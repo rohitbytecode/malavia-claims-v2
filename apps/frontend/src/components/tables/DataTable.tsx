@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useCallback } from "react";
 import { EmptyState } from "../ui/EmptyState";
 import { cn } from "../../lib/cn";
 
@@ -10,6 +10,21 @@ export interface Column<T> {
   searchValue?: (row: T) => string;
   className?: string;
   pinned?: boolean;
+  width?: string;
+  align?: "left" | "right" | "center";
+}
+
+interface DataTableProps<T> {
+  rows: T[];
+  columns: Column<T>[];
+  getRowId: (row: T) => string;
+  onRowClick?: (row: T) => void;
+  title?: string;
+  subtitle?: string;
+  expandedRow?: (row: T) => React.ReactNode;
+  compact?: boolean;
+  actions?: React.ReactNode;
+  isLoading?: boolean;
 }
 
 export function DataTable<T>({
@@ -17,110 +32,325 @@ export function DataTable<T>({
   columns,
   getRowId,
   onRowClick,
+  title = "Records",
+  subtitle,
+  expandedRow,
   compact = true,
-  title = "Operational records",
-}: {
-  rows: T[];
-  columns: Column<T>[];
-  getRowId: (row: T) => string;
-  onRowClick?: (row: T) => void;
-  compact?: boolean;
-  title?: string;
-}) {
+  actions,
+  isLoading,
+}: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string>(columns[0]?.key ?? "");
   const [direction, setDirection] = useState<"asc" | "desc">("asc");
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(columns.map((column) => [column.key, true])),
+    Object.fromEntries(columns.map((c) => [c.key, true]))
+  );
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 25;
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const toggleExpand = useCallback(
+    (id: string, e: React.MouseEvent) => {
+      if (!expandedRow) return;
+      e.stopPropagation();
+      setExpandedRows((prev) => {
+        const next = new Set(prev);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
+      });
+    },
+    [expandedRow]
   );
 
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase();
     if (!term) return rows;
     return rows.filter((row) =>
-      columns.some((column) => (column.searchValue?.(row) ?? String(column.sortValue?.(row) ?? "")).toLowerCase().includes(term)),
+      columns.some((col) =>
+        (col.searchValue?.(row) ?? String(col.sortValue?.(row) ?? ""))
+          .toLowerCase()
+          .includes(term)
+      )
     );
   }, [columns, query, rows]);
 
-  const sorted = useMemo(
-    () =>
-      [...filtered].sort((a, b) => {
-        const column = columns.find((item) => item.key === sortKey);
-        if (!column?.sortValue) return 0;
-        const av = column.sortValue(a);
-        const bv = column.sortValue(b);
-        return (av > bv ? 1 : av < bv ? -1 : 0) * (direction === "asc" ? 1 : -1);
-      }),
-    [columns, direction, filtered, sortKey],
-  );
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const col = columns.find((c) => c.key === sortKey);
+      if (!col?.sortValue) return 0;
+      const av = col.sortValue(a);
+      const bv = col.sortValue(b);
+      return (av > bv ? 1 : av < bv ? -1 : 0) * (direction === "asc" ? 1 : -1);
+    });
+  }, [columns, direction, filtered, sortKey]);
 
-  const shown = columns.filter((column) => visible[column.key]);
+  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
+  const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const shown = columns.filter((c) => visible[c.key]);
+
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setDirection((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setDirection("asc");
+    }
+    setPage(1);
+  };
 
   return (
-    <div className="table-shell premium-table-shell">
-      <div className="table-command-bar">
-        <div>
-          <p className="eyebrow">Dense table console</p>
-          <h2>{title}</h2>
+    <div className="dt-shell">
+      {/* ── Toolbar ── */}
+      <div className="dt-toolbar">
+        <div className="dt-toolbar__left">
+          <div>
+            {title && <h2 className="dt-title">{title}</h2>}
+            {subtitle && <p className="dt-subtitle">{subtitle}</p>}
+          </div>
         </div>
-        <input
-          className="input table-search"
-          placeholder="Quick filter visible records…"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        <button className="btn btn-secondary" type="button" onClick={() => window.print()}>
-          Export / Print
-        </button>
-      </div>
-      <div className="table-tools">
-        <div className="column-toggles">
-          {columns.map((column) => (
-            <label key={column.key}>
-              <input
-                type="checkbox"
-                checked={visible[column.key]}
-                onChange={(event) => setVisible((state) => ({ ...state, [column.key]: event.target.checked }))}
-              />
-              {column.header}
-            </label>
-          ))}
+        <div className="dt-toolbar__right">
+          <div className="dt-search">
+            <span className="dt-search__icon">⌕</span>
+            <input
+              ref={searchRef}
+              className="dt-search__input"
+              placeholder="Filter records…"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setPage(1);
+              }}
+              aria-label="Search table"
+            />
+            {query && (
+              <button
+                className="dt-search__clear"
+                onClick={() => {
+                  setQuery("");
+                  searchRef.current?.focus();
+                }}
+                type="button"
+              >
+                ×
+              </button>
+            )}
+          </div>
+          {actions && <div className="dt-toolbar__actions">{actions}</div>}
         </div>
-        <span>{sorted.length} / {rows.length} records</span>
       </div>
-      <div className="table-viewport" tabIndex={0}>
-        <table className={compact ? "data-table compact" : "data-table"}>
+
+      {/* ── Column toggles ── */}
+      <div className="dt-col-toggles">
+        <span className="dt-col-toggles__label">Columns</span>
+        {columns.map((col) => (
+          <label key={col.key} className="dt-col-toggle">
+            <input
+              type="checkbox"
+              checked={visible[col.key] ?? true}
+              onChange={(e) =>
+                setVisible((v) => ({ ...v, [col.key]: e.target.checked }))
+              }
+            />
+            <span>{col.header}</span>
+          </label>
+        ))}
+        <span className="dt-count">
+          {filtered.length === rows.length
+            ? `${rows.length} records`
+            : `${filtered.length} / ${rows.length}`}
+        </span>
+      </div>
+
+      {/* ── Table ── */}
+      <div
+        className="dt-viewport"
+        role="region"
+        aria-label={title}
+        tabIndex={0}
+      >
+        <table className={cn("dt-table", compact && "dt-table--compact")}>
           <thead>
             <tr>
-              {shown.map((column) => (
-                <th key={column.key} className={cn(column.className, column.pinned && "pinned-col")}>
+              {expandedRow && <th className="dt-th dt-th--expand" />}
+              {shown.map((col) => (
+                <th
+                  key={col.key}
+                  className={cn(
+                    "dt-th",
+                    col.pinned && "dt-th--pinned",
+                    sortKey === col.key && "dt-th--sorted",
+                    col.align === "right" && "dt-th--right"
+                  )}
+                  style={{ width: col.width }}
+                >
                   <button
+                    className="dt-th__btn"
+                    onClick={() => col.sortValue && handleSort(col.key)}
                     type="button"
-                    onClick={() => {
-                      setSortKey(column.key);
-                      setDirection((current) => (sortKey === column.key && current === "asc" ? "desc" : "asc"));
-                    }}
+                    disabled={!col.sortValue}
                   >
-                    {column.header}{sortKey === column.key ? (direction === "asc" ? " ↑" : " ↓") : ""}
+                    {col.header}
+                    {col.sortValue && (
+                      <span className="dt-th__sort-icon">
+                        {sortKey === col.key
+                          ? direction === "asc"
+                            ? " ↑"
+                            : " ↓"
+                          : " ↕"}
+                      </span>
+                    )}
                   </button>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {sorted.map((row) => (
-              <tr key={getRowId(row)} onClick={() => onRowClick?.(row)} tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter") onRowClick?.(row); }}>
-                {shown.map((column) => (
-                  <td key={column.key} className={cn(column.className, column.pinned && "pinned-col")}>
-                    {column.cell(row)}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {isLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i} className="dt-row dt-row--skeleton">
+                    {expandedRow && <td />}
+                    {shown.map((col) => (
+                      <td key={col.key} className="dt-td">
+                        <div className="dt-skeleton-cell" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              : paged.map((row) => {
+                  const id = getRowId(row);
+                  const isExpanded = expandedRows.has(id);
+                  return (
+                    <>
+                      <tr
+                        key={id}
+                        className={cn(
+                          "dt-row",
+                          onRowClick && "dt-row--clickable",
+                          isExpanded && "dt-row--expanded"
+                        )}
+                        onClick={() => onRowClick?.(row)}
+                        tabIndex={onRowClick ? 0 : undefined}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && onRowClick?.(row)
+                        }
+                        aria-expanded={expandedRow ? isExpanded : undefined}
+                      >
+                        {expandedRow && (
+                          <td
+                            className="dt-td dt-td--expand"
+                            onClick={(e) => toggleExpand(id, e)}
+                          >
+                            <span
+                              className={`dt-expand-icon${isExpanded ? " dt-expand-icon--open" : ""}`}
+                            >
+                              {isExpanded ? "▾" : "▸"}
+                            </span>
+                          </td>
+                        )}
+                        {shown.map((col) => (
+                          <td
+                            key={col.key}
+                            className={cn(
+                              "dt-td",
+                              col.pinned && "dt-td--pinned",
+                              col.className,
+                              col.align === "right" && "dt-td--right"
+                            )}
+                          >
+                            {col.cell(row)}
+                          </td>
+                        ))}
+                      </tr>
+                      {expandedRow && isExpanded && (
+                        <tr key={`${id}-expanded`} className="dt-row-expansion">
+                          <td
+                            colSpan={shown.length + 1}
+                            className="dt-td dt-td--expansion"
+                          >
+                            <div className="dt-expansion-content">
+                              {expandedRow(row)}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  );
+                })}
           </tbody>
         </table>
       </div>
-      {sorted.length === 0 && <EmptyState />}
+
+      {/* ── Empty state ── */}
+      {!isLoading && paged.length === 0 && (
+        <EmptyState
+          title={query ? "No matching records" : "No records"}
+          message={
+            query
+              ? `No results for "${query}"`
+              : "No operational records to display."
+          }
+        />
+      )}
+
+      {/* ── Pagination ── */}
+      {totalPages > 1 && (
+        <div className="dt-pagination">
+          <span className="dt-pagination__info">
+            Page {page} of {totalPages} — {sorted.length} records
+          </span>
+          <div className="dt-pagination__controls">
+            <button
+              className="dt-pagination__btn"
+              disabled={page === 1}
+              onClick={() => setPage(1)}
+              type="button"
+            >
+              «
+            </button>
+            <button
+              className="dt-pagination__btn"
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+              type="button"
+            >
+              ‹
+            </button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const p = Math.max(1, Math.min(page - 2, totalPages - 4)) + i;
+              return (
+                <button
+                  key={p}
+                  className={cn(
+                    "dt-pagination__btn",
+                    page === p && "dt-pagination__btn--active"
+                  )}
+                  onClick={() => setPage(p)}
+                  type="button"
+                >
+                  {p}
+                </button>
+              );
+            })}
+            <button
+              className="dt-pagination__btn"
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              type="button"
+            >
+              ›
+            </button>
+            <button
+              className="dt-pagination__btn"
+              disabled={page === totalPages}
+              onClick={() => setPage(totalPages)}
+              type="button"
+            >
+              »
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
