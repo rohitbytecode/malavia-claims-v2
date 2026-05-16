@@ -17,6 +17,10 @@ const envSchema = z.object({
 
   ACCESS_TOKEN_EXPIRES_IN: z.string().default("1d"),
   REFRESH_TOKEN_EXPIRES_IN: z.string().default("7d"),
+
+  CORS_ORIGIN: z.string().default("*"),
+  FRONTEND_URL: z.string().default("http://localhost:3000"),
+  RATE_LIMIT_MAX: z.coerce.number().default(100),
 });
 
 const parsed = envSchema.safeParse(process.env);
