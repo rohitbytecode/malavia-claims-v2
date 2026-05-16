@@ -1,10 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import App from "./App";
+import { applyInitialTheme } from "./store/ui.store";
 import "./index.css";
-import App from "./App.tsx";
-
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+applyInitialTheme();
+createRoot(document.getElementById("root")!).render(<StrictMode><App /></StrictMode>);
