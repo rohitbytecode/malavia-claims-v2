@@ -1,0 +1,1 @@
+export function EmptyState({ title = "No records", message = "No operational records matched the current filters." }: { title?: string; message?: string }) { return <div className="empty-state"><strong>{title}</strong><span>{message}</span></div>; }
