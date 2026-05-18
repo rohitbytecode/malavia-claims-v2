@@ -26,8 +26,8 @@ const TRANSITION_RISK: Record<string, "low" | "medium" | "high" | "critical"> =
 const RISK_COLORS: Record<string, string> = {
   critical: "var(--red)",
   high: "var(--amber)",
-  medium: "var(--amber-vivid)",
-  low: "var(--accent)",
+  medium: "var(--amber)",
+  low: "var(--accent-primary)",
 };
 
 export function WorkflowActionsPanel({ claim }: { claim: Claim }) {

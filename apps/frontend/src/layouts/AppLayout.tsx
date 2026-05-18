@@ -10,73 +10,180 @@ import {
 } from "../constants/workflow";
 import type { Role } from "../types/domain";
 
+type NavIconName =
+  | "dashboard"
+  | "claims"
+  | "alerts"
+  | "settlements"
+  | "reports"
+  | "insurance"
+  | "departments"
+  | "users"
+  | "settings";
+
+function NavIcon({ name }: { name: NavIconName }) {
+  const common = {
+    width: 18,
+    height: 18,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.9,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  };
+
+  switch (name) {
+    case "dashboard":
+      return (
+        <svg {...common}>
+          <path d="M4 13.5a8 8 0 1 1 16 0" />
+          <path d="M12 13l4-5" />
+          <path d="M5 19h14" />
+        </svg>
+      );
+    case "claims":
+      return (
+        <svg {...common}>
+          <path d="M7 3.5h7l3 3V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z" />
+          <path d="M14 3.5V7h3.5" />
+          <path d="M9 12h6" />
+          <path d="M9 16h4" />
+        </svg>
+      );
+    case "alerts":
+      return (
+        <svg {...common}>
+          <path d="M12 3 2.7 19h18.6L12 3Z" />
+          <path d="M12 9v4" />
+          <path d="M12 17h.01" />
+        </svg>
+      );
+    case "settlements":
+      return (
+        <svg {...common}>
+          <path d="M4 7h16" />
+          <path d="M6 7V5h12v2" />
+          <rect x="4" y="7" width="16" height="12" rx="2" />
+          <path d="M8 13h8" />
+          <path d="M8 16h5" />
+        </svg>
+      );
+    case "reports":
+      return (
+        <svg {...common}>
+          <path d="M5 20V4" />
+          <path d="M5 20h15" />
+          <path d="M9 16v-5" />
+          <path d="M13 16V8" />
+          <path d="M17 16v-3" />
+        </svg>
+      );
+    case "insurance":
+      return (
+        <svg {...common}>
+          <path d="M12 3 5 6v5c0 4.5 2.8 8 7 10 4.2-2 7-5.5 7-10V6l-7-3Z" />
+          <path d="M9 12h6" />
+          <path d="M12 9v6" />
+        </svg>
+      );
+    case "departments":
+      return (
+        <svg {...common}>
+          <path d="M4 21V8l8-5 8 5v13" />
+          <path d="M9 21v-6h6v6" />
+          <path d="M8 10h.01" />
+          <path d="M12 10h.01" />
+          <path d="M16 10h.01" />
+        </svg>
+      );
+    case "users":
+      return (
+        <svg {...common}>
+          <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+          <circle cx="9.5" cy="7" r="4" />
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      );
+    case "settings":
+      return (
+        <svg {...common}>
+          <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
+          <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.04.04a2 2 0 0 1-2.83 2.83l-.04-.04A1.8 1.8 0 0 0 15 19.4a1.8 1.8 0 0 0-1 .6 1.8 1.8 0 0 0-.4 1.1V21a2 2 0 0 1-4 0v-.06a1.8 1.8 0 0 0-1.4-1.76 1.8 1.8 0 0 0-1.6.45l-.04.04a2 2 0 1 1-2.83-2.83l.04-.04A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-.6-1 1.8 1.8 0 0 0-1.1-.4H3a2 2 0 0 1 0-4h.06A1.8 1.8 0 0 0 4.8 8.2a1.8 1.8 0 0 0-.45-1.6l-.04-.04a2 2 0 0 1 2.83-2.83l.04.04A1.8 1.8 0 0 0 9 4.6a1.8 1.8 0 0 0 1-.6 1.8 1.8 0 0 0 .4-1.1V3a2 2 0 0 1 4 0v.06A1.8 1.8 0 0 0 15.8 4.8a1.8 1.8 0 0 0 1.6-.45l.04-.04a2 2 0 1 1 2.83 2.83l-.04.04A1.8 1.8 0 0 0 19.4 9c.28.34.62.55 1 .6.36.05.72.04 1.1.04H21a2 2 0 0 1 0 4h-.06a1.8 1.8 0 0 0-1.54 1.36Z" />
+        </svg>
+      );
+  }
+}
+
 const NAV_ITEMS: {
   to: string;
   label: string;
-  icon: string;
+  icon: NavIconName;
   roles: Role[];
   group: string;
 }[] = [
   {
     to: "/dashboard",
     label: "Command Center",
-    icon: "◈",
+    icon: "dashboard",
     roles: operationalRoles,
     group: "operations",
   },
   {
     to: "/claims",
     label: "Claims",
-    icon: "◉",
+    icon: "claims",
     roles: operationalRoles,
     group: "operations",
   },
   {
     to: "/alerts",
     label: "Alerts",
-    icon: "◬",
+    icon: "alerts",
     roles: operationalRoles,
     group: "operations",
   },
   {
     to: "/settlements",
     label: "Settlements",
-    icon: "◎",
+    icon: "settlements",
     roles: accountantRoles,
     group: "finance",
   },
   {
     to: "/reports",
     label: "Reports",
-    icon: "◫",
+    icon: "reports",
     roles: operationalRoles,
     group: "finance",
   },
   {
     to: "/insurance",
     label: "Insurance",
-    icon: "◰",
+    icon: "insurance",
     roles: adminRoles,
     group: "administration",
   },
   {
     to: "/departments",
     label: "Departments",
-    icon: "◱",
+    icon: "departments",
     roles: adminRoles,
     group: "administration",
   },
   {
     to: "/users",
     label: "Users",
-    icon: "◲",
+    icon: "users",
     roles: adminRoles,
     group: "administration",
   },
   {
     to: "/settings",
     label: "Settings",
-    icon: "◳",
+    icon: "settings",
     roles: operationalRoles,
     group: "system",
   },
@@ -85,7 +192,11 @@ const NAV_ITEMS: {
 const ROLE_META: Record<Role, { label: string; color: string; abbr: string }> =
   {
     SUPER_ADMIN: { label: "Super Admin", color: "var(--amber)", abbr: "SA" },
-    ADMIN: { label: "Administrator", color: "var(--accent)", abbr: "AD" },
+    ADMIN: {
+      label: "Administrator",
+      color: "var(--accent-primary)",
+      abbr: "AD",
+    },
     CLAIM_MANAGER: {
       label: "Claim Manager",
       color: "var(--green)",
@@ -168,7 +279,9 @@ export function AppLayout({ children }: PropsWithChildren) {
                       className={`sidebar__link${isActive ? " sidebar__link--active" : ""}`}
                       title={sidebarCollapsed ? item.label : undefined}
                     >
-                      <span className="sidebar__link-icon">{item.icon}</span>
+                      <span className="sidebar__link-icon">
+                        <NavIcon name={item.icon} />
+                      </span>
                       {!sidebarCollapsed && (
                         <span className="sidebar__link-label">
                           {item.label}
