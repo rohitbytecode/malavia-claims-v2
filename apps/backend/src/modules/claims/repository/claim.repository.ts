@@ -18,7 +18,14 @@ export class ClaimRepository {
       return null;
     }
 
-    return ClaimModel.findById(claimId);
+    return ClaimModel.findById(claimId)
+      .populate("patientId")
+      .populate("insuranceCompanyId")
+      .populate("departmentId")
+      .populate("hospitalId")
+      .populate("createdBy")
+      .populate("updatedBy")
+      .lean();
   }
 
   static async findClaims(filter: ClaimFilter, page: number, limit: number) {
@@ -33,9 +40,18 @@ export class ClaimRepository {
     }
 
     return ClaimModel.find(query)
+      .populate("patientId")
+      .populate("insuranceCompanyId")
+      .populate("departmentId")
+      .populate("hospitalId")
       .sort({ updatedAt: -1 })
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .lean();
+  }
+
+  static async countClaims(filter: ClaimFilter) {
+    return ClaimModel.countDocuments(filter);
   }
 
   static async updateClaimStatus(

@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "dotenv": "^17.4.2",
+    "pino-http": "^11.0.0",
     "tsx": "^4.22.0"
   }
 }

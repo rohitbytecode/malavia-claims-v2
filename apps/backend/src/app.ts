@@ -1,13 +1,19 @@
 import express from "express";
 import cors from "cors";
+import mongoose from "mongoose";
+import { randomUUID } from "node:crypto";
+
+import type { Request, Response } from "express";
+
+import { env } from "./config/env.js";
+import { logger } from "./config/logger.js";
 
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import {
   setupSecurityMiddleware,
   apiLimiter,
 } from "./middleware/security.middleware.js";
-import { requestLogger } from "./middleware/logger.middleware.js";
-import { env } from "./config/env.js";
+
 import authRouter from "./modules/auth/index.js";
 import usersRouter from "./modules/users/index.js";
 import insuranceCompanyRouter from "./modules/insurance-companies/index.js";
@@ -24,13 +30,80 @@ import auditLogsRouter from "./modules/audit-logs/index.js";
 import reportsRouter from "./modules/reports/index.js";
 import timelinesRouter from "./modules/timelines/index.js";
 import notificationsRouter from "./modules/notifications/index.js";
+
 import { setupSwagger } from "./config/swagger.js";
 
 const app = express();
 
-app.use(requestLogger);
+import pinoHttpImport from "pino-http";
+
+const pinoHttp =
+  typeof pinoHttpImport === "function"
+    ? pinoHttpImport
+    : pinoHttpImport.default;
 
 setupSecurityMiddleware(app);
+
+app.use(
+  pinoHttp({
+    logger,
+
+    genReqId: (req: Request, res: Response) => {
+      const existingId = req.headers["x-request-id"];
+
+      if (typeof existingId === "string" && existingId.length > 0) {
+        return existingId;
+      }
+
+      const reqId = randomUUID();
+
+      res.setHeader("x-request-id", reqId);
+
+      return reqId;
+    },
+
+    customSuccessMessage: (req: Request, res: Response) => {
+      return `${req.method} ${req.url} completed`;
+    },
+
+    customErrorMessage: (req: Request, res: Response, error: Error) => {
+      return `${req.method} ${req.url} failed`;
+    },
+
+    customProps: () => {
+      return {
+        service: "claim-management-api",
+        environment: env.NODE_ENV,
+      };
+    },
+
+    serializers: {
+      req(req: Request & { id?: string }) {
+        return {
+          id: req.id,
+          method: req.method,
+          url: req.url,
+          query: req.query,
+          params: req.params,
+          userAgent: req.headers["user-agent"],
+          ip: req.ip,
+        };
+      },
+
+      res(res: Response) {
+        return {
+          statusCode: res.statusCode,
+        };
+      },
+    },
+
+    autoLogging: {
+      ignore: (req: Request) => {
+        return req.url === "/live" || req.url === "/ready";
+      },
+    },
+  })
+);
 
 app.use(
   cors({
@@ -40,13 +113,9 @@ app.use(
 );
 
 app.use(express.json({ limit: "10kb" }));
-
-// Apply rate limiter to all API routes
 app.use("/api", apiLimiter);
 
 setupSwagger(app);
-
-import mongoose from "mongoose";
 
 app.get("/health", (_, res) => {
   res.status(200).json({
@@ -54,6 +123,7 @@ app.get("/health", (_, res) => {
     message: "Claim Management API Running",
     uptime: process.uptime(),
     memory: process.memoryUsage(),
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -63,10 +133,10 @@ app.get("/live", (_, res) => {
 
 app.get("/ready", (_, res) => {
   if (mongoose.connection.readyState === 1) {
-    res.status(200).send("Ready");
-  } else {
-    res.status(503).send("Database not connected");
+    return res.status(200).send("Ready");
   }
+
+  return res.status(503).send("Database not connected");
 });
 
 app.use("/api/v1/auth", authRouter);
@@ -85,6 +155,7 @@ app.use("/api/v1/audit-logs", auditLogsRouter);
 app.use("/api/v1/reports", reportsRouter);
 app.use("/api/v1/timelines", timelinesRouter);
 app.use("/api/v1/notifications", notificationsRouter);
+
 app.use(errorMiddleware);
 
 export default app;

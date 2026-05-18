@@ -26,8 +26,30 @@ import type {
   Role,
   SubmissionMethod,
 } from "../types/domain";
-const normalized = <T>(value: T[] | Paginated<T>): Paginated<T> =>
-  Array.isArray(value) ? { data: value } : value;
+const normalized = <T>(
+  value:
+    | T[]
+    | Paginated<T>
+    | {
+        items: T[];
+        pagination?: Paginated<T>["pagination"];
+      }
+): Paginated<T> => {
+  if (Array.isArray(value)) {
+    return {
+      data: value,
+    };
+  }
+
+  if ("items" in value) {
+    return {
+      data: value.items,
+      pagination: value.pagination,
+    };
+  }
+
+  return value;
+};
 export const authApi = {
   login: (body: { email: string; password: string }) =>
     unwrap<AuthPayload>(apiClient.post("/auth/login", body)),

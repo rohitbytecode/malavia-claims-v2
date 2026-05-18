@@ -143,7 +143,11 @@ export function ClaimTimeline({ events, compact = false }: ClaimTimelineProps) {
           <div className="timeline__events">
             {(grouped[day] ?? []).map((ev, idx) => {
               const id = ev.id ?? ev._id ?? `${ev.type}-${ev.createdAt}-${idx}`;
-              const meta = EVENT_META[ev.type];
+              const meta = EVENT_META[ev.type] ?? {
+                icon: "*",
+                label: labelize(ev.type),
+                colorVar: "var(--text-tertiary",
+              };
               const isExpanded = expandedIds.has(id) || (!compact && idx < 2);
               const hasDetail = !!(
                 ev.fromStatus ||

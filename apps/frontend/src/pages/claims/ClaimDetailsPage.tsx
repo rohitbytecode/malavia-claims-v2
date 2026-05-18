@@ -1,7 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { useMemo, useState } from "react";
-import { alertApi, auditApi, communicationApi, claimsApi, depositApi, settlementApi, timelineApi } from "../../api/services";
+import {
+  alertApi,
+  auditApi,
+  communicationApi,
+  claimsApi,
+  depositApi,
+  settlementApi,
+  timelineApi,
+} from "../../api/services";
 import { AlertPlaybookPanel } from "../../components/alerts/AlertPlaybookPanel";
 import { FinancialControlDeck } from "../../components/claims/FinancialControlDeck";
 import { WorkflowActionsPanel } from "../../components/claims/WorkflowActionsPanel";
@@ -16,7 +24,13 @@ import { StatusBadge } from "../../components/ui/StatusBadge";
 import { canSeeFinance } from "../../constants/operations";
 import { useAuthStore } from "../../store/auth.store";
 import type { CommunicationMedium } from "../../types/domain";
-import { ageInDays, formatCurrency, formatDateTime, labelize, nameOf } from "../../utils/format";
+import {
+  ageInDays,
+  formatCurrency,
+  formatDateTime,
+  labelize,
+  nameOf,
+} from "../../utils/format";
 
 export function ClaimDetailsPage() {
   const { claimId = "" } = useParams();
@@ -25,16 +39,46 @@ export function ClaimDetailsPage() {
   const [commText, setCommText] = useState("");
   const [medium, setMedium] = useState<CommunicationMedium>("PORTAL");
 
-  const claim = useQuery({ queryKey: ["claim", claimId], queryFn: () => claimsApi.get(claimId) });
-  const timeline = useQuery({ queryKey: ["timeline", claimId], queryFn: () => timelineApi.claim(claimId) });
-  const alerts = useQuery({ queryKey: ["claim-alerts", claimId], queryFn: () => alertApi.byClaim(claimId) });
-  const communications = useQuery({ queryKey: ["communications", claimId], queryFn: () => communicationApi.list(claimId) });
-  const audit = useQuery({ queryKey: ["audit", claimId], queryFn: () => auditApi.entity(claimId) });
-  const settlement = useQuery({ queryKey: ["settlement", claimId], queryFn: () => settlementApi.getByClaim(claimId), retry: false });
-  const deposit = useQuery({ queryKey: ["deposit", claimId], queryFn: () => depositApi.getByClaim(claimId), retry: false });
+  const claim = useQuery({
+    queryKey: ["claim", claimId],
+    queryFn: () => claimsApi.get(claimId),
+  });
+  const timeline = useQuery({
+    queryKey: ["timeline", claimId],
+    queryFn: () => timelineApi.claim(claimId),
+  });
+  const alerts = useQuery({
+    queryKey: ["claim-alerts", claimId],
+    queryFn: () => alertApi.byClaim(claimId),
+  });
+  const communications = useQuery({
+    queryKey: ["communications", claimId],
+    queryFn: () => communicationApi.list(claimId),
+  });
+  const audit = useQuery({
+    queryKey: ["audit", claimId],
+    queryFn: () => auditApi.entity(claimId),
+  });
+  const settlement = useQuery({
+    queryKey: ["settlement", claimId],
+    queryFn: () => settlementApi.getByClaim(claimId),
+    retry: false,
+  });
+  const deposit = useQuery({
+    queryKey: ["deposit", claimId],
+    queryFn: () => depositApi.getByClaim(claimId),
+    retry: false,
+  });
 
   const addCommunication = useMutation({
-    mutationFn: () => communicationApi.create({ claimId, type: "FOLLOW_UP", medium, remarks: commText, createdBy: user?._id }),
+    mutationFn: () =>
+      communicationApi.create({
+        claimId,
+        type: "FOLLOW_UP",
+        medium,
+        remarks: commText,
+        createdBy: user?._id,
+      }),
     onSuccess: () => {
       setCommText("");
       qc.invalidateQueries({ queryKey: ["communications", claimId] });
@@ -42,7 +86,10 @@ export function ClaimDetailsPage() {
     },
   });
 
-  const auditExceptions = useMemo(() => audit.data?.data.slice(0, 6) ?? [], [audit.data?.data]);
+  const auditExceptions = useMemo(
+    () => audit.data?.data.slice(0, 6) ?? [],
+    [audit.data?.data]
+  );
 
   if (claim.isLoading) return <Skeleton rows={10} />;
   if (claim.isError || !claim.data) return <ErrorPanel error={claim.error} />;
@@ -59,7 +106,10 @@ export function ClaimDetailsPage() {
           <div>
             <p className="eyebrow">Claim Operational Cockpit</p>
             <h1>{data.claimNumber ?? data._id}</h1>
-            <span>{data.type} workflow · {ageing} days ageing · Updated {formatDateTime(data.updatedAt)}</span>
+            <span>
+              {data.type} workflow · {ageing} days ageing · Updated{" "}
+              {formatDateTime(data.updatedAt)}
+            </span>
           </div>
           <div className="cockpit-hero-status">
             <StatusBadge value={data.status} />
@@ -67,22 +117,47 @@ export function ClaimDetailsPage() {
           </div>
         </section>
 
-        {locked && <div className="audit-warning">Closed claim is immutable. SUPER_ADMIN reopen requires a confirmation modal and audit reason.</div>}
-        {criticalAgeing && !locked && <div className="audit-warning">Ageing risk: this claim is inside backend courier-delay escalation territory.</div>}
+        {locked && (
+          <div className="audit-warning">
+            Closed claim is immutable. SUPER_ADMIN reopen requires a
+            confirmation modal and audit reason.
+          </div>
+        )}
+        {criticalAgeing && !locked && (
+          <div className="audit-warning">
+            Ageing risk: this claim is inside backend courier-delay escalation
+            territory.
+          </div>
+        )}
 
         <WorkflowRail claim={data} />
-        <FinancialControlDeck claim={data} settlement={settlement.data} deposit={deposit.data} />
+        <FinancialControlDeck
+          claim={data}
+          settlement={settlement.data}
+          deposit={deposit.data}
+        />
 
         <div className="cockpit-matrix">
           <Card className="premium-panel identity-card">
-            <CardHeader title="Patient and insurer identity" eyebrow="Primary operational record" />
+            <CardHeader
+              title="Patient and insurer identity"
+              eyebrow="Primary operational record"
+            />
             <dl className="detail-list">
-              <dt>Patient ID</dt><dd>{data.patientId}</dd>
-              <dt>Hospital ID</dt><dd>{data.hospitalId}</dd>
-              <dt>Insurance company</dt><dd>{nameOf(data.insuranceCompanyId)}</dd>
-              <dt>Department</dt><dd>{nameOf(data.departmentId)}</dd>
-              <dt>Created by</dt><dd>{nameOf(data.createdBy)}</dd>
-              <dt>Operational notes</dt><dd>{Array.isArray(data.remarks) ? data.remarks.join(", ") : data.remarks ?? "—"}</dd>
+              <dt>Patient ID</dt>
+              <dd>{data.patientId}</dd>
+              <dt>Insurance company</dt>
+              <dd>{nameOf(data.insuranceCompanyId)}</dd>
+              <dt>Department</dt>
+              <dd>{nameOf(data.departmentId)}</dd>
+              <dt>Created by</dt>
+              <dd>{nameOf(data.createdBy)}</dd>
+              <dt>Operational notes</dt>
+              <dd>
+                {Array.isArray(data.remarks)
+                  ? data.remarks.join(", ")
+                  : (data.remarks ?? "—")}
+              </dd>
             </dl>
           </Card>
 
@@ -90,48 +165,108 @@ export function ClaimDetailsPage() {
         </div>
 
         <Card className="premium-panel">
-          <CardHeader title="Chronology timeline" eyebrow="Status · communications · documents · settlements · alerts · audit" />
-          {timeline.isError ? <ErrorPanel error={timeline.error} /> : <ClaimTimeline events={timeline.data ?? []} />}
+          <CardHeader
+            title="Chronology timeline"
+            eyebrow="Status · communications · documents · settlements · alerts · audit"
+          />
+          {timeline.isError ? (
+            <ErrorPanel error={timeline.error} />
+          ) : (
+            <ClaimTimeline events={timeline.data ?? []} />
+          )}
         </Card>
 
         <Card className="premium-panel">
-          <CardHeader title="Secure document control" eyebrow="Versioned claim evidence" />
-          <DocumentManager claimId={data._id} locked={locked} />
+          <CardHeader
+            title="Secure document control"
+            eyebrow="Versioned claim evidence"
+          />
+          <DocumentManager claimId={data.id || data._id} locked={locked} />
         </Card>
 
         {canSeeFinance(user?.role) ? (
           <Card className="premium-panel">
-            <CardHeader title="Finance execution console" eyebrow="Settlement · allocations · refunds" />
+            <CardHeader
+              title="Finance execution console"
+              eyebrow="Settlement · allocations · refunds"
+            />
             <SettlementPanel claim={data} />
           </Card>
         ) : (
           <Card className="premium-panel restricted-card">
-            <CardHeader title="Finance execution restricted" eyebrow="Role-based control" />
-            <p>Settlement finalization, TDS, deductions, allocation, and refund execution are visible to finance/admin roles.</p>
+            <CardHeader
+              title="Finance execution restricted"
+              eyebrow="Role-based control"
+            />
+            <p>
+              Settlement finalization, TDS, deductions, allocation, and refund
+              execution are visible to finance/admin roles.
+            </p>
           </Card>
         )}
 
         <div className="cockpit-matrix">
           <Card className="premium-panel">
-            <CardHeader title="Communication console" eyebrow="TPA / insurer / patient log" />
-            <form className="communication-form" onSubmit={(event) => { event.preventDefault(); if (commText.length >= 2) addCommunication.mutate(); }}>
-              <select className="input" value={medium} onChange={(event) => setMedium(event.target.value as CommunicationMedium)} disabled={locked}>
-                <option>EMAIL</option><option>PORTAL</option><option>COURIER</option><option>PHONE</option><option>IN_PERSON</option>
+            <CardHeader
+              title="Communication console"
+              eyebrow="TPA / insurer / patient log"
+            />
+            <form
+              className="communication-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (commText.length >= 2) addCommunication.mutate();
+              }}
+            >
+              <select
+                className="input"
+                value={medium}
+                onChange={(event) =>
+                  setMedium(event.target.value as CommunicationMedium)
+                }
+                disabled={locked}
+              >
+                <option>EMAIL</option>
+                <option>PORTAL</option>
+                <option>COURIER</option>
+                <option>PHONE</option>
+                <option>IN_PERSON</option>
               </select>
-              <input className="input" value={commText} onChange={(event) => setCommText(event.target.value)} placeholder="Record operational communication" disabled={locked} />
-              <button className="btn btn-secondary" disabled={locked || addCommunication.isPending}>Add</button>
+              <input
+                className="input"
+                value={commText}
+                onChange={(event) => setCommText(event.target.value)}
+                placeholder="Record operational communication"
+                disabled={locked}
+              />
+              <button
+                className="btn btn-secondary"
+                disabled={locked || addCommunication.isPending}
+              >
+                Add
+              </button>
             </form>
             {communications.data?.data.map((item) => (
-              <div className="alert-row" key={item._id}><StatusBadge value={item.medium} compact /><span>{item.remarks} · {formatDateTime(item.createdAt)}</span></div>
+              <div className="alert-row" key={item._id}>
+                <StatusBadge value={item.medium} compact />
+                <span>
+                  {item.remarks} · {formatDateTime(item.createdAt)}
+                </span>
+              </div>
             ))}
           </Card>
 
           <Card className="premium-panel audit-console">
-            <CardHeader title="Audit trace" eyebrow="Backend immutable activity" />
+            <CardHeader
+              title="Audit trace"
+              eyebrow="Backend immutable activity"
+            />
             {auditExceptions.map((log) => (
               <div className="audit-row" key={log._id}>
                 <strong>{labelize(log.action)}</strong>
-                <span>{labelize(log.module)} · {formatDateTime(log.createdAt)}</span>
+                <span>
+                  {labelize(log.module)} · {formatDateTime(log.createdAt)}
+                </span>
               </div>
             ))}
           </Card>

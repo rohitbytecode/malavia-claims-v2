@@ -17,7 +17,7 @@ describe("Claim Workflow Transitions", () => {
       hospitalId: new mongoose.Types.ObjectId(),
       totalClaimAmount: 50000,
     });
-    claimId = claim._id.toString();
+    claimId = claim.id.toString();
   });
 
   it("should successfully transition DRAFT to PREAUTH_PENDING", async () => {

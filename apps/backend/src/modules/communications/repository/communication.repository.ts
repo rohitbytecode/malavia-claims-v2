@@ -19,6 +19,9 @@ export class CommunicationRepository {
     page: number,
     limit: number
   ) {
+    if (!claimId || !Types.ObjectId.isValid(claimId)) {
+      return [];
+    }
     const query: Record<string, unknown> = {
       claimId: new Types.ObjectId(claimId),
     };

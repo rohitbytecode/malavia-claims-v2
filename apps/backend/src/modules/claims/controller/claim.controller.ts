@@ -52,6 +52,14 @@ export class ClaimController {
     const claimId = Array.isArray(req.params.claimId)
       ? req.params.claimId[0]
       : req.params.claimId;
+
+    if (!claimId || claimId === "undefined") {
+      return res.status(400).json({
+        success: false,
+        message: "Missing or invalid claim ID",
+      });
+    }
+
     const { toStatus, remarks, performedBy } = req.body;
     const claim = await ClaimService.transitionClaimStatus(
       claimId,

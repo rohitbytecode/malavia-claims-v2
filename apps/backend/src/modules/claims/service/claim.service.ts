@@ -13,7 +13,7 @@ import { ClaimType } from "@/modules/claims/constant/claim-type.enum.js";
 interface CreateClaimPayload {
   type: ClaimType;
   insuranceCompanyId?: string;
-  patientId: string;
+  patientId: string | any;
   hospitalId: string;
   departmentId?: string;
   totalClaimAmount: number;
@@ -36,14 +36,23 @@ export class ClaimService {
       claimNumber: this.buildClaimNumber(),
       type: payload.type,
       status: ClaimStatus.DRAFT,
-      insuranceCompanyId: payload.insuranceCompanyId
-        ? new Types.ObjectId(payload.insuranceCompanyId)
-        : undefined,
-      patientId: new Types.ObjectId(payload.patientId),
-      hospitalId: new Types.ObjectId(payload.hospitalId),
-      departmentId: payload.departmentId
-        ? new Types.ObjectId(payload.departmentId)
-        : undefined,
+      insuranceCompanyId:
+        payload.insuranceCompanyId &&
+        Types.ObjectId.isValid(payload.insuranceCompanyId)
+          ? new Types.ObjectId(payload.insuranceCompanyId)
+          : undefined,
+
+      patientId: payload.patientId,
+
+      hospitalId:
+        payload.hospitalId && Types.ObjectId.isValid(payload.hospitalId)
+          ? new Types.ObjectId(payload.hospitalId)
+          : undefined,
+
+      departmentId:
+        payload.departmentId && Types.ObjectId.isValid(payload.departmentId)
+          ? new Types.ObjectId(payload.departmentId)
+          : undefined,
       totalClaimAmount: payload.totalClaimAmount,
       tdsAmount: payload.tdsAmount ?? 0,
       deductions: payload.deductions ?? 0,
@@ -51,9 +60,10 @@ export class ClaimService {
       depositAmount: payload.depositAmount ?? 0,
       refundAmount: payload.refundAmount ?? 0,
       remarks: payload.remarks ? [payload.remarks] : [],
-      createdBy: payload.createdBy
-        ? new Types.ObjectId(payload.createdBy)
-        : undefined,
+      createdBy:
+        payload.createdBy && Types.ObjectId.isValid(payload.createdBy)
+          ? new Types.ObjectId(payload.createdBy)
+          : undefined,
     });
 
     return toClaimResponse(claim);
@@ -75,16 +85,25 @@ export class ClaimService {
     page: number,
     limit: number
   ) {
-    const claims = await ClaimRepository.findClaims(
-      {
-        type: type,
-        status: status,
-      },
-      page,
-      limit
-    );
+    const filter: Record<string, unknown> = {};
 
-    return claims.map(toClaimResponse);
+    if (type) filter.type = type;
+    if (status) filter.status = status;
+
+    const [claims, total] = await Promise.all([
+      ClaimRepository.findClaims(filter, page, limit),
+      ClaimRepository.countClaims(filter),
+    ]);
+
+    return {
+      items: claims.map(toClaimResponse),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   static async transitionClaimStatus(
@@ -113,7 +132,7 @@ export class ClaimService {
     }
 
     await ClaimStatusHistoryRepository.createClaimStatusHistory({
-      claimId: claim._id,
+      claimId: claim.id,
       fromStatus: claim.status,
       toStatus,
       remarks,

@@ -46,14 +46,14 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
 
   const mutation = useMutation({
     mutationFn: ({ status, reason }: { status: ClaimStatus; reason: string }) =>
-      claimsApi.transition(claim._id, {
+      claimsApi.transition(claim.id, {
         toStatus: status,
         remarks: reason,
         performedBy: user?._id,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["claim", claim._id] });
-      qc.invalidateQueries({ queryKey: ["timeline", claim._id] });
+      qc.invalidateQueries({ queryKey: ["claim", claim.id] });
+      qc.invalidateQueries({ queryKey: ["timeline", claim.id] });
       setTarget(undefined);
       setRemarks("");
     },

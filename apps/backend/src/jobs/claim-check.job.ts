@@ -20,7 +20,7 @@ export const checkCourierDelays = async () => {
 
   for (const claim of criticalClaims) {
     await AlertService.createAlert({
-      claimId: claim._id.toString(),
+      claimId: claim.id.toString(),
       type: AlertType.COURIER_DELAY,
       severity: AlertSeverity.CRITICAL,
       message: `Claim ${claim.claimNumber} is severely delayed (>60 days)`,
@@ -35,7 +35,7 @@ export const checkCourierDelays = async () => {
 
   for (const claim of highClaims) {
     await AlertService.createAlert({
-      claimId: claim._id.toString(),
+      claimId: claim.id.toString(),
       type: AlertType.COURIER_DELAY,
       severity: AlertSeverity.HIGH,
       message: `Claim ${claim.claimNumber} is delayed (>45 days)`,
@@ -50,7 +50,7 @@ export const checkPendingSettlements = async () => {
 
   for (const claim of pendingClaims) {
     await AlertService.createAlert({
-      claimId: claim._id.toString(),
+      claimId: claim.id.toString(),
       type: AlertType.SETTLEMENT_PENDING,
       severity: AlertSeverity.MEDIUM,
       message: `Claim ${claim.claimNumber} is pending settlement`,

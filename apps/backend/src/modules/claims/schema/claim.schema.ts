@@ -29,14 +29,15 @@ const claimSchema = new mongoose.Schema<ClaimDocument>(
       required: false,
     },
     patientId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Patient",
+      type: String,
       required: true,
+      trim: true,
+      index: true,
     },
     hospitalId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Department",
-      required: true,
+      ref: "Hospital",
+      required: false,
     },
     departmentId: {
       type: mongoose.Schema.Types.ObjectId,
