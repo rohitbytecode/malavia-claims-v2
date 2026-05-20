@@ -375,7 +375,22 @@ hr {
   background: linear-gradient(90deg, var(--accent-primary), transparent);
   border-radius: var(--r-xl) var(--r-xl) 0 0;
 }
-
+.identity-card .card-header {
+  padding: 0;
+  margin-bottom: 1.5rem;
+  text-align: left;
+  align-items: flex-start;
+}
+.identity-card .card-header .eyebrow {
+  text-align: left;
+  margin: 0 0 0.4rem 0;
+}
+.identity-card .card-header h3,
+.identity-card .card-header h2,
+.identity-card .card-header .title {
+  text-align: left;
+  margin: 0;
+}
 /* Card header layout */
 .card-header {
   display: flex;
@@ -1895,8 +1910,31 @@ select.input {
 /* Detail list */
 .detail-list {
   display: grid;
-  grid-template-columns: 160px 1fr;
-  gap: 10px 16px;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 14px 24px;
+  margin: 0;
+  padding: 0;
+  align-items: start;
+}
+
+.detail-list dt {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+.detail-list dd {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.6;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .detail-term {
   font-size: 11px;
@@ -4189,7 +4227,10 @@ select.input {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .cockpit-hero-status,
-.identity-card,
+.identity-card {
+  padding: 1.5rem;
+  overflow: hidden;
+}
 .net-payable,
 .audit-console,
 .restricted-card {

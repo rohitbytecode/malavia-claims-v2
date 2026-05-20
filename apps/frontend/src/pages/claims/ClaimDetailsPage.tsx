@@ -147,22 +147,31 @@ export function ClaimDetailsPage() {
               <dt>Patient ID</dt>
               <dd>{data.patientId}</dd>
               <dt>Insurance company</dt>
-              <dd>{nameOf(data.insuranceCompanyId)}</dd>
+              <dd>{nameOf(data.insuranceCompanyId) || "Not assigned"}</dd>
               {data.doctor && (
                 <>
                   <dt>Doctor</dt>
-                  <dd>Dr. {typeof data.doctor === "object" ? data.doctor.name : data.doctor}</dd>
+                  <dd>
+                    Dr.{" "}
+                    {typeof data.doctor === "object"
+                      ? data.doctor.name
+                      : data.doctor}
+                  </dd>
                 </>
               )}
               <dt>Department</dt>
-              <dd>{nameOf(data.departmentId)}</dd>
+              <dd>{nameOf(data.departmentId) || "Not assigned"}</dd>
               <dt>Created by</dt>
               <dd>{nameOf(data.createdBy)}</dd>
               <dt>Operational notes</dt>
               <dd>
                 {Array.isArray(data.remarks)
-                  ? data.remarks.join(", ")
-                  : (data.remarks ?? "—")}
+                  ? data.remarks.length
+                    ? data.remarks.join(", ")
+                    : "No operational notes"
+                  : data.remarks?.trim()
+                    ? data.remarks
+                    : "No operational notes"}
               </dd>
             </dl>
           </Card>
