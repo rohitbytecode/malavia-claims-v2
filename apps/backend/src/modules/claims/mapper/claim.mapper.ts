@@ -18,6 +18,8 @@ export const toClaimResponse = (claim: any) => {
 
     insuranceCompany: mapRelation(claimObject.insuranceCompanyId),
 
+    insurerId: claimObject.insurerId,
+
     patientId: claimObject.patientId,
 
     hospital: mapRelation(claimObject.hospitalId),

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card, CardHeader } from "../../components/ui/Card";
+
 export function SettlementsPage() {
   return (
     <div className="page-stack">
@@ -16,16 +17,18 @@ export function SettlementsPage() {
           title="Settlement workflow"
           eyebrow="Controlled from claim cockpit"
         />
-        <p>
-          Settlement creation is intentionally claim-centered to preserve audit
-          context and prevent orphan financial entries.
-        </p>
-        <Link
-          className="btn btn-primary"
-          to="/claims?status=SETTLEMENT_PENDING"
-        >
-          Open settlement pending claims
-        </Link>
+        <div className="card-pad" style={{ display: "grid", gap: "12px" }}>
+          <p>
+            Settlement creation is intentionally claim-centered to preserve audit
+            context and prevent orphan financial entries.
+          </p>
+          <Link
+            className="btn btn-primary"
+            to="/claims?status=SETTLEMENT_PENDING"
+          >
+            Open settlement pending claims
+          </Link>
+        </div>
       </Card>
     </div>
   );

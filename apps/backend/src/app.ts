@@ -30,10 +30,15 @@ import auditLogsRouter from "./modules/audit-logs/index.js";
 import reportsRouter from "./modules/reports/index.js";
 import timelinesRouter from "./modules/timelines/index.js";
 import notificationsRouter from "./modules/notifications/index.js";
+import patientsRouter from "./modules/patients/index.js";
 
 import { setupSwagger } from "./config/swagger.js";
 
 const app = express();
+// disable cache for easier debugging
+if (env.NODE_ENV === "development") {
+  app.set("estag", false);
+}
 
 import pinoHttpImport from "pino-http";
 
@@ -155,6 +160,7 @@ app.use("/api/v1/audit-logs", auditLogsRouter);
 app.use("/api/v1/reports", reportsRouter);
 app.use("/api/v1/timelines", timelinesRouter);
 app.use("/api/v1/notifications", notificationsRouter);
+app.use("/api/v1/patients", patientsRouter);
 
 app.use(errorMiddleware);
 

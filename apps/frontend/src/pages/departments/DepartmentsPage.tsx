@@ -15,6 +15,7 @@ type DepartmentDraft = {
   description: string;
   isActive: boolean;
 };
+
 const blank: DepartmentDraft = {
   name: "",
   code: "",
@@ -27,10 +28,12 @@ export function DepartmentsPage() {
   const [editing, setEditing] = useState<Department | null>(null);
   const [draft, setDraft] = useState<DepartmentDraft>(blank);
   const qc = useQueryClient();
+
   const query = useQuery({
     queryKey: ["departments"],
     queryFn: () => departmentApi.list({ limit: 100 }),
   });
+
   const save = useMutation({
     mutationFn: () =>
       editing
@@ -41,15 +44,22 @@ export function DepartmentsPage() {
       closeModal();
     },
   });
-  const remove = useMutation({
-    mutationFn: departmentApi.remove,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["departments"] }),
+
+  // New: Toggle Active / Inactive
+  const toggleStatus = useMutation({
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      departmentApi.update(id, { isActive }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["departments"] });
+    },
   });
+
   const openCreate = () => {
     setEditing(null);
     setDraft(blank);
     setModalOpen(true);
   };
+
   const openEdit = (department: Department) => {
     setEditing(department);
     setDraft({
@@ -60,11 +70,13 @@ export function DepartmentsPage() {
     });
     setModalOpen(true);
   };
+
   const closeModal = () => {
     setEditing(null);
     setDraft(blank);
     setModalOpen(false);
   };
+
   const columns: Column<Department>[] = [
     {
       key: "code",
@@ -98,24 +110,38 @@ export function DepartmentsPage() {
       header: "Actions",
       cell: (d) => (
         <div className="chip-cloud">
-          <Button type="button" variant="secondary" onClick={() => openEdit(d)}>
+          <Button 
+            type="button" 
+            variant="secondary" 
+            onClick={() => openEdit(d)}
+          >
             Edit
           </Button>
+
           <Button
             type="button"
-            variant="danger"
-            onClick={() => remove.mutate(d._id)}
-            disabled={remove.isPending}
+            variant={d.isActive ? "danger" : "success"}   // Green when inactive
+            className={d.isActive ? "" : "bg-green-600 hover:bg-green-700 text-white"}
+            onClick={() => 
+              toggleStatus.mutate({ 
+                id: d._id, 
+                isActive: !d.isActive 
+              })
+            }
+            disabled={toggleStatus.isPending}
           >
-            Disable
+            {d.isActive ? "Inactivate" : "Activate"}
           </Button>
         </div>
       ),
     },
   ];
+
   if (query.isLoading) return <Skeleton rows={8} />;
   if (query.isError) return <ErrorPanel error={query.error} />;
+
   const rows = query.data?.data ?? [];
+
   return (
     <div className="page-stack">
       <div className="page-title">
@@ -125,6 +151,7 @@ export function DepartmentsPage() {
           Allocation-ready department records used by settlement distribution.
         </span>
       </div>
+
       <DataTable
         title="Department master"
         rows={rows}
@@ -136,6 +163,7 @@ export function DepartmentsPage() {
           </Button>
         }
       />
+
       <Modal
         open={modalOpen}
         title={editing ? "Update department" : "Create department"}

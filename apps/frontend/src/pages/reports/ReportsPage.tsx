@@ -5,13 +5,6 @@ import { ErrorPanel } from "../../components/ui/ErrorPanel";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { formatCurrency, labelize } from "../../utils/format";
 
-type MonthlyReport = {
-  summary: any[];
-  detailedClaims: any[];
-  totalClaims?: number;
-  totalAmount?: number;
-};
-
 export function ReportsPage() {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());

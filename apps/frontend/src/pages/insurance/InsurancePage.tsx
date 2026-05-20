@@ -26,6 +26,7 @@ type CompanyDraft = {
   remarks: string;
   isActive: boolean;
 };
+
 const blank: CompanyDraft = {
   name: "",
   submissionMethods: ["PORTAL"],
@@ -41,19 +42,20 @@ const blank: CompanyDraft = {
   remarks: "",
   isActive: true,
 };
+
 const methods: SubmissionMethod[] = ["PORTAL", "EMAIL", "COURIER"];
 
 function toPayload(draft: CompanyDraft) {
   return {
     name: draft.name,
     submissionMethods: draft.submissionMethods,
-    portalUrl: draft.portalUrl || undefined,
-    portalUsername: draft.portalUsername || undefined,
-    portalPassword: draft.portalPassword || undefined,
-    email: draft.email || undefined,
-    courierAddress: draft.courierAddress || undefined,
+    portalUrl: draft.portalUrl?.trim() || undefined,
+    portalUsername: draft.portalUsername?.trim() || undefined,
+    portalPassword: draft.portalPassword?.trim() || undefined,
+    email: draft.email?.trim() || undefined,
+    courierAddress: draft.courierAddress?.trim() || undefined,
     tatDays: Number(draft.tatDays) || 0,
-    remarks: draft.remarks,
+    remarks: draft.remarks?.trim() || undefined,
     isActive: draft.isActive,
     contactPersons:
       draft.contactName && draft.contactEmail && draft.contactPhone
@@ -74,10 +76,12 @@ export function InsurancePage() {
   const [editing, setEditing] = useState<InsuranceCompany | null>(null);
   const [draft, setDraft] = useState<CompanyDraft>(blank);
   const qc = useQueryClient();
+
   const query = useQuery({
     queryKey: ["insurance"],
     queryFn: () => insuranceApi.list({ limit: 100 }),
   });
+
   const save = useMutation({
     mutationFn: () =>
       editing
@@ -88,24 +92,28 @@ export function InsurancePage() {
       closeModal();
     },
   });
-  const remove = useMutation({
-    mutationFn: insuranceApi.remove,
+
+  const toggle = useMutation({
+    mutationFn: (company: InsuranceCompany) =>
+      insuranceApi.update(company._id, { isActive: !company.isActive }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["insurance"] }),
   });
+
   const openCreate = () => {
     setEditing(null);
     setDraft(blank);
     setModalOpen(true);
   };
+
   const openEdit = (company: InsuranceCompany) => {
-    const contact = company.contactPersons[0];
+    const contact = company.contactPersons?.[0];
     setEditing(company);
     setDraft({
       name: company.name,
       submissionMethods: company.submissionMethods,
       portalUrl: company.portalUrl ?? "",
       portalUsername: company.portalUsername ?? "",
-      portalPassword: "",
+      portalPassword: "", // Force re-entry for security
       email: company.email ?? "",
       courierAddress: company.courierAddress ?? "",
       tatDays: company.tatDays ?? 0,
@@ -117,27 +125,33 @@ export function InsurancePage() {
     });
     setModalOpen(true);
   };
+
   const closeModal = () => {
     setEditing(null);
     setDraft(blank);
     setModalOpen(false);
   };
-  const toggleMethod = (method: SubmissionMethod) =>
+
+  const toggleMethod = (method: SubmissionMethod) => {
     setDraft((d) => {
       const has = d.submissionMethods.includes(method);
-      const next = has
+      let next = has
         ? d.submissionMethods.filter((item) => item !== method)
         : [...d.submissionMethods, method];
-      return { ...d, submissionMethods: next.length ? next : [method] };
+
+      // Ensure at least one method
+      if (next.length === 0) next = [method];
+
+      return { ...d, submissionMethods: next };
     });
+  };
+
+  // Helper to check if method is selected
+  const hasMethod = (method: SubmissionMethod) =>
+    draft.submissionMethods.includes(method);
+
   const columns: Column<InsuranceCompany>[] = [
-    {
-      key: "name",
-      header: "Company",
-      cell: (c) => <strong>{c.name}</strong>,
-      sortValue: (c) => c.name,
-      searchValue: (c) => c.name,
-    },
+    { key: "name", header: "Company", cell: (c) => <strong>{c.name}</strong>, sortValue: (c) => c.name },
     {
       key: "methods",
       header: "Submission",
@@ -159,40 +173,39 @@ export function InsurancePage() {
     {
       key: "contact",
       header: "Contact",
-      cell: (c) => c.email ?? c.contactPersons[0]?.email ?? "—",
+      cell: (c) => c.email ?? c.contactPersons?.[0]?.email ?? "—",
       sortValue: (c) => c.email ?? "",
-      searchValue: (c) =>
-        `${c.email ?? ""} ${c.contactPersons[0]?.email ?? ""}`,
     },
     {
       key: "status",
       header: "Status",
       cell: (c) => labelize(c.isActive ? "ACTIVE" : "INACTIVE"),
-      sortValue: (c) => String(c.isActive),
     },
     {
       key: "actions",
       header: "Actions",
       cell: (c) => (
         <div className="chip-cloud">
-          <Button type="button" variant="secondary" onClick={() => openEdit(c)}>
+          <Button variant="secondary" onClick={() => openEdit(c)}>
             Edit
           </Button>
           <Button
-            type="button"
-            variant="danger"
-            onClick={() => remove.mutate(c._id)}
-            disabled={remove.isPending}
+            variant={c.isActive ? "danger" : "success"}
+            onClick={() => toggle.mutate(c)}
+            disabled={toggle.isPending}
           >
-            Disable
+            {c.isActive ? "Inactivate" : "Activate"}
           </Button>
         </div>
       ),
     },
   ];
+
   if (query.isLoading) return <Skeleton rows={8} />;
   if (query.isError) return <ErrorPanel error={query.error} />;
+
   const rows = query.data?.data ?? [];
+
   return (
     <div className="page-stack">
       <div className="page-title">
@@ -202,33 +215,38 @@ export function InsurancePage() {
           Submission channels, escalation matrix and operational TAT visibility.
         </span>
       </div>
+
       <DataTable
         title="Payer directory"
         rows={rows}
         columns={columns}
         getRowId={(row) => row._id}
-        actions={
-          <Button type="button" onClick={openCreate}>
-            New payer
-          </Button>
-        }
+        actions={<Button onClick={openCreate}>New payer</Button>}
         expandedRow={(row) => (
-          <div className="form-grid-3">
-            <div>
-              <p className="eyebrow">Portal</p>
-              <strong>{row.portalUrl ?? "Not configured"}</strong>
-            </div>
-            <div>
-              <p className="eyebrow">Courier</p>
-              <strong>{row.courierAddress ?? "Not configured"}</strong>
-            </div>
-            <div>
-              <p className="eyebrow">Escalations</p>
-              <strong>{row.escalationMatrix.length} contacts</strong>
-            </div>
-          </div>
-        )}
+  <div className="form-grid-3">
+    <div>
+      <p className="eyebrow">Portal</p>
+      {row.portalUrl ? (
+        <a href={row.portalUrl} target="_blank" rel="noopener noreferrer"
+        className="text-blue-600 hover:underline"> 
+        <strong>{row.portalUrl}</strong>
+        </a>
+      ) : (
+        <strong>Not configured</strong>
+      )}
+    </div>
+    <div>
+      <p className="eyebrow">Courier</p>
+      <strong>{row.courierAddress ? row.courierAddress : "Not configured"}</strong>
+    </div>
+    <div>
+      <p className="eyebrow">Escalations</p>
+      <strong>{row.escalationMatrix?.length ?? 0} contacts</strong>
+    </div>
+  </div>
+)}
       />
+
       <Modal
         open={modalOpen}
         title={editing ? "Update payer" : "Create payer"}
@@ -241,34 +259,36 @@ export function InsurancePage() {
           }}
         >
           <div className="modal-body form-grid-2">
+            {/* Basic Info */}
             <Field label="Company name">
               <TextInput
                 required
                 minLength={3}
                 value={draft.name}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, name: e.target.value }))
-                }
+                onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
               />
             </Field>
+
             <Field label="TAT days">
               <TextInput
                 type="number"
                 min={0}
                 value={draft.tatDays}
                 onChange={(e) =>
-                  setDraft((d) => ({ ...d, tatDays: Number(e.target.value) }))
+                  setDraft((d) => ({ ...d, tatDays: Number(e.target.value) || 0 }))
                 }
               />
             </Field>
-            <div className="field">
+
+            {/* Submission Methods */}
+            <div className="field col-span-2">
               <span>Submission methods</span>
               <div className="chip-cloud">
                 {methods.map((method) => (
                   <label key={method} className="filter-chip">
                     <input
                       type="checkbox"
-                      checked={draft.submissionMethods.includes(method)}
+                      checked={hasMethod(method)}
                       onChange={() => toggleMethod(method)}
                     />{" "}
                     {method}
@@ -276,99 +296,117 @@ export function InsurancePage() {
                 ))}
               </div>
             </div>
-            <Field label="Email channel">
-              <TextInput
-                type="email"
-                value={draft.email}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, email: e.target.value }))
-                }
-              />
-            </Field>
-            <Field label="Portal URL">
-              <TextInput
-                type="url"
-                value={draft.portalUrl}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, portalUrl: e.target.value }))
-                }
-              />
-            </Field>
-            <Field label="Portal username">
-              <TextInput
-                value={draft.portalUsername}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, portalUsername: e.target.value }))
-                }
-              />
-            </Field>
-            <Field label="Portal password">
-              <TextInput
-                type="password"
-                value={draft.portalPassword}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, portalPassword: e.target.value }))
-                }
-              />
-            </Field>
-            <Field label="Courier address">
-              <TextArea
-                value={draft.courierAddress}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, courierAddress: e.target.value }))
-                }
-              />
-            </Field>
+
+            {/* Conditional Fields */}
+
+            {hasMethod("EMAIL") && (
+              <Field label="Email channel">
+                <TextInput
+                  type="email"
+                  required
+                  value={draft.email}
+                  onChange={(e) => setDraft((d) => ({ ...d, email: e.target.value }))}
+                />
+              </Field>
+            )}
+
+            {hasMethod("PORTAL") && (
+              <>
+                <Field label="Portal URL">
+                  <TextInput
+                    type="url"
+                    required
+                    placeholder="https://"
+                    value={draft.portalUrl}
+                    onChange={(e) => setDraft((d) => ({ ...d, portalUrl: e.target.value }))}
+                    pattern="https?://.*"
+                    title="Must start with http:// or https://"
+                  />
+                </Field>
+
+                <Field label="Portal username">
+                  <TextInput
+                    value={draft.portalUsername}
+                    onChange={(e) =>
+                      setDraft((d) => ({ ...d, portalUsername: e.target.value }))
+                    }
+                  />
+                </Field>
+
+                <Field label="Portal password">
+                  <TextInput
+                    type="password"
+                    value={draft.portalPassword}
+                    onChange={(e) =>
+                      setDraft((d) => ({ ...d, portalPassword: e.target.value }))
+                    }
+                  />
+                </Field>
+              </>
+            )}
+
+            {hasMethod("COURIER") && (
+              <div className="col-span-2">
+                <Field label="Courier address">
+                  <TextArea
+                    required
+                    value={draft.courierAddress}
+                    onChange={(e) =>
+                      setDraft((d) => ({ ...d, courierAddress: e.target.value }))
+                    }
+                  />
+                </Field>
+              </div>
+            )}
+
+            {/* Contact Info */}
             <Field label="Primary contact name">
               <TextInput
                 value={draft.contactName}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, contactName: e.target.value }))
-                }
+                onChange={(e) => setDraft((d) => ({ ...d, contactName: e.target.value }))}
               />
             </Field>
+
             <Field label="Primary contact email">
               <TextInput
                 type="email"
                 value={draft.contactEmail}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, contactEmail: e.target.value }))
-                }
+                onChange={(e) => setDraft((d) => ({ ...d, contactEmail: e.target.value }))}
               />
             </Field>
+
             <Field label="Primary contact phone">
               <TextInput
                 value={draft.contactPhone}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, contactPhone: e.target.value }))
-                }
+                onChange={(e) => setDraft((d) => ({ ...d, contactPhone: e.target.value }))}
               />
             </Field>
-            <Field label="Remarks">
-              <TextArea
-                value={draft.remarks}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, remarks: e.target.value }))
-                }
-              />
-            </Field>
+
+            <div className="col-span-2">
+              <Field label="Remarks">
+                <TextArea
+                  value={draft.remarks}
+                  onChange={(e) => setDraft((d) => ({ ...d, remarks: e.target.value }))}
+                />
+              </Field>
+            </div>
+
             <label className="field">
               <span>Active</span>
               <input
                 type="checkbox"
                 checked={draft.isActive}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, isActive: e.target.checked }))
-                }
+                onChange={(e) => setDraft((d) => ({ ...d, isActive: e.target.checked }))}
               />
             </label>
           </div>
+
           <div className="modal-footer">
             <Button type="button" variant="ghost" onClick={closeModal}>
               Cancel
             </Button>
-            <Button disabled={save.isPending}>
-              {save.isPending ? "Saving…" : "Save payer"}
+            <Button type="submit" disabled={save.isPending}>
+              {save.isPending ? "Saving…" : editing ? "Update payer" : "Create payer"}
             </Button>
           </div>
         </form>

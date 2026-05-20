@@ -139,6 +139,13 @@ const NAV_ITEMS: {
     group: "operations",
   },
   {
+    to: "/patients",
+    label: "Patients",
+    icon: "users",
+    roles: operationalRoles,
+    group: "operations",
+  },
+  {
     to: "/alerts",
     label: "Alerts",
     icon: "alerts",

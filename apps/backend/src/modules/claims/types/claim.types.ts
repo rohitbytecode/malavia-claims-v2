@@ -7,8 +7,9 @@ export interface ClaimBase {
   type: ClaimType;
   status: ClaimStatus;
   insuranceCompanyId?: Types.ObjectId;
-  patientId: Types.ObjectId;
-  hospitalId: Types.ObjectId;
+  insurerId?: string;
+  patientId: string;
+  hospitalId?: Types.ObjectId;
   departmentId?: Types.ObjectId;
   totalClaimAmount: number;
   tdsAmount: number;

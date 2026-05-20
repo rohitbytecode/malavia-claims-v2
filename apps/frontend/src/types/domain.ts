@@ -115,6 +115,7 @@ export interface Claim {
   type: ClaimType;
   status: ClaimStatus;
   insuranceCompanyId?: string | InsuranceCompany;
+  insurerId?: string;
   patientId: string;
   hospitalId: string;
   departmentId?: string | Department;
@@ -217,6 +218,18 @@ export interface Department {
   name: string;
   code: string;
   description?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+export interface Patient {
+  _id: string;
+  id: string;
+  patientId: string;
+  name: string;
+  insurerId?: string;
+  insuranceCompanyId?: string;
+  insuranceCompany?: InsuranceCompany | string | null;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;

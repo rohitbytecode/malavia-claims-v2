@@ -1,19 +1,46 @@
 import axios, { AxiosError, type AxiosRequestConfig } from "axios";
 import { useAuthStore } from "../store/auth.store";
 import type { ApiResponse, AuthTokens } from "../types/domain";
+
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? "/api/v1",
   headers: { "Content-Type": "application/json" },
   timeout: 20_000,
 });
+
 apiClient.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
+
+function normalizeIds(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(normalizeIds);
+  }
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    if (!obj._id && obj.id) {
+      obj._id = obj.id;
+    }
+    for (const key of Object.keys(obj)) {
+      if (typeof obj[key] === "object") {
+        obj[key] = normalizeIds(obj[key]);
+      }
+    }
+  }
+  return value;
+}
+
 let refreshRequest: Promise<AuthTokens> | null = null;
+
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.data?.data) {
+      response.data.data = normalizeIds(response.data.data);
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const original = error.config as
       | (AxiosRequestConfig & { _retry?: boolean })
@@ -44,9 +71,11 @@ apiClient.interceptors.response.use(
     return apiClient(original);
   }
 );
+
 export const unwrap = async <T>(
   request: Promise<{ data: ApiResponse<T> }>
 ): Promise<T> => (await request).data.data;
+
 export function apiErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as { message?: string } | undefined;

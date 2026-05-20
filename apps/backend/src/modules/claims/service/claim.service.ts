@@ -13,8 +13,9 @@ import { ClaimType } from "@/modules/claims/constant/claim-type.enum.js";
 interface CreateClaimPayload {
   type: ClaimType;
   insuranceCompanyId?: string;
+  insurerId?: string;
   patientId: string | any;
-  hospitalId: string;
+  hospitalId?: string;
   departmentId?: string;
   totalClaimAmount: number;
   tdsAmount?: number;
@@ -41,6 +42,8 @@ export class ClaimService {
         Types.ObjectId.isValid(payload.insuranceCompanyId)
           ? new Types.ObjectId(payload.insuranceCompanyId)
           : undefined,
+
+      insurerId: payload.insurerId,
 
       patientId: payload.patientId,
 

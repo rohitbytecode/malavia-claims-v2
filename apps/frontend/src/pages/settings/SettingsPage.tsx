@@ -12,10 +12,12 @@ export function SettingsPage() {
       </div>
       <Card>
         <CardHeader title="Theme" eyebrow="Clinical light / premium dark" />
-        <p>
-          Current theme: <strong>{theme}</strong>
-        </p>
+        <div className="card-pad" style={{ display: "grid", gap: "12px "}}>
+          <p>
+            Current theme: <strong>{theme}</strong>
+          </p>
         <Button onClick={toggleTheme}>Switch theme</Button>
+        </div>
       </Card>
     </div>
   );

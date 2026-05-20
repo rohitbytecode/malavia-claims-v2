@@ -1,10 +1,11 @@
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import type { z } from "zod";
 
-import { claimsApi } from "../../api/services";
+import { claimsApi, patientApi, departmentApi, insuranceApi } from "../../api/services";
 import { claimTypes } from "../../constants/workflow";
 import { Field, SelectInput, TextArea, TextInput } from "../forms/FormField";
 import { Button } from "../ui/Button";
@@ -20,18 +21,59 @@ export function ClaimCreatePanel() {
   const navigate = useNavigate();
   const qc = useQueryClient();
 
+  const patientsQuery = useQuery({
+    queryKey: ["patients", "active"],
+    queryFn: () => patientApi.list({ isActive: true, limit: 100 }),
+  });
+
+  const departmentsQuery = useQuery({
+    queryKey: ["departments", "active"],
+    queryFn: () => departmentApi.list({ isActive: true, limit: 100 }),
+  });
+
+  const insuranceQuery = useQuery({
+    queryKey: ["insurance", "active"],
+    queryFn: () => insuranceApi.list({ isActive: true, limit: 100 }),
+  });
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<ClaimFormInput, unknown, ClaimFormOutput>({
     resolver: zodResolver(claimSchema),
     defaultValues: {
       type: "CASHLESS",
       totalClaimAmount: 0,
+      patientId: "",
+      insurerId: "",
+      insuranceCompanyId: "",
+      departmentId: "",
     },
   });
+
+  const watchedPatientId = watch("patientId");
+
+  const selectedPatient = patientsQuery.data?.data?.find(
+    (p) => p.patientId === watchedPatientId
+  );
+
+  useEffect(() => {
+    if (selectedPatient) {
+      const insurerIdVal = typeof selectedPatient.insuranceCompany === "object" && selectedPatient.insuranceCompany
+        ? selectedPatient.insuranceCompany._id
+        : selectedPatient.insuranceCompanyId || "";
+      
+      setValue("insuranceCompanyId", insurerIdVal);
+      setValue("insurerId", selectedPatient.insurerId || "");
+    } else {
+      setValue("insuranceCompanyId", "");
+      setValue("insurerId", "");
+    }
+  }, [selectedPatient, setValue]);
 
   const mutation = useMutation({
     mutationFn: claimsApi.create,
@@ -73,19 +115,54 @@ export function ClaimCreatePanel() {
         </Field>
 
         <Field label="Patient ID" error={errors.patientId?.message}>
-          <TextInput {...register("patientId")} />
+          <SelectInput {...register("patientId")} defaultValue="">
+            <option value="" disabled>Select patient...</option>
+            {patientsQuery.data?.data?.map((p) => (
+              <option key={p.id || p._id} value={p.patientId}>
+                {p.patientId} - {p.name}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
+
+        <Field label="Patient Name">
+          <TextInput
+            readOnly
+            disabled
+            value={selectedPatient ? selectedPatient.name : ""}
+            placeholder="Selected patient name..."
+          />
         </Field>
 
         <Field label="Insurer ID">
-          <TextInput {...register("insuranceCompanyId")} />
+          <TextInput
+            readOnly
+            disabled
+            value={selectedPatient ? (selectedPatient.insurerId || "—") : ""}
+            placeholder="Selected patient insurer ID..."
+          />
         </Field>
 
-        <Field label="Hospital ID" error={errors.hospitalId?.message}>
-          <TextInput {...register("hospitalId")} />
+        <Field label="Insurance Company" error={errors.insuranceCompanyId?.message}>
+          <SelectInput {...register("insuranceCompanyId")} defaultValue="">
+            <option value="">Select insurance company...</option>
+            {insuranceQuery.data?.data?.map((ins) => (
+              <option key={ins._id} value={ins._id}>
+                {ins.name}
+              </option>
+            ))}
+          </SelectInput>
         </Field>
 
-        <Field label="Department ID">
-          <TextInput {...register("departmentId")} />
+        <Field label="Department ID" error={errors.departmentId?.message}>
+          <SelectInput {...register("departmentId")} defaultValue="">
+            <option value="">Select department...</option>
+            {departmentsQuery.data?.data?.map((dept) => (
+              <option key={dept._id} value={dept._id}>
+                {dept.name}
+              </option>
+            ))}
+          </SelectInput>
         </Field>
 
         <Field label="Claim amount" error={errors.totalClaimAmount?.message}>

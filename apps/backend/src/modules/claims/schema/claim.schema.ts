@@ -28,6 +28,11 @@ const claimSchema = new mongoose.Schema<ClaimDocument>(
       ref: "InsuranceCompany",
       required: false,
     },
+    insurerId: {
+      type: String,
+      trim: true,
+      required: false,
+    },
     patientId: {
       type: String,
       required: true,

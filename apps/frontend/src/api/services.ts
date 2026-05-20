@@ -12,6 +12,7 @@ import type {
   Department,
   Deposit,
   InsuranceCompany,
+  Patient,
   ListParams,
   Paginated,
   ReportRow,
@@ -63,8 +64,9 @@ export const claimsApi = {
   create: (body: {
     type: string;
     insuranceCompanyId?: string;
+    insurerId?: string;
     patientId: string;
-    hospitalId: string;
+    hospitalId?: string;
     departmentId?: string;
     totalClaimAmount: number;
     depositAmount?: number;
@@ -209,6 +211,31 @@ export const departmentApi = {
     unwrap<Department>(apiClient.patch(`/departments/${departmentId}`, body)),
   remove: (departmentId: string) =>
     unwrap<Department>(apiClient.delete(`/departments/${departmentId}`)),
+};
+export const patientApi = {
+  list: (params: ListParams = {}) =>
+    unwrap<Paginated<Patient> | Patient[]>(
+      apiClient.get("/patients", { params })
+    ).then(normalized),
+  create: (body: {
+    patientId: string;
+    name: string;
+    insurerId?: string | null;
+    insuranceCompanyId?: string | null;
+    isActive?: boolean;
+  }) => unwrap<Patient>(apiClient.post("/patients", body)),
+  update: (
+    id: string,
+    body: Partial<{
+      patientId: string;
+      name: string;
+      insurerId: string | null;
+      insuranceCompanyId: string | null;
+      isActive: boolean;
+    }>
+  ) => unwrap<Patient>(apiClient.patch(`/patients/${id}`, body)),
+  remove: (id: string) =>
+    unwrap<Patient>(apiClient.delete(`/patients/${id}`)),
 };
 export const insuranceApi = {
   list: (params: ListParams = {}) =>

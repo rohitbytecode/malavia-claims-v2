@@ -5,8 +5,9 @@ import { ClaimType } from "@/modules/claims/constant/claim-type.enum.js";
 const createClaimBodySchema = z.object({
   type: z.nativeEnum(ClaimType),
   insuranceCompanyId: z.string().trim().optional(),
+  insurerId: z.string().trim().optional(),
   patientId: z.string().trim(),
-  hospitalId: z.string().trim(),
+  hospitalId: z.string().trim().optional(),
   departmentId: z.string().trim().optional(),
   totalClaimAmount: z.number().nonnegative(),
   tdsAmount: z.number().nonnegative().optional().default(0),

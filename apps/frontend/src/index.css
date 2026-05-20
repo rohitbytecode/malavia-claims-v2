@@ -487,6 +487,17 @@ hr {
   box-shadow: 0 2px 8px var(--red-bg);
 }
 
+/* Success */
+.btn-success {
+  color: var(--green);
+  background: var(--green-bg);
+  border-color: var(--green-border);
+}
+.btn-success:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--green-bg) 80%, var(--green) 12%);
+  box-shadow: 0 2px 8px var(--green-bg);
+}
+
 /* Sizes */
 .btn-sm {
   padding: 6px 12px;

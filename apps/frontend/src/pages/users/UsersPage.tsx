@@ -15,6 +15,7 @@ import {
 } from "../../components/forms/FormField";
 import type { Role, User } from "../../types/domain";
 import { formatDateTime } from "../../utils/format";
+import { useAuthStore } from "../../store/auth.store";
 
 type UserDraft = {
   fullName: string;
@@ -23,6 +24,7 @@ type UserDraft = {
   role: Role;
   isActive: boolean;
 };
+
 const blank: UserDraft = {
   fullName: "",
   email: "",
@@ -36,10 +38,15 @@ export function UsersPage() {
   const [editing, setEditing] = useState<User | null>(null);
   const [draft, setDraft] = useState<UserDraft>(blank);
   const qc = useQueryClient();
+
+  const currentUser = useAuthStore((s) => s.user);
+  const isSuperAdmin = currentUser?.role === "SUPER_ADMIN";
+
   const query = useQuery({
     queryKey: ["users"],
     queryFn: () => usersApi.list({ limit: 100 }),
   });
+
   const save = useMutation({
     mutationFn: () => {
       if (!editing) return usersApi.create(draft);
@@ -51,15 +58,18 @@ export function UsersPage() {
       closeModal();
     },
   });
+
   const deactivate = useMutation({
     mutationFn: usersApi.deactivate,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["users"] }),
   });
+
   const openCreate = () => {
     setEditing(null);
     setDraft(blank);
     setModalOpen(true);
   };
+
   const openEdit = (user: User) => {
     setEditing(user);
     setDraft({
@@ -71,11 +81,13 @@ export function UsersPage() {
     });
     setModalOpen(true);
   };
+
   const closeModal = () => {
     setEditing(null);
     setDraft(blank);
     setModalOpen(false);
   };
+
   const columns: Column<User>[] = [
     {
       key: "name",
@@ -109,29 +121,51 @@ export function UsersPage() {
       cell: (u) => formatDateTime(u.createdAt),
       sortValue: (u) => u.createdAt ?? "",
     },
-    {
-      key: "actions",
-      header: "Actions",
-      cell: (u) => (
-        <div className="chip-cloud">
-          <Button type="button" variant="secondary" onClick={() => openEdit(u)}>
-            Edit
-          </Button>
-          <Button
-            type="button"
-            variant="danger"
-            onClick={() => deactivate.mutate(u._id)}
-            disabled={!u.isActive || deactivate.isPending}
-          >
-            Deactivate
-          </Button>
-        </div>
-      ),
-    },
+    // Only render Actions column if SUPER_ADMIN
+    ...(isSuperAdmin
+      ? ([
+          {
+            key: "actions",
+            header: "Actions",
+            cell: (u) => {
+              const isSelf = u._id === currentUser?._id;
+              return (
+                <div className="chip-cloud">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => openEdit(u)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+  type="button"
+  variant={u.isActive ? "danger" : "success"}
+  onClick={() =>
+    u.isActive
+      ? deactivate.mutate(u._id)
+      : usersApi.update(u._id, { isActive: true }).then(() =>
+          qc.invalidateQueries({ queryKey: ["users"] })
+        )
+  }
+  disabled={isSelf || deactivate.isPending}
+  title={isSelf ? "You cannot deactivate yourself" : undefined}
+>
+  {u.isActive ? "Deactivate" : "Activate"}
+</Button>
+                </div>
+              );
+            },
+          },
+        ] as Column<User>[])
+      : []),
   ];
+
   if (query.isLoading) return <Skeleton rows={8} />;
   if (query.isError) return <ErrorPanel error={query.error} />;
+
   const rows = query.data?.data ?? [];
+
   return (
     <div className="page-stack">
       <div className="page-title">
@@ -142,28 +176,28 @@ export function UsersPage() {
           admins.
         </span>
       </div>
+
       <DataTable
         title="Access control matrix"
         rows={rows}
         columns={columns}
         getRowId={(row) => row._id}
+        // Only show "New user" button for SUPER_ADMIN
         actions={
-          <Button type="button" onClick={openCreate}>
-            New user
-          </Button>
+          isSuperAdmin ? (
+            <Button type="button" onClick={openCreate}>
+              New user
+            </Button>
+          ) : undefined
         }
       />
+
       <Modal
         open={modalOpen}
         title={editing ? "Update operator" : "Create operator"}
         onClose={closeModal}
       >
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            save.mutate();
-          }}
-        >
+        <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }}>
           <div className="modal-body form-grid-2">
             <Field label="Full name">
               <TextInput

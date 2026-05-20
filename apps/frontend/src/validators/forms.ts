@@ -6,8 +6,9 @@ export const loginSchema = z.object({
 export const claimSchema = z.object({
   type: z.enum(["CASHLESS", "REIMBURSEMENT"]),
   insuranceCompanyId: z.string().optional(),
+  insurerId: z.string().optional(),
   patientId: z.string().min(1),
-  hospitalId: z.string().min(1),
+  hospitalId: z.string().optional(),
   departmentId: z.string().optional(),
   totalClaimAmount: z.coerce.number().nonnegative(),
   depositAmount: z.coerce.number().nonnegative().optional(),
