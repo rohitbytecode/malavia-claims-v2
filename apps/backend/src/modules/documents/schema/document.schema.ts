@@ -53,5 +53,5 @@ const documentSchema = new mongoose.Schema<DocumentDocument>(
 );
 
 export const DocumentModel =
-  mongoose.models.Document ||
+  (mongoose.models.Document as mongoose.Model<DocumentDocument>) ??
   mongoose.model<DocumentDocument>("Document", documentSchema);

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { claimsApi, patientApi, doctorApi } from "../../api/services";
+import { claimsApi, patientApi } from "../../api/services";
 
 import { ClaimCreatePanel } from "../../components/claims/ClaimCreatePanel";
 import { DataTable, type Column } from "../../components/tables/DataTable";
@@ -62,20 +62,6 @@ export function ClaimsListPage() {
     }
     return map;
   }, [patientsQuery.data]);
-
-  const doctorsQuery = useQuery({
-    queryKey: ["doctors"],
-    queryFn: () => doctorApi.list({ limit: 100 }),
-  });
-
-  const doctorMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const d of doctorsQuery.data?.data ?? []) {
-      if (d.id) map.set(d.id, d.name);
-      if (d._id) map.set(d._id, d.name);
-    }
-    return map;
-  }, [doctorsQuery.data]);
 
   const rows = useMemo(
     () =>

@@ -4248,7 +4248,9 @@ select.input {
   border-radius: var(--r-md);
   background: var(--surface-1);
   box-shadow: var(--shadow-sm);
-  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+  transition:
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease;
 }
 .timeline__card:hover {
   border-color: var(--border-strong);

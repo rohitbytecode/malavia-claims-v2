@@ -6,7 +6,11 @@ import { ErrorPanel } from "../../components/ui/ErrorPanel";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { Button } from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
-import { Field, SelectInput, TextInput } from "../../components/forms/FormField";
+import {
+  Field,
+  SelectInput,
+  TextInput,
+} from "../../components/forms/FormField";
 import type { Patient } from "../../types/domain";
 
 type PatientDraft = {
@@ -75,9 +79,10 @@ export function PatientsPage() {
   };
 
   const openEdit = (patient: Patient) => {
-    const insurerId = typeof patient.insuranceCompany === "object" && patient.insuranceCompany
-      ? patient.insuranceCompany._id
-      : patient.insuranceCompanyId || "";
+    const insurerId =
+      typeof patient.insuranceCompany === "object" && patient.insuranceCompany
+        ? patient.insuranceCompany._id
+        : patient.insuranceCompanyId || "";
     setEditing(patient);
     setDraft({
       patientId: patient.patientId,
@@ -150,21 +155,17 @@ export function PatientsPage() {
       header: "Actions",
       cell: (p) => (
         <div className="chip-cloud">
-          <Button 
-            type="button" 
-            variant="secondary" 
-            onClick={() => openEdit(p)}
-          >
+          <Button type="button" variant="secondary" onClick={() => openEdit(p)}>
             Edit
           </Button>
 
           <Button
             type="button"
             variant={p.isActive ? "danger" : "success"}
-            onClick={() => 
-              toggleStatus.mutate({ 
-                id: p._id, 
-                isActive: !p.isActive 
+            onClick={() =>
+              toggleStatus.mutate({
+                id: p._id,
+                isActive: !p.isActive,
               })
             }
             disabled={toggleStatus.isPending}
@@ -188,7 +189,8 @@ export function PatientsPage() {
         <p className="eyebrow">Operations data center</p>
         <h1>Patients</h1>
         <span>
-          Register and manage patients with corresponding patient IDs and insurance providers.
+          Register and manage patients with corresponding patient IDs and
+          insurance providers.
         </span>
       </div>
 
@@ -250,7 +252,10 @@ export function PatientsPage() {
               <SelectInput
                 value={draft.insuranceCompanyId}
                 onChange={(e) =>
-                  setDraft((d) => ({ ...d, insuranceCompanyId: e.target.value }))
+                  setDraft((d) => ({
+                    ...d,
+                    insuranceCompanyId: e.target.value,
+                  }))
                 }
               >
                 <option value="">Select insurance company...</option>

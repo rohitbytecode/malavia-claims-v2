@@ -17,8 +17,16 @@ const EVENT_META: Record<
     colorVar: string;
   }
 > = {
-  STATUS: { icon: "↗", label: "Status Change", colorVar: "var(--accent-primary)" },
-  STATUS_CHANGE: { icon: "↗", label: "Status Change", colorVar: "var(--accent-primary)" },
+  STATUS: {
+    icon: "↗",
+    label: "Status Change",
+    colorVar: "var(--accent-primary)",
+  },
+  STATUS_CHANGE: {
+    icon: "↗",
+    label: "Status Change",
+    colorVar: "var(--accent-primary)",
+  },
   COMMUNICATION: {
     icon: "✉",
     label: "Communication",
@@ -53,7 +61,7 @@ export function ClaimTimeline({ events, compact = false }: ClaimTimelineProps) {
         (e) =>
           filter === "ALL" ||
           e.type === filter ||
-          (filter === "STATUS" && e.type === "STATUS_CHANGE")
+          (filter === "STATUS" && (e.type as string) === "STATUS_CHANGE")
       )
       .sort(
         (a, b) =>
@@ -72,7 +80,8 @@ export function ClaimTimeline({ events, compact = false }: ClaimTimelineProps) {
   const typeCounts = useMemo(() => {
     const counts: Record<string, number> = { ALL: events.length };
     for (const ev of events) {
-      const typeKey = ev.type === "STATUS_CHANGE" ? "STATUS" : ev.type;
+      const typeKey =
+        (ev.type as string) === "STATUS_CHANGE" ? "STATUS" : ev.type;
       counts[typeKey] = (counts[typeKey] ?? 0) + 1;
     }
     return counts;
@@ -166,9 +175,7 @@ export function ClaimTimeline({ events, compact = false }: ClaimTimelineProps) {
                 >
                   {/* Spine */}
                   <div className="timeline__spine">
-                    <div className="timeline__icon">
-                      {meta.icon}
-                    </div>
+                    <div className="timeline__icon">{meta.icon}</div>
                     {idx < (grouped[day]?.length ?? 0) - 1 && (
                       <div className="timeline__connector" />
                     )}

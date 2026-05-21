@@ -15,7 +15,7 @@ const safeFileName = (originalName: string) => {
 };
 
 export const documentStorage = multer.diskStorage({
-  destination: () => uploadDirectory,
+  destination: uploadDirectory,
   filename: (_, file, callback) => {
     callback(null, safeFileName(file.originalname));
   },

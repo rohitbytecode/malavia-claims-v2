@@ -26,6 +26,16 @@ export function DocumentManager({
     queryKey: ["documents", claimId],
     queryFn: () => documentApi.list(claimId),
   });
+  const handlePreview = async (filename: string, mimeType: string) => {
+    try {
+      const blob = await documentApi.download(filename);
+      const url = URL.createObjectURL(new Blob([blob], { type: mimeType }));
+      window.open(url, "_blank");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to preview document");
+    }
+  };
   const upload = useMutation({
     mutationFn: documentApi.upload,
     onSuccess: () => {
@@ -124,7 +134,11 @@ export function DocumentManager({
               </span>
               <small>{doc.remarks}</small>
             </div>
-            <button className="link-button" type="button">
+            <button
+              className="link-button"
+              type="button"
+              onClick={() => handlePreview(doc.fileName, doc.mimeType)}
+            >
               Preview
             </button>
           </div>

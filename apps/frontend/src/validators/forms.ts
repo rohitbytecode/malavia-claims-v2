@@ -54,4 +54,3 @@ export const doctorSchema = z.object({
     ),
   departmentId: z.string().min(1, "Department is required"),
 });
-

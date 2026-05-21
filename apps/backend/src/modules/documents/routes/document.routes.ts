@@ -24,5 +24,10 @@ router.get(
   validate(getDocumentsSchema),
   asyncHandler(DocumentController.listDocuments)
 );
+router.get(
+  "/download/:filename",
+  authenticate,
+  asyncHandler(DocumentController.downloadDocument)
+);
 
 export default router;

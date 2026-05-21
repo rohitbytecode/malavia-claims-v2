@@ -19,8 +19,8 @@ export function SettlementsPage() {
         />
         <div className="card-pad" style={{ display: "grid", gap: "12px" }}>
           <p>
-            Settlement creation is intentionally claim-centered to preserve audit
-            context and prevent orphan financial entries.
+            Settlement creation is intentionally claim-centered to preserve
+            audit context and prevent orphan financial entries.
           </p>
           <Link
             className="btn btn-primary"

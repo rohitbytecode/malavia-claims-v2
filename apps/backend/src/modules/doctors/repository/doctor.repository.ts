@@ -15,7 +15,11 @@ export class DoctorRepository {
     return DoctorModel.findById(id).populate("departmentId").lean();
   }
 
-  static async listDoctors(filters: DoctorFilters, page: number, limit: number) {
+  static async listDoctors(
+    filters: DoctorFilters,
+    page: number,
+    limit: number
+  ) {
     const query: Record<string, unknown> = {};
     if (typeof filters.isActive === "boolean") {
       query.isActive = filters.isActive;

@@ -35,7 +35,10 @@ export class AuthService {
     }
 
     if (!user.isActive) {
-      throw new AppError("User account is inactive, Contact Super Administrator", 403);
+      throw new AppError(
+        "User account is inactive, Contact Super Administrator",
+        403
+      );
     }
 
     const passwordMatches = await comparePassword(
@@ -85,7 +88,10 @@ export class AuthService {
     }
 
     if (!user.isActive) {
-      throw new AppError("User account is inactive, Contact Super Administrator", 403);
+      throw new AppError(
+        "User account is inactive, Contact Super Administrator",
+        403
+      );
     }
 
     const accessToken = signAccessToken(

@@ -21,8 +21,16 @@ export class DoctorService {
     return toDoctorResponse(doctor);
   }
 
-  static async listDoctors(isActive: boolean | undefined, page: number, limit: number) {
-    const doctors = await DoctorRepository.listDoctors({ isActive }, page, limit);
+  static async listDoctors(
+    isActive: boolean | undefined,
+    page: number,
+    limit: number
+  ) {
+    const doctors = await DoctorRepository.listDoctors(
+      { isActive },
+      page,
+      limit
+    );
     return doctors.map(toDoctorResponse);
   }
 
@@ -38,7 +46,9 @@ export class DoctorService {
     const updatePayload: Partial<DoctorDocument> = {};
     if (payload.name) updatePayload.name = payload.name.trim();
     if (payload.departmentId) {
-      updatePayload.departmentId = new mongoose.Types.ObjectId(payload.departmentId);
+      updatePayload.departmentId = new mongoose.Types.ObjectId(
+        payload.departmentId
+      );
     }
     if (typeof payload.isActive === "boolean") {
       updatePayload.isActive = payload.isActive;

@@ -16,10 +16,16 @@ export class PatientRepository {
   }
 
   static async findByPatientId(patientId: string) {
-    return PatientModel.findOne({ patientId }).populate("insuranceCompanyId").lean();
+    return PatientModel.findOne({ patientId })
+      .populate("insuranceCompanyId")
+      .lean();
   }
 
-  static async listPatients(filters: PatientFilters, page: number, limit: number) {
+  static async listPatients(
+    filters: PatientFilters,
+    page: number,
+    limit: number
+  ) {
     const query: Record<string, unknown> = {};
     if (typeof filters.isActive === "boolean") {
       query.isActive = filters.isActive;

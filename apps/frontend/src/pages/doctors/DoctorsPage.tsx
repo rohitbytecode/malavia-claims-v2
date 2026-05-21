@@ -6,7 +6,11 @@ import { ErrorPanel } from "../../components/ui/ErrorPanel";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { Button } from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
-import { Field, SelectInput, TextInput } from "../../components/forms/FormField";
+import {
+  Field,
+  SelectInput,
+  TextInput,
+} from "../../components/forms/FormField";
 import type { Doctor } from "../../types/domain";
 
 type DoctorDraft = {
@@ -71,9 +75,10 @@ export function DoctorsPage() {
   };
 
   const openEdit = (doctor: Doctor) => {
-    const deptId = typeof doctor.department === "object" && doctor.department
-      ? doctor.department._id
-      : doctor.departmentId || "";
+    const deptId =
+      typeof doctor.department === "object" && doctor.department
+        ? doctor.department._id
+        : doctor.departmentId || "";
     setEditing(doctor);
     setDraft({
       name: doctor.name,
@@ -94,7 +99,9 @@ export function DoctorsPage() {
   const validateName = (name: string): boolean => {
     const normalized = name.toLowerCase().trim();
     if (normalized.startsWith("dr.") || normalized.startsWith("dr ")) {
-      setValidationError("Doctor name should not start with 'Dr.' or 'dr.' prefix");
+      setValidationError(
+        "Doctor name should not start with 'Dr.' or 'dr.' prefix"
+      );
       return false;
     }
     setValidationError(null);
@@ -142,21 +149,17 @@ export function DoctorsPage() {
       header: "Actions",
       cell: (d) => (
         <div className="chip-cloud">
-          <Button 
-            type="button" 
-            variant="secondary" 
-            onClick={() => openEdit(d)}
-          >
+          <Button type="button" variant="secondary" onClick={() => openEdit(d)}>
             Edit
           </Button>
 
           <Button
             type="button"
             variant={d.isActive ? "danger" : "success"}
-            onClick={() => 
-              toggleStatus.mutate({ 
-                id: d._id || d.id, 
-                isActive: !d.isActive 
+            onClick={() =>
+              toggleStatus.mutate({
+                id: d._id || d.id,
+                isActive: !d.isActive,
               })
             }
             disabled={toggleStatus.isPending}
@@ -179,9 +182,7 @@ export function DoctorsPage() {
       <div className="page-title">
         <p className="eyebrow">Operations data center</p>
         <h1>Doctors</h1>
-        <span>
-          Register and manage doctors with corresponding departments.
-        </span>
+        <span>Register and manage doctors with corresponding departments.</span>
       </div>
 
       <DataTable

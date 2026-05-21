@@ -1,7 +1,28 @@
+import fs from "fs";
+import path from "path";
 import { Request, Response } from "express";
 import { DocumentService } from "@/modules/documents/service/document.service.js";
 
 export class DocumentController {
+  static async downloadDocument(req: Request, res: Response) {
+    const { filename } = req.params;
+    const filePath = path.resolve(
+      process.cwd(),
+      "uploads",
+      "documents",
+      filename
+    );
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        message: "File not found",
+      });
+    }
+
+    return res.sendFile(filePath);
+  }
+
   static async uploadDocument(req: Request, res: Response) {
     const file = req.file;
 

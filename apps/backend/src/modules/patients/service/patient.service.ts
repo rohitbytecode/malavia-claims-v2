@@ -14,7 +14,9 @@ interface CreatePatientPayload {
 
 export class PatientService {
   static async createPatient(payload: CreatePatientPayload) {
-    const existing = await PatientRepository.findByPatientId(payload.patientId.trim());
+    const existing = await PatientRepository.findByPatientId(
+      payload.patientId.trim()
+    );
     if (existing) {
       throw new AppError("Patient with this ID already registered", 400);
     }
@@ -24,7 +26,8 @@ export class PatientService {
       name: payload.name.trim(),
       insurerId: payload.insurerId?.trim() || undefined,
       insuranceCompanyId:
-        payload.insuranceCompanyId && mongoose.Types.ObjectId.isValid(payload.insuranceCompanyId)
+        payload.insuranceCompanyId &&
+        mongoose.Types.ObjectId.isValid(payload.insuranceCompanyId)
           ? new mongoose.Types.ObjectId(payload.insuranceCompanyId)
           : undefined,
       isActive: payload.isActive ?? true,
@@ -33,8 +36,16 @@ export class PatientService {
     return toPatientResponse(patient);
   }
 
-  static async listPatients(isActive: boolean | undefined, page: number, limit: number) {
-    const patients = await PatientRepository.listPatients({ isActive }, page, limit);
+  static async listPatients(
+    isActive: boolean | undefined,
+    page: number,
+    limit: number
+  ) {
+    const patients = await PatientRepository.listPatients(
+      { isActive },
+      page,
+      limit
+    );
     return patients.map(toPatientResponse);
   }
 
@@ -54,7 +65,10 @@ export class PatientService {
     return toPatientResponse(patient);
   }
 
-  static async updatePatient(id: string, payload: Partial<CreatePatientPayload>) {
+  static async updatePatient(
+    id: string,
+    payload: Partial<CreatePatientPayload>
+  ) {
     const updatePayload: Partial<PatientDocument> = {};
     if (payload.patientId) updatePayload.patientId = payload.patientId.trim();
     if (payload.name) updatePayload.name = payload.name.trim();
@@ -63,11 +77,13 @@ export class PatientService {
     }
     if (payload.insuranceCompanyId !== undefined) {
       updatePayload.insuranceCompanyId =
-        payload.insuranceCompanyId && mongoose.Types.ObjectId.isValid(payload.insuranceCompanyId)
+        payload.insuranceCompanyId &&
+        mongoose.Types.ObjectId.isValid(payload.insuranceCompanyId)
           ? new mongoose.Types.ObjectId(payload.insuranceCompanyId)
           : undefined;
     }
-    if (typeof payload.isActive === "boolean") updatePayload.isActive = payload.isActive;
+    if (typeof payload.isActive === "boolean")
+      updatePayload.isActive = payload.isActive;
 
     const patient = await PatientRepository.updatePatient(id, updatePayload);
     if (!patient) {

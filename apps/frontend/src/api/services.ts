@@ -141,6 +141,12 @@ export const documentApi = {
         headers: { "Content-Type": "multipart/form-data" },
       })
     ),
+  download: (filename: string) =>
+    apiClient
+      .get<Blob>(`/documents/download/${filename}`, {
+        responseType: "blob",
+      })
+      .then((res) => res.data),
 };
 export const alertApi = {
   active: (params: { page?: number; limit?: number } = {}) =>
@@ -236,19 +242,15 @@ export const patientApi = {
       isActive: boolean;
     }>
   ) => unwrap<Patient>(apiClient.patch(`/patients/${id}`, body)),
-  remove: (id: string) =>
-    unwrap<Patient>(apiClient.delete(`/patients/${id}`)),
+  remove: (id: string) => unwrap<Patient>(apiClient.delete(`/patients/${id}`)),
 };
 export const doctorApi = {
   list: (params: ListParams = {}) =>
     unwrap<Paginated<Doctor> | Doctor[]>(
       apiClient.get("/doctors", { params })
     ).then(normalized),
-  create: (body: {
-    name: string;
-    departmentId: string;
-    isActive?: boolean;
-  }) => unwrap<Doctor>(apiClient.post("/doctors", body)),
+  create: (body: { name: string; departmentId: string; isActive?: boolean }) =>
+    unwrap<Doctor>(apiClient.post("/doctors", body)),
   update: (
     id: string,
     body: Partial<{
@@ -257,8 +259,7 @@ export const doctorApi = {
       isActive: boolean;
     }>
   ) => unwrap<Doctor>(apiClient.patch(`/doctors/${id}`, body)),
-  remove: (id: string) =>
-    unwrap<Doctor>(apiClient.delete(`/doctors/${id}`)),
+  remove: (id: string) => unwrap<Doctor>(apiClient.delete(`/doctors/${id}`)),
 };
 export const insuranceApi = {
   list: (params: ListParams = {}) =>

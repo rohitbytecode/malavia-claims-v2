@@ -110,22 +110,20 @@ export function DepartmentsPage() {
       header: "Actions",
       cell: (d) => (
         <div className="chip-cloud">
-          <Button 
-            type="button" 
-            variant="secondary" 
-            onClick={() => openEdit(d)}
-          >
+          <Button type="button" variant="secondary" onClick={() => openEdit(d)}>
             Edit
           </Button>
 
           <Button
             type="button"
-            variant={d.isActive ? "danger" : "success"}   // Green when inactive
-            className={d.isActive ? "" : "bg-green-600 hover:bg-green-700 text-white"}
-            onClick={() => 
-              toggleStatus.mutate({ 
-                id: d._id, 
-                isActive: !d.isActive 
+            variant={d.isActive ? "danger" : "success"} // Green when inactive
+            className={
+              d.isActive ? "" : "bg-green-600 hover:bg-green-700 text-white"
+            }
+            onClick={() =>
+              toggleStatus.mutate({
+                id: d._id,
+                isActive: !d.isActive,
               })
             }
             disabled={toggleStatus.isPending}

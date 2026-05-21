@@ -91,9 +91,24 @@ const runSeeders = async () => {
     const star = await InsuranceCompanyModel.findOne({ name: "Star Health" });
 
     const patients = [
-      { patientId: "PAT-001", name: "John Doe", insurerId: "INS-776655", insuranceCompanyId: hdfc?._id },
-      { patientId: "PAT-002", name: "Jane Smith", insurerId: "INS-443322", insuranceCompanyId: star?._id },
-      { patientId: "PAT-003", name: "Robert Johnson", insurerId: undefined, insuranceCompanyId: undefined },
+      {
+        patientId: "PAT-001",
+        name: "John Doe",
+        insurerId: "INS-776655",
+        insuranceCompanyId: hdfc?._id,
+      },
+      {
+        patientId: "PAT-002",
+        name: "Jane Smith",
+        insurerId: "INS-443322",
+        insuranceCompanyId: star?._id,
+      },
+      {
+        patientId: "PAT-003",
+        name: "Robert Johnson",
+        insurerId: undefined,
+        insuranceCompanyId: undefined,
+      },
     ];
 
     for (const p of patients) {
