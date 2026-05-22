@@ -9,5 +9,6 @@ router.get(
 );
 router.get("/insurance-performance", ReportController.getInsurancePerformance);
 router.get("/monthly", ReportController.getMonthlyReport);
+router.get("/settlement-report", ReportController.getSettlementReport);
 
 export default router;

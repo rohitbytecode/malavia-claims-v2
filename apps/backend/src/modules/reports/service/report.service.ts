@@ -165,4 +165,76 @@ export class ReportService {
       ),
     };
   }
+
+  static async generateSettlementReport(year: number, month: number) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    const settlements = await mongoose.model("Settlement").aggregate([
+      { $match: { settlementDate: { $gte: startDate, $lte: endDate } } },
+      {
+        $lookup: {
+          from: "claims",
+          localField: "claimId",
+          foreignField: "_id",
+          as: "claim",
+        },
+      },
+      { $unwind: { path: "$claim", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "insurancecompanies",
+          localField: "claim.insuranceCompanyId",
+          foreignField: "_id",
+          as: "insurance",
+        },
+      },
+      {
+        $unwind: { path: "$insurance", preserveNullAndEmptyArrays: true },
+      },
+      {
+        $project: {
+          claimNumber: "$claim.claimNumber",
+          claimId: "$claimId",
+          patientId: "$claim.patientId",
+          insuranceCompany: "$insurance.name",
+          approvedAmount: { $ifNull: ["$approvedAmount", 0] },
+          deductions: { $ifNull: ["$deductions", 0] },
+          tds: { $ifNull: ["$tds", 0] },
+          hospitalDiscount: { $ifNull: ["$hospitalDiscount", 0] },
+          netPayable: { $ifNull: ["$netPayable", 0] },
+          settlementMethod: "$settlementMethod",
+          settlementDate: "$settlementDate",
+          totalClaimAmount: { $ifNull: ["$claim.totalClaimAmount", 0] },
+        },
+      },
+      { $sort: { settlementDate: -1 } },
+    ]);
+
+    const totals = settlements.reduce(
+      (acc, s) => {
+        acc.totalApproved += s.approvedAmount;
+        acc.totalDeductions += s.deductions;
+        acc.totalTds += s.tds;
+        acc.totalHospitalDiscount += s.hospitalDiscount;
+        acc.totalNetPayable += s.netPayable;
+        acc.totalClaimAmount += s.totalClaimAmount;
+        return acc;
+      },
+      {
+        totalApproved: 0,
+        totalDeductions: 0,
+        totalTds: 0,
+        totalHospitalDiscount: 0,
+        totalNetPayable: 0,
+        totalClaimAmount: 0,
+      }
+    );
+
+    return {
+      settlements,
+      count: settlements.length,
+      totals,
+    };
+  }
 }

@@ -44,6 +44,11 @@ export function ReportsPage() {
     queryFn: reportApi.insurancePerformance,
   });
 
+  const settlementReport = useQuery({
+    queryKey: ["reports", "settlement", year, month],
+    queryFn: () => reportApi.settlementReport(year, month),
+  });
+
   const patient = useQuery({
     queryKey: ["reports", "patient", patientId],
     enabled: patientId.length > 0,
@@ -648,6 +653,234 @@ export function ReportsPage() {
             ))}
           </tbody>
         </table>
+
+        {/* === Settlement Financial Review === */}
+        <h3
+          style={{
+            fontSize: 13,
+            fontWeight: 800,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            color: "#1a3a8f",
+            margin: "32px 0 12px",
+          }}
+        >
+          Settlement Financial Review — {month.toString().padStart(2, "0")}/
+          {year}
+        </h3>
+
+        {settlementReport.isLoading && <Skeleton rows={3} />}
+        {settlementReport.isError && (
+          <ErrorPanel error={settlementReport.error} />
+        )}
+
+        {(() => {
+          const sData = settlementReport.data as any;
+          const settlements = sData?.settlements ?? [];
+          const totals = sData?.totals ?? {};
+
+          if (!settlementReport.isLoading && settlements.length === 0) {
+            return (
+              <div
+                style={{
+                  padding: "24px 0",
+                  textAlign: "center",
+                  color: "#94a3b8",
+                  fontSize: 13,
+                }}
+              >
+                No settlements found for {month}/{year}
+              </div>
+            );
+          }
+
+          if (settlements.length === 0) return null;
+
+          return (
+            <>
+              {/* Settlement KPI Strip */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(auto-fit, minmax(140px, 1fr))",
+                  gap: 12,
+                  marginBottom: 20,
+                }}
+              >
+                <div className="report-summary-cell">
+                  <span>Settlements</span>
+                  <strong style={{ color: "#1a3a8f" }}>
+                    {sData?.count ?? 0}
+                  </strong>
+                </div>
+                <div className="report-summary-cell">
+                  <span>Approved</span>
+                  <strong style={{ color: "#1a3a8f", fontSize: 16 }}>
+                    {formatCurrency(totals.totalApproved)}
+                  </strong>
+                </div>
+                <div className="report-summary-cell">
+                  <span>Deductions</span>
+                  <strong style={{ color: "#dc2626", fontSize: 16 }}>
+                    {formatCurrency(totals.totalDeductions)}
+                  </strong>
+                </div>
+                <div className="report-summary-cell">
+                  <span>TDS</span>
+                  <strong style={{ color: "#dc2626", fontSize: 16 }}>
+                    {formatCurrency(totals.totalTds)}
+                  </strong>
+                </div>
+                <div className="report-summary-cell">
+                  <span>Hospital Discount</span>
+                  <strong style={{ color: "#f59e0b", fontSize: 16 }}>
+                    {formatCurrency(totals.totalHospitalDiscount)}
+                  </strong>
+                </div>
+                <div className="report-summary-cell">
+                  <span>Net Payable</span>
+                  <strong style={{ color: "#059669", fontSize: 16 }}>
+                    {formatCurrency(totals.totalNetPayable)}
+                  </strong>
+                </div>
+              </div>
+
+              {/* Settlement Detail Table */}
+              <div
+                className="report-table-wrapper"
+                style={{ overflowX: "auto", marginBottom: 32 }}
+              >
+                <table className="report-table">
+                  <thead>
+                    <tr>
+                      <th>Claim No.</th>
+                      <th>Patient ID</th>
+                      <th>Insurance Company</th>
+                      <th>Claim Amount</th>
+                      <th>Approved</th>
+                      <th>Deductions</th>
+                      <th>TDS</th>
+                      <th>Hospital Discount</th>
+                      <th>Net Payable</th>
+                      <th>Method</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {settlements.map((s: any) => (
+                      <tr key={s._id}>
+                        <td>{s.claimNumber || "—"}</td>
+                        <td>{s.patientId || "—"}</td>
+                        <td>{s.insuranceCompany || "—"}</td>
+                        <td style={{ textAlign: "right" }}>
+                          {formatCurrency(s.totalClaimAmount)}
+                        </td>
+                        <td style={{ textAlign: "right", fontWeight: 600 }}>
+                          {formatCurrency(s.approvedAmount)}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "right",
+                            color: s.deductions > 0 ? "#dc2626" : undefined,
+                          }}
+                        >
+                          {formatCurrency(s.deductions)}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "right",
+                            color: s.tds > 0 ? "#dc2626" : undefined,
+                          }}
+                        >
+                          {formatCurrency(s.tds)}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "right",
+                            color:
+                              s.hospitalDiscount > 0 ? "#f59e0b" : undefined,
+                          }}
+                        >
+                          {formatCurrency(s.hospitalDiscount)}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "right",
+                            fontWeight: 700,
+                            color: "#059669",
+                          }}
+                        >
+                          {formatCurrency(s.netPayable)}
+                        </td>
+                        <td>{labelize(s.settlementMethod)}</td>
+                        <td style={{ whiteSpace: "nowrap" }}>
+                          {s.settlementDate
+                            ? new Date(s.settlementDate).toLocaleDateString(
+                                "en-IN"
+                              )
+                            : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr
+                      style={{
+                        fontWeight: 700,
+                        background: "#eef2ff",
+                        borderTop: "2px solid #c7d2fe",
+                      }}
+                    >
+                      <td colSpan={3} style={{ textAlign: "right" }}>
+                        TOTALS
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        {formatCurrency(totals.totalClaimAmount)}
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        {formatCurrency(totals.totalApproved)}
+                      </td>
+                      <td
+                        style={{
+                          textAlign: "right",
+                          color: "#dc2626",
+                        }}
+                      >
+                        {formatCurrency(totals.totalDeductions)}
+                      </td>
+                      <td
+                        style={{
+                          textAlign: "right",
+                          color: "#dc2626",
+                        }}
+                      >
+                        {formatCurrency(totals.totalTds)}
+                      </td>
+                      <td
+                        style={{
+                          textAlign: "right",
+                          color: "#f59e0b",
+                        }}
+                      >
+                        {formatCurrency(totals.totalHospitalDiscount)}
+                      </td>
+                      <td
+                        style={{
+                          textAlign: "right",
+                          color: "#059669",
+                        }}
+                      >
+                        {formatCurrency(totals.totalNetPayable)}
+                      </td>
+                      <td colSpan={2}></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </>
+          );
+        })()}
 
         {/* Patient Summary - unchanged */}
         {patient.isLoading && patientId && <Skeleton rows={3} />}

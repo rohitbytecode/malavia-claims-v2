@@ -200,6 +200,10 @@ export const reportApi = {
     unwrap<ReportRow[]>(apiClient.get("/reports/insurance-performance")),
   patientClaims: (patientId: string) =>
     unwrap<ReportRow[]>(apiClient.get(`/reports/patient-claims/${patientId}`)),
+  settlementReport: (year: number, month: number) =>
+    unwrap<any>(
+      apiClient.get("/reports/settlement-report", { params: { year, month } })
+    ),
 };
 export const departmentApi = {
   list: (params: ListParams = {}) =>

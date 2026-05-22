@@ -200,13 +200,58 @@ export function ClaimDetailsPage() {
         </Card>
 
         {canSeeFinance(user?.role) ? (
-          <Card className="premium-panel">
-            <CardHeader
-              title="Finance execution console"
-              eyebrow="Settlement · allocations · refunds"
-            />
-            <SettlementPanel claim={data} />
-          </Card>
+          (() => {
+            const settlementStatuses = [
+              "SETTLEMENT_PENDING",
+              "SETTLED",
+              "DEPOSIT_PENDING",
+              "DEPOSIT_RETURNED",
+              "CLOSED",
+            ];
+            const isSettlementReady = settlementStatuses.includes(data.status);
+
+            return isSettlementReady ? (
+              <Card className="premium-panel">
+                <CardHeader
+                  title="Finance execution console"
+                  eyebrow="Settlement · allocations · refunds"
+                />
+                <SettlementPanel claim={data} />
+              </Card>
+            ) : (
+              <Card className="premium-panel restricted-card">
+                <CardHeader
+                  title="Finance execution console"
+                  eyebrow="Settlement · allocations · refunds"
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "16px 20px",
+                    background:
+                      "color-mix(in srgb, var(--amber) 8%, transparent)",
+                    border: "1px solid color-mix(in srgb, var(--amber) 25%, transparent)",
+                    borderRadius: "var(--r-lg)",
+                    fontSize: 13,
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  <span style={{ fontSize: 20 }}>🔒</span>
+                  <div>
+                    <strong style={{ display: "block", marginBottom: 2 }}>
+                      Settlement not available yet
+                    </strong>
+                    The claim must reach{" "}
+                    <strong>Settlement Pending</strong> status before the
+                    finance console is unlocked. Current status:{" "}
+                    <StatusBadge value={data.status} compact />
+                  </div>
+                </div>
+              </Card>
+            );
+          })()
         ) : (
           <Card className="premium-panel restricted-card">
             <CardHeader

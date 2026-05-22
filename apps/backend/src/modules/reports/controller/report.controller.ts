@@ -46,4 +46,26 @@ export class ReportController {
       data: report,
     });
   }
+
+  static async getSettlementReport(req: Request, res: Response) {
+    const { year, month } = req.query;
+
+    if (!year || !month) {
+      return res.status(400).json({
+        success: false,
+        message: "Year and month query parameters are required",
+      });
+    }
+
+    const report = await ReportService.generateSettlementReport(
+      Number(year),
+      Number(month)
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Settlement report generated successfully",
+      data: report,
+    });
+  }
 }
