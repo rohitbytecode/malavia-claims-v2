@@ -43,8 +43,10 @@ export class TimelineService {
     documents.forEach((item) => {
       timeline.push({
         type: "DOCUMENT",
-        title: `Document uploaded (${item.type})`,
-        description: item.name || "No description",
+        title: `Document uploaded (${item.documentType})`,
+        description: item.remarks || item.originalName || "No description",
+        attachmentName: item.originalName,
+        remarks: item.remarks || "No remarks provided",
         createdAt: item.createdAt,
         createdBy: item.uploadedBy,
       });

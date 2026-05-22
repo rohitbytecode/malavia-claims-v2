@@ -5,7 +5,9 @@ import { DocumentService } from "@/modules/documents/service/document.service.js
 
 export class DocumentController {
   static async downloadDocument(req: Request, res: Response) {
-    const { filename } = req.params;
+    const filename = (Array.isArray(req.params.filename)
+      ? req.params.filename[0]
+      : req.params.filename) as string;
     const filePath = path.resolve(
       process.cwd(),
       "uploads",

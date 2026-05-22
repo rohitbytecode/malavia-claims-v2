@@ -27,7 +27,7 @@ const seedAdmin = async () => {
       logger.info("Super Admin User already exists.");
     }
   } catch (error) {
-    logger.error("Error seeding admin:", error);
+    logger.error(error, "Error seeding admin");
   } finally {
     await mongoose.disconnect();
     logger.info("Database disconnected.");
