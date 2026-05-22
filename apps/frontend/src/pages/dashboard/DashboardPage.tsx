@@ -53,8 +53,7 @@ export function DashboardPage() {
           <p className="eyebrow">Operational Command Center</p>
           <h1>Malavia Claims Control</h1>
           <span>
-            Backend-derived live control surface for insurer waiting, settlement
-            blockers, courier ageing, refunds, alerts, and workflow bottlenecks.
+            Live control surface for insurer waiting, settlement blockers, courier ageing, refunds, alerts, and workflow bottlenecks.
           </span>
         </div>
         <div className="hero-radar" aria-label="Operational pulse">

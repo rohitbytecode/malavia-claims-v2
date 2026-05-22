@@ -265,6 +265,7 @@ export interface InsuranceCompany {
   submissionMethods: SubmissionMethod[];
   portalUrl?: string;
   portalUsername?: string;
+  portalPassword?: string;
   email?: string;
   courierAddress?: string;
   tatDays?: number;

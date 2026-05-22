@@ -32,4 +32,22 @@ export class AuthController {
       },
     });
   }
+
+  static async changePassword(req: Request, res: Response) {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const { oldPassword, newPassword } = req.body;
+    await AuthService.changePassword(userId, oldPassword, newPassword);
+
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  }
 }

@@ -55,6 +55,8 @@ const normalized = <T>(
 export const authApi = {
   login: (body: { email: string; password: string }) =>
     unwrap<AuthPayload>(apiClient.post("/auth/login", body)),
+  changePassword: (body: { oldPassword: string; newPassword: string }) =>
+    unwrap<{ success: boolean }>(apiClient.post("/auth/change-password", body)),
 };
 export const claimsApi = {
   list: (params: ListParams) =>
@@ -322,10 +324,10 @@ export const usersApi = {
   create: (body: {
     fullName: string;
     email: string;
-    password: string;
+    password?: string;
     role: Role;
     isActive?: boolean;
-  }) => unwrap<User>(apiClient.post("/users", body)),
+  }) => unwrap<User & { tempPassword?: string }>(apiClient.post("/users", body)),
   update: (
     userId: string,
     body: Partial<{

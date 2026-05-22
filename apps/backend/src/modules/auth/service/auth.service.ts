@@ -5,6 +5,7 @@ import {
   verifyRefreshToken,
 } from "@/modules/auth/utils/jwt.util.js";
 import { AuthRepository } from "@/modules/auth/repository/auth.repository.js";
+import { UserRepository } from "@/modules/users/repository/user.repository.js";
 import { AppError } from "@/core/errors/AppError.js";
 import { hashPassword } from "@/modules/auth/utils/password.util.js";
 import { toUserResponse } from "@/modules/users/mapper/user.mapper.js";
@@ -111,5 +112,37 @@ export class AuthService {
       accessToken,
       refreshToken: newRefreshToken,
     };
+  }
+
+  static async changePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string
+  ) {
+    const user = await UserRepository.findByIdWithPassword(userId);
+
+    if (!user || !user.password) {
+      throw new AppError("User not found", 404);
+    }
+
+    const passwordMatches = await comparePassword(
+      oldPassword,
+      user.password
+    );
+
+    if (!passwordMatches) {
+      throw new AppError("Invalid current password", 400);
+    }
+
+    const newHashedPassword = await hashPassword(newPassword);
+
+    await UserRepository.updateUser(userId, {
+      password: newHashedPassword,
+    } as any);
+
+    // Invalidate refresh token to force re-login
+    await UserRepository.updateRefreshTokenHash(userId, undefined);
+
+    return { success: true };
   }
 }

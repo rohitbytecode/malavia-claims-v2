@@ -21,6 +21,7 @@ export const authenticate = (
   try {
     const payload = verifyAccessToken(token);
     req.user = {
+      id: payload.userId,
       role: payload.role as Roles,
     };
     next();

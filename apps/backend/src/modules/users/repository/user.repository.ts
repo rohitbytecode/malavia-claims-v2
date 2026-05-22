@@ -22,6 +22,14 @@ export class UserRepository {
       .lean();
   }
 
+  static async findByIdWithPassword(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) {
+      return null;
+    }
+
+    return UserModel.findById(userId);
+  }
+
   static async findByEmail(email: string) {
     return UserModel.findOne({ email: email.toLowerCase().trim() });
   }

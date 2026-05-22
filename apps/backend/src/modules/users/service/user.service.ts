@@ -22,14 +22,28 @@ interface UpdateUserPayload {
 }
 
 export class UserService {
-  static async createUser(payload: CreateUserPayload) {
+  static generateRandomPassword() {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let password = "";
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  }
+
+  static async createUser(payload: Omit<CreateUserPayload, "password"> & { password?: string }) {
     const existingUser = await UserRepository.findByEmail(payload.email);
 
     if (existingUser) {
       throw new AppError("Email already in use", 409);
     }
 
-    const hashedPassword = await hashPassword(payload.password);
+    if (payload.role === Roles.SUPER_ADMIN) {
+      throw new AppError("Creating another SUPER_ADMIN is not permitted", 400);
+    }
+
+    const autoPassword = UserService.generateRandomPassword();
+    const hashedPassword = await hashPassword(autoPassword);
     const user = await UserRepository.createUser({
       fullName: payload.fullName,
       email: payload.email.toLowerCase().trim(),
@@ -38,7 +52,10 @@ export class UserService {
       isActive: payload.isActive ?? true,
     } as Partial<UserDocument>);
 
-    return toUserResponse(user);
+    return {
+      ...toUserResponse(user),
+      tempPassword: autoPassword,
+    };
   }
 
   static async listUsers(
@@ -82,6 +99,9 @@ export class UserService {
     }
 
     if (payload.role) {
+      if (payload.role === Roles.SUPER_ADMIN) {
+        throw new AppError("Promoting user to SUPER_ADMIN is not permitted", 400);
+      }
       updatePayload.role = payload.role;
     }
 

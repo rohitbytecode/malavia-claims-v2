@@ -20,7 +20,6 @@ import { useAuthStore } from "../../store/auth.store";
 type UserDraft = {
   fullName: string;
   email: string;
-  password: string;
   role: Role;
   isActive: boolean;
 };
@@ -28,7 +27,6 @@ type UserDraft = {
 const blank: UserDraft = {
   fullName: "",
   email: "",
-  password: "",
   role: "CLAIM_EXECUTIVE",
   isActive: true,
 };
@@ -37,6 +35,8 @@ export function UsersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
   const [draft, setDraft] = useState<UserDraft>(blank);
+  const [createdUserTempPassword, setCreatedUserTempPassword] = useState<string | null>(null);
+  const [createdUserEmail, setCreatedUserEmail] = useState<string | null>(null);
   const qc = useQueryClient();
 
   const currentUser = useAuthStore((s) => s.user);
@@ -50,12 +50,15 @@ export function UsersPage() {
   const save = useMutation({
     mutationFn: () => {
       if (!editing) return usersApi.create(draft);
-      const { password, ...rest } = draft;
-      return usersApi.update(editing._id, rest);
+      return usersApi.update(editing._id, draft);
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       qc.invalidateQueries({ queryKey: ["users"] });
       closeModal();
+      if (!editing && data?.tempPassword) {
+        setCreatedUserTempPassword(data.tempPassword);
+        setCreatedUserEmail(data.email);
+      }
     },
   });
 
@@ -75,7 +78,6 @@ export function UsersPage() {
     setDraft({
       fullName: user.fullName,
       email: user.email,
-      password: "",
       role: user.role,
       isActive: user.isActive,
     });
@@ -228,19 +230,6 @@ export function UsersPage() {
                 }
               />
             </Field>
-            {!editing && (
-              <Field label="Password">
-                <TextInput
-                  required
-                  minLength={8}
-                  type="password"
-                  value={draft.password}
-                  onChange={(e) =>
-                    setDraft((d) => ({ ...d, password: e.target.value }))
-                  }
-                />
-              </Field>
-            )}
             <Field label="Role">
               <SelectInput
                 value={draft.role}
@@ -248,11 +237,13 @@ export function UsersPage() {
                   setDraft((d) => ({ ...d, role: e.target.value as Role }))
                 }
               >
-                {operationalRoles.map((role) => (
-                  <option key={role} value={role}>
-                    {role}
-                  </option>
-                ))}
+                {operationalRoles
+                  .filter((r) => r !== "SUPER_ADMIN")
+                  .map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
               </SelectInput>
             </Field>
             <label className="field">
@@ -276,6 +267,57 @@ export function UsersPage() {
           </div>
         </form>
       </Modal>
+
+      {createdUserTempPassword && (
+        <Modal
+          open={!!createdUserTempPassword}
+          title="User Created Successfully"
+          onClose={() => {
+            setCreatedUserTempPassword(null);
+            setCreatedUserEmail(null);
+          }}
+        >
+          <div className="modal-body page-stack">
+            <p>The system has automatically generated a secure password for the new user.</p>
+            <div className="alert alert-success" style={{ padding: "16px", borderRadius: "6px", background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div>
+                <span className="text-muted" style={{ fontSize: "0.85em" }}>Email / Username:</span>
+                <div style={{ fontWeight: "bold", fontSize: "1.15em", color: "var(--text-main, #fff)" }}>{createdUserEmail}</div>
+              </div>
+              <div>
+                <span className="text-muted" style={{ fontSize: "0.85em" }}>Temporary Password:</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
+                  <code style={{ fontSize: "1.25em", background: "rgba(0,0,0,0.3)", padding: "6px 12px", borderRadius: "4px", letterSpacing: "1px", color: "var(--amber, #f59e0b)", fontFamily: "monospace" }}>
+                    {createdUserTempPassword}
+                  </code>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => navigator.clipboard.writeText(createdUserTempPassword)}
+                    style={{ padding: "4px 8px", minHeight: "auto" }}
+                  >
+                    Copy
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <p style={{ fontSize: "0.85em", color: "var(--text-muted, #888)", marginTop: "8px" }}>
+              Please share this temporary password with the user. They will be forced to change their password or can change it from their settings.
+            </p>
+          </div>
+          <div className="modal-footer">
+            <Button
+              type="button"
+              onClick={() => {
+                setCreatedUserTempPassword(null);
+                setCreatedUserEmail(null);
+              }}
+            >
+              Close & Proceed
+            </Button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

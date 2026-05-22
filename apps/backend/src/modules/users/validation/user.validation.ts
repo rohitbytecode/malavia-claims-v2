@@ -4,7 +4,7 @@ import { Roles } from "@/core/enums/roles.enum.js";
 const createUserBody = z.object({
   fullName: z.string().min(2),
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(8).optional(),
   role: z.nativeEnum(Roles),
   isActive: z.boolean().optional().default(true),
 });
