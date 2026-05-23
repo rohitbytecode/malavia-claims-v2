@@ -10,7 +10,7 @@ const createClaimBodySchema = z.object({
   hospitalId: z.string().trim().optional(),
   departmentId: z.string().trim().optional(),
   doctorId: z.string().trim().optional(),
-  totalClaimAmount: z.number().nonnegative(),
+  totalClaimAmount: z.number().nonnegative().optional().default(0),
   tdsAmount: z.number().nonnegative().optional().default(0),
   deductions: z.number().nonnegative().optional().default(0),
   hospitalDiscount: z.number().nonnegative().optional().default(0),
@@ -51,6 +51,7 @@ export const transitionClaimStatusSchema = z.object({
     remarks: z.string().trim().optional(),
     performedBy: z.string().trim().optional(),
     claimNumber: z.string().trim().min(1).optional(),
+    totalClaimAmount: z.number().nonnegative().optional(),
   }),
   query: z.object({}).optional(),
   params: z.object({

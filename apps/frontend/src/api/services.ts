@@ -84,6 +84,7 @@ export const claimsApi = {
       remarks?: string;
       performedBy?: string;
       claimNumber?: string;
+      totalClaimAmount?: number;
     }
   ) =>
     unwrap<Claim>(apiClient.post(`/claims/${claimId}/status-transition`, body)),

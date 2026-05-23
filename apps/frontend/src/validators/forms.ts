@@ -11,7 +11,7 @@ export const claimSchema = z.object({
   hospitalId: z.string().optional(),
   departmentId: z.string().optional(),
   doctorId: z.string().optional(),
-  totalClaimAmount: z.coerce.number().nonnegative(),
+  totalClaimAmount: z.coerce.number().nonnegative().optional().default(0),
   depositAmount: z.coerce.number().nonnegative().optional(),
   remarks: z.string().optional(),
 });

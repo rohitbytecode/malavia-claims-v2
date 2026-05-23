@@ -119,7 +119,8 @@ export class ClaimService {
     toStatus: ClaimStatus,
     remarks?: string,
     performedBy?: string,
-    claimNumber?: string
+    claimNumber?: string,
+    totalClaimAmount?: number
   ) {
     try {
       const claim = await ClaimRepository.findClaimById(claimId);
@@ -130,9 +131,44 @@ export class ClaimService {
 
       validateClaimStatusTransition(claim.type, claim.status, toStatus);
 
+      // Verify that reconsideration transitions match the original rejection stage
+      if (claim.status === ClaimStatus.RECONSIDERATION_PENDING) {
+        const histories = await ClaimStatusHistoryRepository.findByClaimId(claimId);
+        const lastRejection = histories.find(
+          (h) =>
+            h.toStatus === ClaimStatus.PREAUTH_REJECTED ||
+            h.toStatus === ClaimStatus.FINAL_REJECTED
+        );
+
+        if (lastRejection) {
+          if (lastRejection.toStatus === ClaimStatus.PREAUTH_REJECTED) {
+            if (
+              toStatus !== ClaimStatus.PREAUTH_APPROVED &&
+              toStatus !== ClaimStatus.PREAUTH_REJECTED
+            ) {
+              throw new AppError(
+                "For pre-authorization reconsideration, the next status must be Pre-Auth Approved or Pre-Auth Rejected",
+                400
+              );
+            }
+          } else if (lastRejection.toStatus === ClaimStatus.FINAL_REJECTED) {
+            if (
+              toStatus !== ClaimStatus.FINAL_APPROVED &&
+              toStatus !== ClaimStatus.FINAL_REJECTED
+            ) {
+              throw new AppError(
+                "For final authorization reconsideration, the next status must be Final Approved or Final Rejected",
+                400
+              );
+            }
+          }
+        }
+      }
+
       // Enforce mandatory claim/AL number for pre-auth approval
       if (
-        claim.status === ClaimStatus.PREAUTH_PENDING &&
+        (claim.status === ClaimStatus.PREAUTH_PENDING ||
+          claim.status === ClaimStatus.RECONSIDERATION_PENDING) &&
         toStatus === ClaimStatus.PREAUTH_APPROVED &&
         !claimNumber?.trim()
       ) {
@@ -142,12 +178,75 @@ export class ClaimService {
         );
       }
 
+      // Enforce mandatory positive totalClaimAmount for DRAFT -> PREAUTH_PENDING
+      if (
+        claim.status === ClaimStatus.DRAFT &&
+        toStatus === ClaimStatus.PREAUTH_PENDING
+      ) {
+        if (totalClaimAmount === undefined || totalClaimAmount <= 0) {
+          throw new AppError(
+            "Claim amount must be specified and greater than 0 when moving from Draft to Pre-Auth Pending",
+            400
+          );
+        }
+      }
+
+      // Enforce 7-day limit for reconsideration
+      if (toStatus === ClaimStatus.RECONSIDERATION_PENDING) {
+        if (
+          claim.status !== ClaimStatus.PREAUTH_REJECTED &&
+          claim.status !== ClaimStatus.FINAL_REJECTED
+        ) {
+          throw new AppError(
+            "Reconsideration can only be requested from Pre-Auth Rejected or Final Rejected states",
+            400
+          );
+        }
+
+        const histories = await ClaimStatusHistoryRepository.findByClaimId(claimId);
+        const rejectionEntry = histories.find(
+          (h: any) => h.toStatus === claim.status
+        );
+        const rejectionDate = rejectionEntry
+          ? new Date(rejectionEntry.effectiveAt || rejectionEntry.createdAt)
+          : new Date(claim.updatedAt);
+
+        const diffMs = Date.now() - rejectionDate.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+        if (diffDays > 7) {
+          throw new AppError(
+            "Reconsideration is only allowed within 7 days of rejection",
+            400
+          );
+        }
+      }
+
+      // Only allow totalClaimAmount changes during permitted transitions
+      const amountChangeAllowed =
+        (claim.status === ClaimStatus.DRAFT &&
+          toStatus === ClaimStatus.PREAUTH_PENDING) ||
+        ((claim.status === ClaimStatus.PREAUTH_PENDING ||
+          claim.status === ClaimStatus.RECONSIDERATION_PENDING) &&
+          toStatus === ClaimStatus.PREAUTH_APPROVED) ||
+        ((claim.status === ClaimStatus.FINAL_APPROVAL_PENDING ||
+          claim.status === ClaimStatus.RECONSIDERATION_PENDING) &&
+          toStatus === ClaimStatus.FINAL_APPROVED);
+
+      if (totalClaimAmount !== undefined && !amountChangeAllowed) {
+        throw new AppError(
+          "Claim amount can only be changed during Draft to Pre-Auth Pending, Pre-Auth Approval, or Final Approval transitions",
+          400
+        );
+      }
+
       const updatedClaim = await ClaimRepository.updateClaimStatus(
         claimId,
         toStatus,
         remarks,
         performedBy,
-        claimNumber?.trim()
+        claimNumber?.trim(),
+        amountChangeAllowed ? totalClaimAmount : undefined
       );
 
       if (!updatedClaim) {

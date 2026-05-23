@@ -77,13 +77,14 @@ export class ClaimController {
         });
       }
 
-      const { toStatus, remarks, performedBy, claimNumber } = req.body;
+      const { toStatus, remarks, performedBy, claimNumber, totalClaimAmount } = req.body;
       const claim = await ClaimService.transitionClaimStatus(
         claimId,
         toStatus,
         remarks,
         performedBy,
-        claimNumber
+        claimNumber,
+        totalClaimAmount
       );
 
       return res.status(200).json({

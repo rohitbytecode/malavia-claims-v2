@@ -54,7 +54,8 @@ const claimSchema = new mongoose.Schema<ClaimDocument>(
     },
     totalClaimAmount: {
       type: Number,
-      required: true,
+      required: false,
+      default: 0,
       min: 0,
     },
     tdsAmount: {

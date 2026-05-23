@@ -57,12 +57,14 @@ export class ClaimRepository {
     status: ClaimStatus,
     remarks?: string,
     updatedBy?: string,
-    claimNumber?: string
+    claimNumber?: string,
+    totalClaimAmount?: number
   ) {
     const $set: {
       status: ClaimStatus;
       updatedBy?: Types.ObjectId;
       claimNumber?: string;
+      totalClaimAmount?: number;
     } = {
       status,
     };
@@ -73,6 +75,10 @@ export class ClaimRepository {
 
     if (claimNumber) {
       $set.claimNumber = claimNumber;
+    }
+
+    if (totalClaimAmount !== undefined) {
+      $set.totalClaimAmount = totalClaimAmount;
     }
 
     const update: Record<string, unknown> = { $set };

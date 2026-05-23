@@ -228,9 +228,6 @@ export function ClaimCreatePanel() {
           />
         </Field>
 
-        <Field label="Claim amount" error={errors.totalClaimAmount?.message}>
-          <TextInput type="number" {...register("totalClaimAmount")} />
-        </Field>
 
         <Field label="Deposit amount">
           <TextInput type="number" {...register("depositAmount")} />

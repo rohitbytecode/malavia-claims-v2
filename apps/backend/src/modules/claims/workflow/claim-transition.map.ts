@@ -15,13 +15,21 @@ const cashlessWorkflow: ClaimWorkflowMap = {
     ClaimStatus.RECONSIDERATION_PENDING,
     ClaimStatus.CLOSED,
   ],
-  [ClaimStatus.RECONSIDERATION_PENDING]: [ClaimStatus.FINAL_APPROVAL_PENDING],
+  [ClaimStatus.RECONSIDERATION_PENDING]: [
+    ClaimStatus.PREAUTH_APPROVED,
+    ClaimStatus.PREAUTH_REJECTED,
+    ClaimStatus.FINAL_APPROVED,
+    ClaimStatus.FINAL_REJECTED,
+  ],
   [ClaimStatus.FINAL_APPROVAL_PENDING]: [
     ClaimStatus.FINAL_APPROVED,
     ClaimStatus.FINAL_REJECTED,
   ],
   [ClaimStatus.FINAL_APPROVED]: [ClaimStatus.SETTLEMENT_PENDING],
-  [ClaimStatus.FINAL_REJECTED]: [ClaimStatus.CLOSED],
+  [ClaimStatus.FINAL_REJECTED]: [
+    ClaimStatus.RECONSIDERATION_PENDING,
+    ClaimStatus.CLOSED,
+  ],
   [ClaimStatus.SETTLEMENT_PENDING]: [ClaimStatus.SETTLED],
   [ClaimStatus.SETTLED]: [ClaimStatus.DEPOSIT_PENDING],
   [ClaimStatus.DEPOSIT_PENDING]: [
