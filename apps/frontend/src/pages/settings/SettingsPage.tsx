@@ -5,6 +5,7 @@ import { Field, TextInput } from "../../components/forms/FormField";
 import { useUiStore } from "../../store/ui.store";
 import { useAuthStore } from "../../store/auth.store";
 import { authApi } from "../../api/services";
+import { APP_CONFIG } from "../../../../backend/src/config/app";
 
 export function SettingsPage() {
   const { theme, toggleTheme } = useUiStore();
@@ -220,7 +221,7 @@ export function SettingsPage() {
               >
                 — The System Architect —
               </span>
-              solely for <strong>Malavia Hospital</strong> internal use. Any
+              solely for <strong>{ APP_CONFIG.ORG_NAME }</strong> internal use. Any
               unauthorized reproduction, distribution, reverse engineering, or
               duplication of this platform is strictly prohibited.
             </p>
@@ -230,7 +231,7 @@ export function SettingsPage() {
                 color: "var(--text-muted, #666)",
               }}
             >
-              © {new Date().getFullYear()} Malavia Hospital. All Rights
+              © {new Date().getFullYear()} {APP_CONFIG.ORG_NAME}. All Rights
               Reserved.
             </span>
           </div>

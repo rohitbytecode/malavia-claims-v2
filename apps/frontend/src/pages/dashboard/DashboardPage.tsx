@@ -15,6 +15,7 @@ import {
 } from "../../constants/operations";
 import { useAuthStore } from "../../store/auth.store";
 import { formatCurrency, labelize } from "../../utils/format";
+import { APP_CONFIG } from "../../../../backend/src/config/app";
 
 export function DashboardPage() {
   const user = useAuthStore((state) => state.user);
@@ -51,7 +52,7 @@ export function DashboardPage() {
       <section className="hero-command premium-panel">
         <div className="hero-copy">
           <p className="eyebrow">Operational Command Center</p>
-          <h1>Malavia Claims Control</h1>
+          <h1>{APP_CONFIG.APP_NAME}</h1>
           <span>
             Live control surface for insurer waiting, settlement blockers, courier ageing, refunds, alerts, and workflow bottlenecks.
           </span>

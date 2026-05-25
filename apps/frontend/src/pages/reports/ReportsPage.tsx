@@ -17,7 +17,7 @@ import { ClaimsSummary } from "./components/ClaimsSummary";
 import { DetailedClaimsTable } from "./components/DetailedClaimsTable";
 import { InsurancePerformanceTable } from "./components/InsurancePerformanceTable";
 import { SettlementReviewTable } from "./components/SettlementReviewTable";
-
+import { APP_CONFIG } from "../../../../backend/src/config/app";
 // Type definitions
 import type {
   ReportSummaryRow,
@@ -26,7 +26,7 @@ import type {
   SettlementReportData,
 } from "../../types/reports";
 
-const HOSPITAL_NAME = "Malavia Hospital";
+const HOSPITAL_NAME = APP_CONFIG.ORG_NAME;
 
 export function ReportsPage() {
   const now = new Date();

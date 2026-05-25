@@ -1,5 +1,6 @@
 import { labelize } from "./format";
 import type { ReportSummaryRow, InsurancePerformanceRow, SettlementRow, SettlementTotals, DetailedClaim } from "../types/reports";
+import { APP_CONFIG } from "../../../backend/src/config/app";
 
 interface ExportReportParams {
   periodLabel: string;
@@ -53,7 +54,7 @@ export const exportReportToCSV = ({
   const sections: string[] = [];
 
   // --- Header / Metadata ---
-  sections.push(`"Malavia Hospital - Insurance Claims Financial Review"`);
+  sections.push(`"${APP_CONFIG.ORG_NAME} - Insurance Claims Financial Review"`);
   sections.push(`"Report Period: ${periodLabel.replace(/"/g, '""')}"`);
   sections.push(`"Generated: ${new Date().toLocaleString("en-IN")}"`);
   sections.push(`"Total Claims: ${totalClaims}"`);
