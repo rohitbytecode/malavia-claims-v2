@@ -23,7 +23,9 @@ import {
 const seedTestAlertsData = async () => {
   try {
     await connectDatabase();
-    logger.info("Database connected. Cleaning existing alerts and preparing test data...");
+    logger.info(
+      "Database connected. Cleaning existing alerts and preparing test data..."
+    );
 
     // 1. Clear existing alerts to start clean
     await AlertModel.deleteMany({});
@@ -37,7 +39,9 @@ const seedTestAlertsData = async () => {
     const adminUser = await UserModel.findOne({ role: Roles.ADMIN });
 
     if (!hdfc || !cardiology || !doctor || !patient || !adminUser) {
-      logger.error("Required seed data (insurers, patients, doctors, departments, users) is missing. Please run 'npm run seed' first.");
+      logger.error(
+        "Required seed data (insurers, patients, doctors, departments, users) is missing. Please run 'npm run seed' first."
+      );
       process.exit(1);
     }
 
@@ -48,7 +52,14 @@ const seedTestAlertsData = async () => {
 
     // 2. Clear previous test claims to prevent duplicate claimNumber errors
     await ClaimModel.deleteMany({
-      claimNumber: { $in: ["TEST-CLM-50DAYS", "TEST-CLM-65DAYS", "TEST-CLM-SETTLE", "TEST-CLM-REFUND"] }
+      claimNumber: {
+        $in: [
+          "TEST-CLM-50DAYS",
+          "TEST-CLM-65DAYS",
+          "TEST-CLM-SETTLE",
+          "TEST-CLM-REFUND",
+        ],
+      },
     });
 
     // 3. Create a claim backdated by 50 days (triggers High Courier Delay alert)
@@ -65,11 +76,12 @@ const seedTestAlertsData = async () => {
       createdBy: adminUser._id,
     });
     // Set createdAt backdated field bypassing Mongoose timestamps
-    await mongoose.connection.db!.collection("claims").updateOne(
-      { _id: claim50._id },
-      { $set: { createdAt: date50DaysAgo } }
+    await mongoose.connection
+      .db!.collection("claims")
+      .updateOne({ _id: claim50._id }, { $set: { createdAt: date50DaysAgo } });
+    logger.info(
+      "Created 50-day-old claim (TEST-CLM-50DAYS) to trigger High Courier Delay."
     );
-    logger.info("Created 50-day-old claim (TEST-CLM-50DAYS) to trigger High Courier Delay.");
 
     // 4. Create a claim backdated by 65 days (triggers Critical Courier Delay alert)
     const claim65 = await ClaimModel.create({
@@ -85,11 +97,12 @@ const seedTestAlertsData = async () => {
       createdBy: adminUser._id,
     });
     // Set createdAt backdated field bypassing Mongoose timestamps
-    await mongoose.connection.db!.collection("claims").updateOne(
-      { _id: claim65._id },
-      { $set: { createdAt: date65DaysAgo } }
+    await mongoose.connection
+      .db!.collection("claims")
+      .updateOne({ _id: claim65._id }, { $set: { createdAt: date65DaysAgo } });
+    logger.info(
+      "Created 65-day-old claim (TEST-CLM-65DAYS) to trigger Critical Courier Delay."
     );
-    logger.info("Created 65-day-old claim (TEST-CLM-65DAYS) to trigger Critical Courier Delay.");
 
     // 5. Create a claim in SETTLEMENT_PENDING status (triggers Settlement Pending alert)
     const claimSettle = await ClaimModel.create({
@@ -128,7 +141,9 @@ const seedTestAlertsData = async () => {
       refundAmount: 0,
       refundStatus: RefundStatus.PENDING,
     });
-    logger.info("Created Deposit with PENDING refund status for claim TEST-CLM-REFUND.");
+    logger.info(
+      "Created Deposit with PENDING refund status for claim TEST-CLM-REFUND."
+    );
 
     // 7. Run the daily claim check jobs to scan database and create alerts
     logger.info("Running alert generation jobs...");
@@ -137,9 +152,11 @@ const seedTestAlertsData = async () => {
     await checkPendingRefunds();
 
     // 8. Output generated alerts
-    const alerts = await AlertModel.find({ resolved: false }).populate("claimId", "claimNumber status").lean();
+    const alerts = await AlertModel.find({ resolved: false })
+      .populate("claimId", "claimNumber status")
+      .lean();
     logger.info(`Successfully generated ${alerts.length} active alerts!`);
-    
+
     console.table(
       alerts.map((a: any) => ({
         Type: a.type,
@@ -149,7 +166,9 @@ const seedTestAlertsData = async () => {
       }))
     );
 
-    logger.info("Testing alerts setup complete. Please refresh your dashboard/alerts page.");
+    logger.info(
+      "Testing alerts setup complete. Please refresh your dashboard/alerts page."
+    );
     process.exit(0);
   } catch (error) {
     logger.error(error, "Failed to seed test alerts");

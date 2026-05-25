@@ -25,4 +25,3 @@ export const changePasswordSchema = z.object({
   query: z.object({}).optional(),
   params: z.object({}).optional(),
 });
-

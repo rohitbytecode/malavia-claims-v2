@@ -54,7 +54,8 @@ export function DashboardPage() {
           <p className="eyebrow">Operational Command Center</p>
           <h1>{APP_CONFIG.APP_NAME}</h1>
           <span>
-            Live control surface for insurer waiting, settlement blockers, courier ageing, refunds, alerts, and workflow bottlenecks.
+            Live control surface for insurer waiting, settlement blockers,
+            courier ageing, refunds, alerts, and workflow bottlenecks.
           </span>
         </div>
         <div className="hero-radar" aria-label="Operational pulse">

@@ -30,14 +30,17 @@ const HOSPITAL_NAME = APP_CONFIG.ORG_NAME;
 
 export function ReportsPage() {
   const now = new Date();
-  
+
   // Date States
-  const [reportMode, setReportMode] = useState<"monthly" | "calendar" | "financial" | "custom">("monthly");
+  const [reportMode, setReportMode] = useState<
+    "monthly" | "calendar" | "financial" | "custom"
+  >("monthly");
   const [monthlyYear, setMonthlyYear] = useState(now.getFullYear());
   const [monthlyMonth, setMonthlyMonth] = useState(now.getMonth() + 1);
   const [calendarYear, setCalendarYear] = useState(now.getFullYear());
 
-  const defaultFinancialYear = now.getMonth() < 3 ? now.getFullYear() - 1 : now.getFullYear();
+  const defaultFinancialYear =
+    now.getMonth() < 3 ? now.getFullYear() - 1 : now.getFullYear();
   const [financialYear, setFinancialYear] = useState(defaultFinancialYear);
 
   const [startYear, setStartYear] = useState(now.getFullYear());
@@ -48,19 +51,21 @@ export function ReportsPage() {
   // Search States
   const [patientId, setPatientId] = useState("");
   const [patientInput, setPatientInput] = useState("");
-  
+
   // Column Visibility State
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
-    claimNo: true,
-    patientId: true,
-    patientName: true,
-    doctorName: true,
-    department: true,
-    type: true,
-    status: true,
-    claimAmount: true,
-    deposit: true,
-  });
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
+    {
+      claimNo: true,
+      patientId: true,
+      patientName: true,
+      doctorName: true,
+      department: true,
+      type: true,
+      status: true,
+      claimAmount: true,
+      deposit: true,
+    }
+  );
 
   // Derived Query Params
   const { queryYear, queryMonth, queryEndYear, queryEndMonth } = useMemo(() => {
@@ -94,13 +99,33 @@ export function ReportsPage() {
           queryEndMonth: endMonth,
         };
     }
-  }, [reportMode, monthlyYear, monthlyMonth, calendarYear, financialYear, startYear, startMonth, endYear, endMonth]);
+  }, [
+    reportMode,
+    monthlyYear,
+    monthlyMonth,
+    calendarYear,
+    financialYear,
+    startYear,
+    startMonth,
+    endYear,
+    endMonth,
+  ]);
 
   // Derived Period Labels
   const periodLabel = useMemo(() => {
     const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
     switch (reportMode) {
       case "monthly":
@@ -112,7 +137,17 @@ export function ReportsPage() {
       case "custom":
         return `${monthNames[startMonth - 1]} ${startYear} to ${monthNames[endMonth - 1]} ${endYear}`;
     }
-  }, [reportMode, monthlyMonth, monthlyYear, calendarYear, financialYear, startMonth, startYear, endMonth, endYear]);
+  }, [
+    reportMode,
+    monthlyMonth,
+    monthlyYear,
+    calendarYear,
+    financialYear,
+    startMonth,
+    startYear,
+    endMonth,
+    endYear,
+  ]);
 
   const periodShortLabel = useMemo(() => {
     switch (reportMode) {
@@ -125,12 +160,31 @@ export function ReportsPage() {
       case "custom":
         return `${startMonth.toString().padStart(2, "0")}/${startYear} - ${endMonth.toString().padStart(2, "0")}/${endYear}`;
     }
-  }, [reportMode, monthlyMonth, monthlyYear, calendarYear, financialYear, startMonth, startYear, endMonth, endYear]);
+  }, [
+    reportMode,
+    monthlyMonth,
+    monthlyYear,
+    calendarYear,
+    financialYear,
+    startMonth,
+    startYear,
+    endMonth,
+    endYear,
+  ]);
 
   // Queries
   const monthly = useQuery({
-    queryKey: ["reports", "monthly", reportMode, queryYear, queryMonth, queryEndYear, queryEndMonth],
-    queryFn: () => reportApi.monthly(queryYear, queryMonth, queryEndYear, queryEndMonth),
+    queryKey: [
+      "reports",
+      "monthly",
+      reportMode,
+      queryYear,
+      queryMonth,
+      queryEndYear,
+      queryEndMonth,
+    ],
+    queryFn: () =>
+      reportApi.monthly(queryYear, queryMonth, queryEndYear, queryEndMonth),
   });
 
   const insurance = useQuery<InsurancePerformanceRow[]>({
@@ -139,8 +193,22 @@ export function ReportsPage() {
   });
 
   const settlementReport = useQuery<SettlementReportData>({
-    queryKey: ["reports", "settlement", reportMode, queryYear, queryMonth, queryEndYear, queryEndMonth],
-    queryFn: () => reportApi.settlementReport(queryYear, queryMonth, queryEndYear, queryEndMonth) as any,
+    queryKey: [
+      "reports",
+      "settlement",
+      reportMode,
+      queryYear,
+      queryMonth,
+      queryEndYear,
+      queryEndMonth,
+    ],
+    queryFn: () =>
+      reportApi.settlementReport(
+        queryYear,
+        queryMonth,
+        queryEndYear,
+        queryEndMonth
+      ) as any,
   });
 
   const patient = useQuery<ReportSummaryRow[]>({
@@ -201,15 +269,23 @@ export function ReportsPage() {
   }, [monthlyData]);
 
   const detailedClaims = useMemo<DetailedClaim[]>(() => {
-    return Array.isArray(monthlyData?.detailedClaims) ? monthlyData.detailedClaims : [];
+    return Array.isArray(monthlyData?.detailedClaims)
+      ? monthlyData.detailedClaims
+      : [];
   }, [monthlyData]);
 
   const totalClaims = useMemo<number>(() => {
-    return monthlyData?.totalClaims ?? summary.reduce((sum, r) => sum + (r.count ?? 0), 0);
+    return (
+      monthlyData?.totalClaims ??
+      summary.reduce((sum, r) => sum + (r.count ?? 0), 0)
+    );
   }, [monthlyData, summary]);
 
   const totalAmount = useMemo<number>(() => {
-    return monthlyData?.totalAmount ?? summary.reduce((sum, r) => sum + (r.totalAmount ?? 0), 0);
+    return (
+      monthlyData?.totalAmount ??
+      summary.reduce((sum, r) => sum + (r.totalAmount ?? 0), 0)
+    );
   }, [monthlyData, summary]);
 
   // Export Action Handler
@@ -283,7 +359,10 @@ export function ReportsPage() {
         onSearchPatient={setPatientId}
         now={now}
       >
-        <div style={{ display: "flex", gap: "8px", marginLeft: "auto" }} className="no-print">
+        <div
+          style={{ display: "flex", gap: "8px", marginLeft: "auto" }}
+          className="no-print"
+        >
           <button
             className="btn btn-primary"
             type="button"

@@ -35,7 +35,9 @@ export function UsersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
   const [draft, setDraft] = useState<UserDraft>(blank);
-  const [createdUserTempPassword, setCreatedUserTempPassword] = useState<string | null>(null);
+  const [createdUserTempPassword, setCreatedUserTempPassword] = useState<
+    string | null
+  >(null);
   const [createdUserEmail, setCreatedUserEmail] = useState<string | null>(null);
   const qc = useQueryClient();
 
@@ -278,22 +280,67 @@ export function UsersPage() {
           }}
         >
           <div className="modal-body page-stack">
-            <p>The system has automatically generated a secure password for the new user.</p>
-            <div className="alert alert-success" style={{ padding: "16px", borderRadius: "6px", background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", display: "flex", flexDirection: "column", gap: "10px" }}>
+            <p>
+              The system has automatically generated a secure password for the
+              new user.
+            </p>
+            <div
+              className="alert alert-success"
+              style={{
+                padding: "16px",
+                borderRadius: "6px",
+                background: "rgba(16, 185, 129, 0.1)",
+                border: "1px solid rgba(16, 185, 129, 0.2)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+              }}
+            >
               <div>
-                <span className="text-muted" style={{ fontSize: "0.85em" }}>Email / Username:</span>
-                <div style={{ fontWeight: "bold", fontSize: "1.15em", color: "var(--text-main, #fff)" }}>{createdUserEmail}</div>
+                <span className="text-muted" style={{ fontSize: "0.85em" }}>
+                  Email / Username:
+                </span>
+                <div
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "1.15em",
+                    color: "var(--text-main, #fff)",
+                  }}
+                >
+                  {createdUserEmail}
+                </div>
               </div>
               <div>
-                <span className="text-muted" style={{ fontSize: "0.85em" }}>Temporary Password:</span>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
-                  <code style={{ fontSize: "1.25em", background: "rgba(0,0,0,0.3)", padding: "6px 12px", borderRadius: "4px", letterSpacing: "1px", color: "var(--amber, #f59e0b)", fontFamily: "monospace" }}>
+                <span className="text-muted" style={{ fontSize: "0.85em" }}>
+                  Temporary Password:
+                </span>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginTop: "4px",
+                  }}
+                >
+                  <code
+                    style={{
+                      fontSize: "1.25em",
+                      background: "rgba(0,0,0,0.3)",
+                      padding: "6px 12px",
+                      borderRadius: "4px",
+                      letterSpacing: "1px",
+                      color: "var(--amber, #f59e0b)",
+                      fontFamily: "monospace",
+                    }}
+                  >
                     {createdUserTempPassword}
                   </code>
                   <Button
                     type="button"
                     variant="secondary"
-                    onClick={() => navigator.clipboard.writeText(createdUserTempPassword)}
+                    onClick={() =>
+                      navigator.clipboard.writeText(createdUserTempPassword)
+                    }
                     style={{ padding: "4px 8px", minHeight: "auto" }}
                   >
                     Copy
@@ -301,8 +348,16 @@ export function UsersPage() {
                 </div>
               </div>
             </div>
-            <p style={{ fontSize: "0.85em", color: "var(--text-muted, #888)", marginTop: "8px" }}>
-              Please share this temporary password with the user. They will be forced to change their password or can change it from their settings.
+            <p
+              style={{
+                fontSize: "0.85em",
+                color: "var(--text-muted, #888)",
+                marginTop: "8px",
+              }}
+            >
+              Please share this temporary password with the user. They will be
+              forced to change their password or can change it from their
+              settings.
             </p>
           </div>
           <div className="modal-footer">

@@ -23,7 +23,8 @@ interface UpdateUserPayload {
 
 export class UserService {
   static generateRandomPassword() {
-    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    const chars =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
     let password = "";
     for (let i = 0; i < 12; i++) {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -31,7 +32,9 @@ export class UserService {
     return password;
   }
 
-  static async createUser(payload: Omit<CreateUserPayload, "password"> & { password?: string }) {
+  static async createUser(
+    payload: Omit<CreateUserPayload, "password"> & { password?: string }
+  ) {
     const existingUser = await UserRepository.findByEmail(payload.email);
 
     if (existingUser) {
@@ -100,7 +103,10 @@ export class UserService {
 
     if (payload.role) {
       if (payload.role === Roles.SUPER_ADMIN) {
-        throw new AppError("Promoting user to SUPER_ADMIN is not permitted", 400);
+        throw new AppError(
+          "Promoting user to SUPER_ADMIN is not permitted",
+          400
+        );
       }
       updatePayload.role = payload.role;
     }

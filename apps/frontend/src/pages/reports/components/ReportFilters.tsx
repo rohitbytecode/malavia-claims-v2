@@ -2,7 +2,9 @@ import React from "react";
 
 interface ReportFiltersProps {
   reportMode: "monthly" | "calendar" | "financial" | "custom";
-  setReportMode: (mode: "monthly" | "calendar" | "financial" | "custom") => void;
+  setReportMode: (
+    mode: "monthly" | "calendar" | "financial" | "custom"
+  ) => void;
   monthlyYear: number;
   setMonthlyYear: (y: number) => void;
   monthlyMonth: number;
@@ -62,7 +64,10 @@ export const ReportFilters: React.FC<ReportFiltersProps> = ({
   };
 
   return (
-    <section className="filter-bar" style={{ gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+    <section
+      className="filter-bar"
+      style={{ gap: 10, flexWrap: "wrap", alignItems: "center" }}
+    >
       <label
         className="field"
         style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
@@ -272,7 +277,9 @@ export const ReportFilters: React.FC<ReportFiltersProps> = ({
         </>
       )}
 
-      <div style={{ display: "flex", gap: 8, flex: "1 1 240px", maxWidth: 360 }}>
+      <div
+        style={{ display: "flex", gap: 8, flex: "1 1 240px", maxWidth: 360 }}
+      >
         <input
           className="input"
           placeholder="Patient ID for summary"

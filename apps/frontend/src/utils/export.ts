@@ -1,5 +1,11 @@
 import { labelize } from "./format";
-import type { ReportSummaryRow, InsurancePerformanceRow, SettlementRow, SettlementTotals, DetailedClaim } from "../types/reports";
+import type {
+  ReportSummaryRow,
+  InsurancePerformanceRow,
+  SettlementRow,
+  SettlementTotals,
+  DetailedClaim,
+} from "../types/reports";
 import { APP_CONFIG } from "../../../backend/src/config/app";
 
 interface ExportReportParams {
@@ -76,7 +82,9 @@ export const exportReportToCSV = ({
   // --- Section 2: Insurance Company Performance ---
   if (insuranceData.length > 0) {
     sections.push(`"INSURANCE COMPANY PERFORMANCE"`);
-    sections.push(`"Insurance Company","Total Claims","Claim Amount","Settled Claims","Settlement Ratio"`);
+    sections.push(
+      `"Insurance Company","Total Claims","Claim Amount","Settled Claims","Settlement Ratio"`
+    );
     insuranceData.forEach((row) => {
       const ratio = Math.round(row.settlementRatio ?? 0);
       sections.push(
@@ -89,9 +97,11 @@ export const exportReportToCSV = ({
   // --- Section 3: Settlement Financial Review ---
   if (settlements.length > 0) {
     sections.push(`"SETTLEMENT FINANCIAL REVIEW"`);
-    
+
     // Totals KPI row
-    sections.push(`"Settlements Count","Total Approved","Total Deductions","Total TDS","Total Hospital Discount","Total Net Payable"`);
+    sections.push(
+      `"Settlements Count","Total Approved","Total Deductions","Total TDS","Total Hospital Discount","Total Net Payable"`
+    );
     sections.push(
       `"${settlementCount}","${settlementTotals.totalApproved ?? 0}","${settlementTotals.totalDeductions ?? 0}","${settlementTotals.totalTds ?? 0}","${settlementTotals.totalHospitalDiscount ?? 0}","${settlementTotals.totalNetPayable ?? 0}"`
     );
@@ -119,7 +129,7 @@ export const exportReportToCSV = ({
   // --- Section 4: Detailed Claims ---
   if (detailedClaims.length > 0) {
     sections.push(`"DETAILED CLAIMS"`);
-    
+
     const activeCols = [
       { key: "claimNo", label: "Claim No." },
       { key: "patientId", label: "Patient ID" },
@@ -142,7 +152,8 @@ export const exportReportToCSV = ({
         let val = "";
         switch (col.key) {
           case "claimNo":
-            val = claim.claimNumber || claim.claimId?.toString().slice(-8) || "";
+            val =
+              claim.claimNumber || claim.claimId?.toString().slice(-8) || "";
             break;
           case "patientId":
             val = claim.patientId || "";
@@ -185,21 +196,29 @@ export const exportReportToCSV = ({
       sections.push(rowValues.join(","));
     });
 
-    const detailedClaimAmountTotal = detailedClaims.reduce((sum, claim) => sum + (claim.totalClaimAmount ?? 0), 0);
-    const detailedDepositTotal = detailedClaims.reduce((sum, claim) => sum + (claim.depositAmount ?? 0), 0);
+    const detailedClaimAmountTotal = detailedClaims.reduce(
+      (sum, claim) => sum + (claim.totalClaimAmount ?? 0),
+      0
+    );
+    const detailedDepositTotal = detailedClaims.reduce(
+      (sum, claim) => sum + (claim.depositAmount ?? 0),
+      0
+    );
 
-    const totalsRow = activeCols.map((col) => {
-      if (col.key === "claimNo") {
-        return `"TOTALS"`;
-      }
-      if (col.key === "claimAmount") {
-        return `"${detailedClaimAmountTotal}"`;
-      }
-      if (col.key === "deposit") {
-        return `"${detailedDepositTotal}"`;
-      }
-      return `""`;
-    }).join(",");
+    const totalsRow = activeCols
+      .map((col) => {
+        if (col.key === "claimNo") {
+          return `"TOTALS"`;
+        }
+        if (col.key === "claimAmount") {
+          return `"${detailedClaimAmountTotal}"`;
+        }
+        if (col.key === "deposit") {
+          return `"${detailedDepositTotal}"`;
+        }
+        return `""`;
+      })
+      .join(",");
     sections.push(totalsRow);
   }
 
@@ -208,13 +227,14 @@ export const exportReportToCSV = ({
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.setAttribute("href", url);
-  const fileSuffix = reportMode === "monthly"
-    ? `${monthlyYear}_${monthlyMonth.toString().padStart(2, "0")}`
-    : reportMode === "calendar"
-    ? `CY_${calendarYear}`
-    : reportMode === "financial"
-    ? `FY_${financialYear}_${(financialYear + 1).toString().slice(-2)}`
-    : `Custom_${startYear}_${startMonth.toString().padStart(2, "0")}_to_${endYear}_${endMonth.toString().padStart(2, "0")}`;
+  const fileSuffix =
+    reportMode === "monthly"
+      ? `${monthlyYear}_${monthlyMonth.toString().padStart(2, "0")}`
+      : reportMode === "calendar"
+        ? `CY_${calendarYear}`
+        : reportMode === "financial"
+          ? `FY_${financialYear}_${(financialYear + 1).toString().slice(-2)}`
+          : `Custom_${startYear}_${startMonth.toString().padStart(2, "0")}_to_${endYear}_${endMonth.toString().padStart(2, "0")}`;
 
   link.setAttribute(
     "download",

@@ -120,12 +120,20 @@ export function SettlementsPage() {
 
   return (
     <div className="page-stack">
-      <div className="page-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+      <div
+        className="page-title"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+        }}
+      >
         <div>
           <p className="eyebrow">Finance operations</p>
           <h1>Settlements Worklist</h1>
           <span>
-            Showing all claims awaiting settlement execution and finance allocation.
+            Showing all claims awaiting settlement execution and finance
+            allocation.
           </span>
         </div>
         <Button

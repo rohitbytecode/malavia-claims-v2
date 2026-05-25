@@ -176,8 +176,16 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
             onChange={(e) => setRefundAmount(Number(e.target.value))}
             min={0}
           />
-          <small style={{ color: "var(--text-secondary)", fontSize: 11, marginTop: 4, display: "block" }}>
-            Patient deposit collected: {formatCurrency(claim.depositAmount || 0)}
+          <small
+            style={{
+              color: "var(--text-secondary)",
+              fontSize: 11,
+              marginTop: 4,
+              display: "block",
+            }}
+          >
+            Patient deposit collected:{" "}
+            {formatCurrency(claim.depositAmount || 0)}
           </small>
         </label>
         <div className="readonly-total">

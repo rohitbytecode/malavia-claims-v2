@@ -75,7 +75,12 @@ export const DetailedClaimsTable: React.FC<DetailedClaimsTableProps> = ({
         }}
       >
         <span
-          style={{ fontSize: 11, fontWeight: 700, color: "var(--text-tertiary)", alignSelf: "center" }}
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: "var(--text-tertiary)",
+            alignSelf: "center",
+          }}
         >
           Visible Columns:
         </span>
@@ -100,20 +105,20 @@ export const DetailedClaimsTable: React.FC<DetailedClaimsTableProps> = ({
             {key === "claimNo"
               ? "Claim No."
               : key === "patientId"
-              ? "Patient ID"
-              : key === "patientName"
-              ? "Patient Name"
-              : key === "doctorName"
-              ? "Doctor"
-              : key === "department"
-              ? "Department"
-              : key === "type"
-              ? "Type"
-              : key === "status"
-              ? "Status"
-              : key === "claimAmount"
-              ? "Claim Amount"
-              : "Deposit"}
+                ? "Patient ID"
+                : key === "patientName"
+                  ? "Patient Name"
+                  : key === "doctorName"
+                    ? "Doctor"
+                    : key === "department"
+                      ? "Department"
+                      : key === "type"
+                        ? "Type"
+                        : key === "status"
+                          ? "Status"
+                          : key === "claimAmount"
+                            ? "Claim Amount"
+                            : "Deposit"}
           </label>
         ))}
       </div>
@@ -133,7 +138,9 @@ export const DetailedClaimsTable: React.FC<DetailedClaimsTableProps> = ({
         <div className="report-table-wrapper" style={{ overflowX: "auto" }}>
           <table
             className="report-table"
-            style={{ "--visible-cols": visibleColumnCount } as React.CSSProperties}
+            style={
+              { "--visible-cols": visibleColumnCount } as React.CSSProperties
+            }
           >
             <thead>
               <tr>
@@ -153,8 +160,7 @@ export const DetailedClaimsTable: React.FC<DetailedClaimsTableProps> = ({
                 <tr key={claim.claimId}>
                   {visibleColumns.claimNo && (
                     <td>
-                      {claim.claimNumber ||
-                        claim.claimId?.toString().slice(-8)}
+                      {claim.claimNumber || claim.claimId?.toString().slice(-8)}
                     </td>
                   )}
                   {visibleColumns.patientId && <td>{claim.patientId}</td>}
@@ -169,8 +175,7 @@ export const DetailedClaimsTable: React.FC<DetailedClaimsTableProps> = ({
                     <td>
                       {doctorMap.get(claim.doctorId)
                         ? `Dr. ${doctorMap.get(claim.doctorId)}`
-                        : typeof claim.doctor === "object" &&
-                          claim.doctor?.name
+                        : typeof claim.doctor === "object" && claim.doctor?.name
                           ? `Dr. ${claim.doctor.name}`
                           : "—"}
                     </td>
@@ -180,7 +185,7 @@ export const DetailedClaimsTable: React.FC<DetailedClaimsTableProps> = ({
                       {departmentMap.get(claim.departmentId)
                         ? departmentMap.get(claim.departmentId)
                         : typeof claim.department === "object" &&
-                          claim.department?.name
+                            claim.department?.name
                           ? claim.department.name
                           : "—"}
                     </td>

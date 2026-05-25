@@ -107,7 +107,11 @@ export class ClaimController {
     }
   }
 
-  static async getClaimHistory(req: Request, res: Response, next: NextFunction) {
+  static async getClaimHistory(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
       const claimId = Array.isArray(req.params.claimId)
         ? req.params.claimId[0]

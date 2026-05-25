@@ -36,11 +36,18 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
   const [target, setTarget] = useState<ClaimStatus | undefined>();
   const [remarks, setRemarks] = useState("");
   const [alNumber, setAlNumber] = useState("");
-  const [updatedClaimAmount, setUpdatedClaimAmount] = useState<number>(claim.totalClaimAmount);
-  const [updatedDepositAmount, setUpdatedDepositAmount] = useState<number>(claim.depositAmount || 0);
+  const [updatedClaimAmount, setUpdatedClaimAmount] = useState<number>(
+    claim.totalClaimAmount
+  );
+  const [updatedDepositAmount, setUpdatedDepositAmount] = useState<number>(
+    claim.depositAmount || 0
+  );
 
   const isReconsiderationExpired = useMemo(() => {
-    if (claim.status !== "PREAUTH_REJECTED" && claim.status !== "FINAL_REJECTED") {
+    if (
+      claim.status !== "PREAUTH_REJECTED" &&
+      claim.status !== "FINAL_REJECTED"
+    ) {
       return false;
     }
     const updatedAtDate = new Date(claim.updatedAt);
@@ -57,10 +64,12 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
   const lastRejectionStatus = useMemo(() => {
     if (!historyQuery.data) return null;
     const sorted = [...historyQuery.data].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
     const found = sorted.find(
-      (h) => h.toStatus === "PREAUTH_REJECTED" || h.toStatus === "FINAL_REJECTED"
+      (h) =>
+        h.toStatus === "PREAUTH_REJECTED" || h.toStatus === "FINAL_REJECTED"
     );
     return found ? found.toStatus : null;
   }, [historyQuery.data]);
@@ -80,19 +89,27 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
         }
       }
     }
-    return allowed.filter((s) => (user ? canRoleTransition(user.role, s) : false));
+    return allowed.filter((s) =>
+      user ? canRoleTransition(user.role, s) : false
+    );
   }, [claim.status, claim.type, claim.claimNumber, user, lastRejectionStatus]);
 
   /* Pre-auth approval gate: require claim/AL number from the insurance company */
   const needsAlNumber =
-    (claim.status === "PREAUTH_PENDING" || claim.status === "RECONSIDERATION_PENDING") && target === "PREAUTH_APPROVED";
+    (claim.status === "PREAUTH_PENDING" ||
+      claim.status === "RECONSIDERATION_PENDING") &&
+    target === "PREAUTH_APPROVED";
   const alNumberValid = !needsAlNumber || alNumber.trim().length >= 2;
 
   /* Claim amount editing is allowed during draft -> preauth_pending, pre-auth approval & final approval */
   const canEditAmount =
     (claim.status === "DRAFT" && target === "PREAUTH_PENDING") ||
-    ((claim.status === "PREAUTH_PENDING" || claim.status === "RECONSIDERATION_PENDING") && target === "PREAUTH_APPROVED") ||
-    ((claim.status === "FINAL_APPROVAL_PENDING" || claim.status === "RECONSIDERATION_PENDING") && target === "FINAL_APPROVED");
+    ((claim.status === "PREAUTH_PENDING" ||
+      claim.status === "RECONSIDERATION_PENDING") &&
+      target === "PREAUTH_APPROVED") ||
+    ((claim.status === "FINAL_APPROVAL_PENDING" ||
+      claim.status === "RECONSIDERATION_PENDING") &&
+      target === "FINAL_APPROVED");
 
   const mutation = useMutation({
     mutationFn: ({
@@ -178,14 +195,18 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
             <p className="action-panel__section-label">Available Transitions</p>
             {transitions.map((status) => {
               const r = TRANSITION_RISK[status] ?? "low";
-              const isExpiredReconsideration = status === "RECONSIDERATION_PENDING" && isReconsiderationExpired;
-              const isSettledTransitionDisabled = claim.status === "SETTLEMENT_PENDING" && status === "SETTLED";
-              const isDisabled = isExpiredReconsideration || isSettledTransitionDisabled;
-              const tooltipTitle = isExpiredReconsideration 
-                ? "Reconsideration period of 7 days has expired" 
-                : isSettledTransitionDisabled 
-                ? "Please finalize the settlement in the Finance Execution Console instead." 
-                : "";
+              const isExpiredReconsideration =
+                status === "RECONSIDERATION_PENDING" &&
+                isReconsiderationExpired;
+              const isSettledTransitionDisabled =
+                claim.status === "SETTLEMENT_PENDING" && status === "SETTLED";
+              const isDisabled =
+                isExpiredReconsideration || isSettledTransitionDisabled;
+              const tooltipTitle = isExpiredReconsideration
+                ? "Reconsideration period of 7 days has expired"
+                : isSettledTransitionDisabled
+                  ? "Please finalize the settlement in the Finance Execution Console instead."
+                  : "";
 
               return (
                 <button
@@ -195,9 +216,11 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                   disabled={isDisabled}
                   style={
                     {
-                      "--risk-color": isDisabled ? "var(--text-tertiary)" : RISK_COLORS[r],
+                      "--risk-color": isDisabled
+                        ? "var(--text-tertiary)"
+                        : RISK_COLORS[r],
                       opacity: isDisabled ? 0.6 : 1,
-                      cursor: isDisabled ? "not-allowed" : "pointer"
+                      cursor: isDisabled ? "not-allowed" : "pointer",
                     } as React.CSSProperties
                   }
                   title={tooltipTitle}
@@ -206,7 +229,11 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                   <span className="action-panel__transition-arrow">→</span>
                   <span>
                     {labelize(status)}
-                    {isExpiredReconsideration ? " (Expired)" : isSettledTransitionDisabled ? " (Use Finance Console)" : ""}
+                    {isExpiredReconsideration
+                      ? " (Expired)"
+                      : isSettledTransitionDisabled
+                        ? " (Use Finance Console)"
+                        : ""}
                   </span>
                   {r === "critical" && (
                     <span className="action-panel__risk-badge">CRITICAL</span>
@@ -359,14 +386,14 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
               {canEditAmount && (
                 <div className="action-panel__audit-section">
                   <label className="field">
-                    <span>
-                      Claim Amount (₹)
-                    </span>
+                    <span>Claim Amount (₹)</span>
                     <input
                       className="input input-mono"
                       type="number"
                       value={updatedClaimAmount}
-                      onChange={(e) => setUpdatedClaimAmount(Number(e.target.value))}
+                      onChange={(e) =>
+                        setUpdatedClaimAmount(Number(e.target.value))
+                      }
                       min={0}
                       step="0.01"
                       disabled={isBlocked}
@@ -400,33 +427,50 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                         : "Update if the insurance company approved a different amount. Leave as-is to keep current amount."}
                     </small>
                   )}
-                  {claim.status === "DRAFT" && target === "PREAUTH_PENDING" && (!updatedClaimAmount || updatedClaimAmount <= 0) && (
-                    <small className="field-error" style={{ display: "block", marginTop: 4 }}>
-                      Claim amount is required and must be greater than 0.
-                    </small>
-                  )}
+                  {claim.status === "DRAFT" &&
+                    target === "PREAUTH_PENDING" &&
+                    (!updatedClaimAmount || updatedClaimAmount <= 0) && (
+                      <small
+                        className="field-error"
+                        style={{ display: "block", marginTop: 4 }}
+                      >
+                        Claim amount is required and must be greater than 0.
+                      </small>
+                    )}
                 </div>
               )}
               {target === "FINAL_APPROVED" && (
                 <div className="action-panel__audit-section">
-                  <div className="action-panel__risk-warning action-panel__risk-warning--low" style={{ borderColor: "var(--accent-primary)", color: "var(--accent-primary)", marginBottom: 12, display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                  <div
+                    className="action-panel__risk-warning action-panel__risk-warning--low"
+                    style={{
+                      borderColor: "var(--accent-primary)",
+                      color: "var(--accent-primary)",
+                      marginBottom: 12,
+                      display: "flex",
+                      gap: "10px",
+                      alignItems: "flex-start",
+                    }}
+                  >
                     <span>?</span>
                     <div>
                       <strong>Verify Deposit Collected</strong>
                       <p style={{ marginTop: 4, fontSize: 12 }}>
-                        Is the collected deposit amount correct? Or did you collect more deposit? If yes, please enter the updated amount.
+                        Is the collected deposit amount correct? Or did you
+                        collect more deposit? If yes, please enter the updated
+                        amount.
                       </p>
                     </div>
                   </div>
                   <label className="field">
-                    <span>
-                      Collected Deposit Amount (₹)
-                    </span>
+                    <span>Collected Deposit Amount (₹)</span>
                     <input
                       className="input input-mono"
                       type="number"
                       value={updatedDepositAmount}
-                      onChange={(e) => setUpdatedDepositAmount(Number(e.target.value))}
+                      onChange={(e) =>
+                        setUpdatedDepositAmount(Number(e.target.value))
+                      }
                       min={0}
                       step="0.01"
                       disabled={isBlocked}
@@ -442,7 +486,9 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                         fontWeight: 600,
                       }}
                     >
-                      ⚠ Deposit will be updated from {formatCurrency(claim.depositAmount || 0)} → {formatCurrency(updatedDepositAmount)}
+                      ⚠ Deposit will be updated from{" "}
+                      {formatCurrency(claim.depositAmount || 0)} →{" "}
+                      {formatCurrency(updatedDepositAmount)}
                     </small>
                   )}
                 </div>
@@ -450,12 +496,24 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
 
               {target === "DEPOSIT_RETURNED" && (
                 <div className="action-panel__audit-section">
-                  <div className="action-panel__risk-warning action-panel__risk-warning--high" style={{ borderColor: "var(--amber)", color: "var(--amber)", display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: 12 }}>
+                  <div
+                    className="action-panel__risk-warning action-panel__risk-warning--high"
+                    style={{
+                      borderColor: "var(--amber)",
+                      color: "var(--amber)",
+                      display: "flex",
+                      gap: "10px",
+                      alignItems: "flex-start",
+                      marginBottom: 12,
+                    }}
+                  >
                     <span>?</span>
                     <div>
                       <strong>Refund Confirmation</strong>
                       <p style={{ marginTop: 4, fontSize: 12 }}>
-                        Did you return the refund amount of <strong>{formatCurrency(claim.refundAmount)}</strong> to the patient?
+                        Did you return the refund amount of{" "}
+                        <strong>{formatCurrency(claim.refundAmount)}</strong> to
+                        the patient?
                       </p>
                     </div>
                   </div>
@@ -519,7 +577,9 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                     !alNumberValid ||
                     isBlocked ||
                     mutation.isPending ||
-                    (claim.status === "DRAFT" && target === "PREAUTH_PENDING" && (!updatedClaimAmount || updatedClaimAmount <= 0))
+                    (claim.status === "DRAFT" &&
+                      target === "PREAUTH_PENDING" &&
+                      (!updatedClaimAmount || updatedClaimAmount <= 0))
                   }
                   onClick={() =>
                     target &&
@@ -529,7 +589,9 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                       ...(needsAlNumber
                         ? { claimNumber: alNumber.trim() }
                         : {}),
-                      ...(canEditAmount && (updatedClaimAmount !== claim.totalClaimAmount || claim.status === "DRAFT")
+                      ...(canEditAmount &&
+                      (updatedClaimAmount !== claim.totalClaimAmount ||
+                        claim.status === "DRAFT")
                         ? { totalClaimAmount: updatedClaimAmount }
                         : {}),
                       ...(target === "FINAL_APPROVED"

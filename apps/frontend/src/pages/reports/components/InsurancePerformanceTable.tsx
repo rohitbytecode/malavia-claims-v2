@@ -7,11 +7,9 @@ interface InsurancePerformanceTableProps {
   formatCurrency: (val: number) => string;
 }
 
-export const InsurancePerformanceTable: React.FC<InsurancePerformanceTableProps> = ({
-  insuranceData,
-  isLoading,
-  formatCurrency,
-}) => {
+export const InsurancePerformanceTable: React.FC<
+  InsurancePerformanceTableProps
+> = ({ insuranceData, isLoading, formatCurrency }) => {
   return (
     <div style={{ marginBottom: 40 }}>
       <h3
@@ -27,7 +25,10 @@ export const InsurancePerformanceTable: React.FC<InsurancePerformanceTableProps>
         Insurance Company Performance
       </h3>
       <div className="report-table-wrapper" style={{ overflowX: "auto" }}>
-        <table className="report-table" style={{ "--visible-cols": 5 } as React.CSSProperties}>
+        <table
+          className="report-table"
+          style={{ "--visible-cols": 5 } as React.CSSProperties}
+        >
           <thead>
             <tr>
               <th>Insurance company</th>

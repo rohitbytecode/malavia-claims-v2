@@ -92,7 +92,9 @@ export class SettlementService {
     );
 
     // Sync or create Deposit record with the refundAmount
-    const existingDeposit = await DepositRepository.findDepositByClaimId(params.claimId);
+    const existingDeposit = await DepositRepository.findDepositByClaimId(
+      params.claimId
+    );
     if (existingDeposit) {
       await DepositRepository.updateDeposit(existingDeposit._id.toString(), {
         refundAmount: params.refundAmount ?? 0,

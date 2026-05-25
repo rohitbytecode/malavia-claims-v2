@@ -24,4 +24,3 @@ export const toInsuranceCompanyResponse = (
     updatedAt: company.updatedAt,
   };
 };
-

@@ -28,7 +28,9 @@ export const ClaimsSummary: React.FC<ClaimsSummaryProps> = ({
       <div className="report-summary" style={{ marginBottom: 28 }}>
         <div className="report-summary-cell">
           <span>Total Claims</span>
-          <strong style={{ color: "var(--accent-primary)" }}>{totalClaims}</strong>
+          <strong style={{ color: "var(--accent-primary)" }}>
+            {totalClaims}
+          </strong>
         </div>
         <div className="report-summary-cell">
           <span>Total Amount</span>
@@ -63,10 +65,7 @@ export const ClaimsSummary: React.FC<ClaimsSummaryProps> = ({
           </h3>
           <div className="report-summary" style={{ marginBottom: 28 }}>
             {summary.map((row) => (
-              <div
-                className="report-summary-cell"
-                key={row._id ?? row.status}
-              >
+              <div className="report-summary-cell" key={row._id ?? row.status}>
                 <span>{labelize(row._id ?? row.status)}</span>
                 <strong>{row.count ?? 0}</strong>
                 <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>

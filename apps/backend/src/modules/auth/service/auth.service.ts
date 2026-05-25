@@ -125,10 +125,7 @@ export class AuthService {
       throw new AppError("User not found", 404);
     }
 
-    const passwordMatches = await comparePassword(
-      oldPassword,
-      user.password
-    );
+    const passwordMatches = await comparePassword(oldPassword, user.password);
 
     if (!passwordMatches) {
       throw new AppError("Invalid current password", 400);

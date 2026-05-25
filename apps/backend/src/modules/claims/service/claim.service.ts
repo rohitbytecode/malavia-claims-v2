@@ -137,7 +137,8 @@ export class ClaimService {
 
       // Verify that reconsideration transitions match the original rejection stage
       if (claim.status === ClaimStatus.RECONSIDERATION_PENDING) {
-        const histories = await ClaimStatusHistoryRepository.findByClaimId(claimId);
+        const histories =
+          await ClaimStatusHistoryRepository.findByClaimId(claimId);
         const lastRejection = histories.find(
           (h) =>
             h.toStatus === ClaimStatus.PREAUTH_REJECTED ||
@@ -207,7 +208,8 @@ export class ClaimService {
           );
         }
 
-        const histories = await ClaimStatusHistoryRepository.findByClaimId(claimId);
+        const histories =
+          await ClaimStatusHistoryRepository.findByClaimId(claimId);
         const rejectionEntry = histories.find(
           (h: any) => h.toStatus === claim.status
         );
@@ -260,12 +262,19 @@ export class ClaimService {
       }
 
       // Sync Deposit record when FINAL_APPROVED
-      if (toStatus === ClaimStatus.FINAL_APPROVED && depositAmount !== undefined) {
-        const existingDeposit = await DepositRepository.findDepositByClaimId(claimId);
+      if (
+        toStatus === ClaimStatus.FINAL_APPROVED &&
+        depositAmount !== undefined
+      ) {
+        const existingDeposit =
+          await DepositRepository.findDepositByClaimId(claimId);
         if (existingDeposit) {
-          await DepositRepository.updateDeposit(existingDeposit._id.toString(), {
-            collectedAmount: depositAmount,
-          } as any);
+          await DepositRepository.updateDeposit(
+            existingDeposit._id.toString(),
+            {
+              collectedAmount: depositAmount,
+            } as any
+          );
         } else {
           await DepositRepository.createDeposit({
             claimId: new Types.ObjectId(claimId),

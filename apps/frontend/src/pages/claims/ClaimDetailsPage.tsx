@@ -232,7 +232,8 @@ export function ClaimDetailsPage() {
                     padding: "16px 20px",
                     background:
                       "color-mix(in srgb, var(--amber) 8%, transparent)",
-                    border: "1px solid color-mix(in srgb, var(--amber) 25%, transparent)",
+                    border:
+                      "1px solid color-mix(in srgb, var(--amber) 25%, transparent)",
                     borderRadius: "var(--r-lg)",
                     fontSize: 13,
                     color: "var(--text-secondary)",
@@ -243,10 +244,9 @@ export function ClaimDetailsPage() {
                     <strong style={{ display: "block", marginBottom: 2 }}>
                       Settlement not available yet
                     </strong>
-                    The claim must reach{" "}
-                    <strong>Settlement Pending</strong> status before the
-                    finance console is unlocked. Current status:{" "}
-                    <StatusBadge value={data.status} compact />
+                    The claim must reach <strong>Settlement Pending</strong>{" "}
+                    status before the finance console is unlocked. Current
+                    status: <StatusBadge value={data.status} compact />
                   </div>
                 </div>
               </Card>

@@ -228,7 +228,6 @@ export function ClaimCreatePanel() {
           />
         </Field>
 
-
         <Field label="Deposit amount">
           <TextInput type="number" {...register("depositAmount")} />
         </Field>

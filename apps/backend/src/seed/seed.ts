@@ -163,7 +163,15 @@ const runSeeders = async () => {
 
     // 6. Seed Claims, Settlements, Deposits, and Alerts
     const claimsCount = await ClaimModel.countDocuments();
-    if (claimsCount === 0 && hdfc && star && cardiology && neurology && doc1 && doc2) {
+    if (
+      claimsCount === 0 &&
+      hdfc &&
+      star &&
+      cardiology &&
+      neurology &&
+      doc1 &&
+      doc2
+    ) {
       const pat1 = await PatientModel.findOne({ patientId: "PAT-001" });
       const pat2 = await PatientModel.findOne({ patientId: "PAT-002" });
       const pat3 = await PatientModel.findOne({ patientId: "PAT-003" });
@@ -272,7 +280,9 @@ const runSeeders = async () => {
         resolved: false,
       });
 
-      logger.info("Claims, Settlements, Deposits, and Alerts seeded successfully.");
+      logger.info(
+        "Claims, Settlements, Deposits, and Alerts seeded successfully."
+      );
     }
 
     logger.info("Seeding completed successfully.");

@@ -221,9 +221,9 @@ export function SettingsPage() {
               >
                 — The System Architect —
               </span>
-              solely for <strong>{ APP_CONFIG.ORG_NAME }</strong> internal use. Any
-              unauthorized reproduction, distribution, reverse engineering, or
-              duplication of this platform is strictly prohibited.
+              solely for <strong>{APP_CONFIG.ORG_NAME}</strong> internal use.
+              Any unauthorized reproduction, distribution, reverse engineering,
+              or duplication of this platform is strictly prohibited.
             </p>
             <span
               style={{
