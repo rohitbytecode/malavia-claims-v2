@@ -11,10 +11,7 @@ import { authenticate } from "@/modules/auth/middleware/auth.middleware.js";
 
 const router = Router();
 
-router.get(
-  "/users",
-  asyncHandler(AuthController.getPublicUsers)
-);
+router.get("/users", asyncHandler(AuthController.getPublicUsers));
 router.post(
   "/login",
   validate(loginSchema),

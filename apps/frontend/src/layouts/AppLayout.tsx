@@ -351,14 +351,14 @@ export function AppLayout({ children }: PropsWithChildren) {
             >
               {theme === "dark" ? "◑" : "◐"}
             </button>
-            <button type="button"
+            <button
+              type="button"
               className="sidebar__icon-btn sidebar__icon-btn--danger"
               onClick={() => {
                 logout();
                 navigate("/login");
               }}
               title="Logout"
-              
             >
               ⊗
             </button>

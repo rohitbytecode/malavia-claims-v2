@@ -80,7 +80,7 @@ const seedTestAlertsData = async () => {
     await mongoose.connection
       .db!.collection("claims")
       .updateOne({ _id: claim50._id }, { $set: { createdAt: date50DaysAgo } });
-    
+
     // Create transition history entry backdated to 50 days ago
     await ClaimStatusHistoryModel.create({
       claimId: claim50._id,

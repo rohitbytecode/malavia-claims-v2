@@ -59,8 +59,7 @@ const normalized = <T>(
 export const authApi = {
   login: (body: { username: string; password: string }) =>
     unwrap<AuthPayload>(apiClient.post("/auth/login", body)),
-  getUsers: () =>
-    unwrap<User[]>(apiClient.get("/auth/users")),
+  getUsers: () => unwrap<User[]>(apiClient.get("/auth/users")),
   changePassword: (body: { oldPassword: string; newPassword: string }) =>
     unwrap<{ success: boolean }>(apiClient.post("/auth/change-password", body)),
 };

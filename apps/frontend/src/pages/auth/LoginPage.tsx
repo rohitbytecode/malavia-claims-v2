@@ -5,7 +5,11 @@ import { useNavigate } from "react-router-dom";
 import { authApi } from "../../api/services";
 import { Button } from "../../components/ui/Button";
 import { ErrorPanel } from "../../components/ui/ErrorPanel";
-import { Field, TextInput, SelectInput } from "../../components/forms/FormField";
+import {
+  Field,
+  TextInput,
+  SelectInput,
+} from "../../components/forms/FormField";
 import { AuthLayout } from "../../layouts/AuthLayout";
 import { useAuthStore } from "../../store/auth.store";
 import { loginSchema } from "../../validators/forms";

@@ -67,9 +67,10 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
         )
       );
 
-      const lines: SettlementDepartmentBreakdown[] = billBreakdown.flatMap((b) => {
-        if (b.amount <= 0) return [];
-        const policy = policyMap.get(b.departmentCategory);
+      const lines: SettlementDepartmentBreakdown[] = billBreakdown.flatMap(
+        (b) => {
+          if (b.amount <= 0) return [];
+          const policy = policyMap.get(b.departmentCategory);
           const claimed = b.amount;
           const approved = claimed;
 
@@ -96,7 +97,8 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
             netAmount: Math.round(net * 100) / 100,
             remarks: "",
           };
-        });
+        }
+      );
       setDeptLines(lines);
 
       if (contract) {
@@ -186,7 +188,9 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
     const totalDiscounts = deptLines.reduce((s, l) => s + l.discountAmount, 0);
     const totalNet = deptLines.reduce((s, l) => s + l.netAmount, 0);
 
-    const activeApproved = hasBillBreakdown ? totalApproved : claim.totalClaimAmount;
+    const activeApproved = hasBillBreakdown
+      ? totalApproved
+      : claim.totalClaimAmount;
     const activeDiscount = hasBillBreakdown ? totalDiscounts : hospitalDiscount;
     const activeNet = Math.max(0, activeApproved - activeDiscount);
 
@@ -197,7 +201,9 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
     const extraRefund = Math.max(0, refundAmount - (claim.depositAmount || 0));
     const netPayable = Math.max(
       0,
-      activeNet - (tds !== undefined && tds !== 0 ? tds : tdsAmount) - extraRefund
+      activeNet -
+        (tds !== undefined && tds !== 0 ? tds : tdsAmount) -
+        extraRefund
     );
 
     return {
@@ -232,10 +238,14 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
     mutationFn: () =>
       settlementApi.create({
         claimId: claim.id,
-        approvedAmount: hasBillBreakdown ? totals.totalApproved : claim.totalClaimAmount,
+        approvedAmount: hasBillBreakdown
+          ? totals.totalApproved
+          : claim.totalClaimAmount,
         deductions: hasBillBreakdown ? totals.totalDeductions : 0,
         tds,
-        hospitalDiscount: hasBillBreakdown ? totals.totalDiscounts : hospitalDiscount,
+        hospitalDiscount: hasBillBreakdown
+          ? totals.totalDiscounts
+          : hospitalDiscount,
         settlementMethod: method,
         settledBy: user?._id ?? "",
         remarks: "Recorded from Smart Finance Console",
@@ -697,8 +707,7 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
           />
           {contract && (
             <small style={{ color: "var(--text-tertiary)", fontSize: 11 }}>
-              Contract TDS: {contract.tdsPercent}% = ₹
-              {totals.tdsAmount}
+              Contract TDS: {contract.tdsPercent}% = ₹{totals.tdsAmount}
             </small>
           )}
         </label>

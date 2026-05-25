@@ -128,13 +128,13 @@ export function DataTable<T>({
               aria-label="Search table"
             />
             {query && (
-              <button type="button"
+              <button
+                type="button"
                 className="dt-search__clear"
                 onClick={() => {
                   setQuery("");
                   searchRef.current?.focus();
                 }}
-                
               >
                 ×
               </button>
@@ -167,12 +167,7 @@ export function DataTable<T>({
       </div>
 
       {/* ── Table ── */}
-      <div
-        className="dt-viewport"
-        role="region"
-        aria-label={title}
-        
-      >
+      <div className="dt-viewport" role="region" aria-label={title}>
         <table className={cn("dt-table", compact && "dt-table--compact")}>
           <thead>
             <tr>
@@ -188,10 +183,10 @@ export function DataTable<T>({
                   )}
                   style={{ width: col.width }}
                 >
-                  <button type="button"
+                  <button
+                    type="button"
                     className="dt-th__btn"
                     onClick={() => col.sortValue && handleSort(col.key)}
-                    
                     disabled={!col.sortValue}
                   >
                     {col.header}
@@ -304,51 +299,51 @@ export function DataTable<T>({
             Page {page} of {totalPages} — {sorted.length} records
           </span>
           <div className="dt-pagination__controls">
-            <button type="button"
+            <button
+              type="button"
               className="dt-pagination__btn"
               disabled={page === 1}
               onClick={() => setPage(1)}
-              
             >
               «
             </button>
-            <button type="button"
+            <button
+              type="button"
               className="dt-pagination__btn"
               disabled={page === 1}
               onClick={() => setPage((p) => p - 1)}
-              
             >
               ‹
             </button>
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               const p = Math.max(1, Math.min(page - 2, totalPages - 4)) + i;
               return (
-                <button type="button"
+                <button
+                  type="button"
                   key={p}
                   className={cn(
                     "dt-pagination__btn",
                     page === p && "dt-pagination__btn--active"
                   )}
                   onClick={() => setPage(p)}
-                  
                 >
                   {p}
                 </button>
               );
             })}
-            <button type="button"
+            <button
+              type="button"
               className="dt-pagination__btn"
               disabled={page === totalPages}
               onClick={() => setPage((p) => p + 1)}
-              
             >
               ›
             </button>
-            <button type="button"
+            <button
+              type="button"
               className="dt-pagination__btn"
               disabled={page === totalPages}
               onClick={() => setPage(totalPages)}
-              
             >
               »
             </button>

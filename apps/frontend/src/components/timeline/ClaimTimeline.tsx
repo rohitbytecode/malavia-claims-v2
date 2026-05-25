@@ -117,11 +117,11 @@ export function ClaimTimeline({ events, compact = false }: ClaimTimelineProps) {
           const meta = type === "ALL" ? null : EVENT_META[type];
           const count = typeCounts[type] ?? 0;
           return (
-            <button type="button"
+            <button
+              type="button"
               key={type}
               className={`timeline__filter-btn${filter === type ? " timeline__filter-btn--active" : ""}`}
               onClick={() => setFilter(type)}
-              
               data-type={type}
             >
               {meta ? <span>{meta.icon}</span> : null}
@@ -183,10 +183,10 @@ export function ClaimTimeline({ events, compact = false }: ClaimTimelineProps) {
 
                   {/* Card */}
                   <div className="timeline__card">
-                    <button type="button"
+                    <button
+                      type="button"
                       className="timeline__card-header"
                       onClick={() => hasDetail && toggleExpand(id)}
-                      
                       disabled={!hasDetail}
                     >
                       <div className="timeline__card-left">

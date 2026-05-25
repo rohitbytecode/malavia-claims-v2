@@ -230,12 +230,20 @@ export const exportReportToCSV = ({
   }
 
   // --- Section 5: Hospital Share & Vendor Payout ---
-  if (hospitalShareData && hospitalShareData.rows && hospitalShareData.rows.length > 0) {
+  if (
+    hospitalShareData &&
+    hospitalShareData.rows &&
+    hospitalShareData.rows.length > 0
+  ) {
     sections.push(`"HOSPITAL SHARE & VENDOR PAYOUT"`);
-    sections.push(`"Date","Claim Number","Insurance Company","Approved","Net Payable","Pharmacy","Laboratory","Radiology","Total Vendor","Hospital Share"`);
-    
+    sections.push(
+      `"Date","Claim Number","Insurance Company","Approved","Net Payable","Pharmacy","Laboratory","Radiology","Total Vendor","Hospital Share"`
+    );
+
     hospitalShareData.rows.forEach((row) => {
-      const dateStr = row.settlementDate ? new Date(row.settlementDate).toLocaleDateString("en-IN") : "—";
+      const dateStr = row.settlementDate
+        ? new Date(row.settlementDate).toLocaleDateString("en-IN")
+        : "—";
       sections.push(
         `"${dateStr}","${(row.claimNumber || "—").replace(/"/g, '""')}","${(row.insuranceCompany || "—").replace(/"/g, '""')}","${row.approvedAmount ?? 0}","${row.netPayable ?? 0}","${row.pharmacyShare ?? 0}","${row.labShare ?? 0}","${row.radiologyShare ?? 0}","${row.vendorPayout ?? 0}","${row.hospitalShare ?? 0}"`
       );

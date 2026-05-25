@@ -38,7 +38,9 @@ export function UsersPage() {
   const [createdUserTempPassword, setCreatedUserTempPassword] = useState<
     string | null
   >(null);
-  const [createdUserUsername, setCreatedUserUsername] = useState<string | null>(null);
+  const [createdUserUsername, setCreatedUserUsername] = useState<string | null>(
+    null
+  );
   const qc = useQueryClient();
 
   const currentUser = useAuthStore((s) => s.user);

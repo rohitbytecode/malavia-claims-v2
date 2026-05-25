@@ -92,7 +92,14 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
     return allowed.filter((s) =>
       user ? canRoleTransition(user.role, s) : false
     );
-  }, [claim.status, claim.type, claim.claimNumber, claim.id, user, lastRejectionStatus]);
+  }, [
+    claim.status,
+    claim.type,
+    claim.claimNumber,
+    claim.id,
+    user,
+    lastRejectionStatus,
+  ]);
 
   /* Pre-auth approval gate: require claim/AL number from the insurance company */
   const needsAlNumber =
@@ -209,7 +216,8 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                   : "";
 
               return (
-                <button type="button"
+                <button
+                  type="button"
                   key={status}
                   className={`action-panel__transition-btn action-panel__transition-btn--${r}`}
                   onClick={() => setTarget(status)}
@@ -224,7 +232,6 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                     } as React.CSSProperties
                   }
                   title={tooltipTitle}
-                  
                 >
                   <span className="action-panel__transition-arrow">→</span>
                   <span>
