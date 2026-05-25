@@ -75,10 +75,14 @@ export class SettlementService {
         departmentCategory: item.departmentCategory,
         claimedAmount: item.claimedAmount,
         approvedAmount: item.approvedAmount,
-        deduction: item.deduction ?? Math.max(0, item.claimedAmount - item.approvedAmount),
+        deduction:
+          item.deduction ??
+          Math.max(0, item.claimedAmount - item.approvedAmount),
         discountPercent: item.discountPercent ?? 0,
         discountAmount: item.discountAmount ?? 0,
-        netAmount: item.netAmount ?? Math.max(0, item.approvedAmount - (item.discountAmount ?? 0)),
+        netAmount:
+          item.netAmount ??
+          Math.max(0, item.approvedAmount - (item.discountAmount ?? 0)),
         remarks: item.remarks ?? "",
       })
     );
@@ -153,4 +157,3 @@ export class SettlementService {
     return settlement;
   }
 }
-

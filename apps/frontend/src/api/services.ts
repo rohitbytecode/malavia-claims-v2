@@ -96,10 +96,7 @@ export const claimsApi = {
     unwrap<Claim>(apiClient.post(`/claims/${claimId}/status-transition`, body)),
   history: (claimId: string) =>
     unwrap<ClaimHistory[]>(apiClient.get(`/claims/${claimId}/history`)),
-  updateBillBreakdown: (
-    claimId: string,
-    billBreakdown: BillLineItem[]
-  ) =>
+  updateBillBreakdown: (claimId: string, billBreakdown: BillLineItem[]) =>
     unwrap<Claim>(
       apiClient.patch(`/claims/${claimId}/bill-breakdown`, { billBreakdown })
     ),
@@ -390,7 +387,10 @@ export const documentTypes: DocumentType[] = [
   "OTHER",
 ];
 
-export const DEPARTMENT_CATEGORIES: { value: DepartmentCategory; label: string }[] = [
+export const DEPARTMENT_CATEGORIES: {
+  value: DepartmentCategory;
+  label: string;
+}[] = [
   { value: "PHARMACY", label: "Pharmacy" },
   { value: "LABORATORY", label: "Laboratory" },
   { value: "RADIOLOGY", label: "Radiology" },

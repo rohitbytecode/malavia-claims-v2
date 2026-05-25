@@ -14,9 +14,17 @@ export const createPayerContractSchema = z.object({
     insuranceCompanyId: z.string().trim().min(1),
     effectiveFrom: z.string().trim().optional(),
     effectiveTo: z.string().trim().optional(),
-    departmentPolicies: z.array(departmentPolicyItemSchema).optional().default([]),
+    departmentPolicies: z
+      .array(departmentPolicyItemSchema)
+      .optional()
+      .default([]),
     tdsPercent: z.number().min(0).max(100).optional().default(0),
-    defaultHospitalDiscountPercent: z.number().min(0).max(100).optional().default(0),
+    defaultHospitalDiscountPercent: z
+      .number()
+      .min(0)
+      .max(100)
+      .optional()
+      .default(0),
     remarks: z.string().trim().optional().default(""),
     createdBy: z.string().trim().min(1),
   }),

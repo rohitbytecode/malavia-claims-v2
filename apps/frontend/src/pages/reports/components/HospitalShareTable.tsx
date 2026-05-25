@@ -125,13 +125,19 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
                 <td style={{ textAlign: "right" }}>
                   {formatCurrency(row.netPayable)}
                 </td>
-                <td style={{ textAlign: "right", color: "var(--text-secondary)" }}>
+                <td
+                  style={{ textAlign: "right", color: "var(--text-secondary)" }}
+                >
                   {formatCurrency(row.pharmacyShare)}
                 </td>
-                <td style={{ textAlign: "right", color: "var(--text-secondary)" }}>
+                <td
+                  style={{ textAlign: "right", color: "var(--text-secondary)" }}
+                >
                   {formatCurrency(row.labShare)}
                 </td>
-                <td style={{ textAlign: "right", color: "var(--text-secondary)" }}>
+                <td
+                  style={{ textAlign: "right", color: "var(--text-secondary)" }}
+                >
                   {formatCurrency(row.radiologyShare)}
                 </td>
                 <td style={{ textAlign: "right", fontWeight: 600 }}>
@@ -152,8 +158,10 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
               <tr
                 style={{
                   fontWeight: 800,
-                  borderTop: "2px solid color-mix(in srgb, var(--text-tertiary) 30%, transparent)",
-                  background: "var(--background-secondary, rgba(255, 255, 255, 0.02))",
+                  borderTop:
+                    "2px solid color-mix(in srgb, var(--text-tertiary) 30%, transparent)",
+                  background:
+                    "var(--background-secondary, rgba(255, 255, 255, 0.02))",
                 }}
               >
                 <td colSpan={3}>TOTAL</td>

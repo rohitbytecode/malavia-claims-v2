@@ -328,7 +328,11 @@ export class ClaimService {
 
   static async updateBillBreakdown(
     claimId: string,
-    billBreakdown: { departmentCategory: string; amount: number; description?: string }[]
+    billBreakdown: {
+      departmentCategory: string;
+      amount: number;
+      description?: string;
+    }[]
   ) {
     const claim = await ClaimRepository.findClaimById(claimId);
     if (!claim) {

@@ -73,7 +73,8 @@ function toPayload(draft: CompanyDraft) {
 }
 
 export function InsurancePage() {
-  const [selectedCompany, setSelectedCompany] = useState<InsuranceCompany | null>(null);
+  const [selectedCompany, setSelectedCompany] =
+    useState<InsuranceCompany | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<InsuranceCompany | null>(null);
   const [draft, setDraft] = useState<CompanyDraft>(blank);
@@ -242,7 +243,6 @@ export function InsurancePage() {
           Submission channels, escalation matrix and operational TAT visibility.
         </span>
       </div>
-
 
       <DataTable
         title="Payer directory"

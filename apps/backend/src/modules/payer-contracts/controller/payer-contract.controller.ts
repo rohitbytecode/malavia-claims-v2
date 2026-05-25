@@ -17,7 +17,9 @@ export class PayerContractController {
 
   static async getById(req: Request, res: Response, next: NextFunction) {
     try {
-      const contract = await PayerContractService.getById(req.params.id as string);
+      const contract = await PayerContractService.getById(
+        req.params.id as string
+      );
       return res.status(200).json({
         success: true,
         message: "Payer contract fetched",

@@ -122,8 +122,10 @@ export function FinancialControlDeck({
               width: "100%",
               justifyContent: "space-between",
               padding: "10px 14px",
-              background: "var(--background-secondary, rgba(255, 255, 255, 0.05))",
-              border: "1px solid color-mix(in srgb, var(--text-tertiary) 15%, transparent)",
+              background:
+                "var(--background-secondary, rgba(255, 255, 255, 0.05))",
+              border:
+                "1px solid color-mix(in srgb, var(--text-tertiary) 15%, transparent)",
               borderRadius: "var(--r-md)",
               cursor: "pointer",
             }}
@@ -236,7 +238,8 @@ export function FinancialControlDeck({
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(180px, 1fr))",
                     gap: 10,
                   }}
                 >
@@ -289,4 +292,3 @@ export function FinancialControlDeck({
     </section>
   );
 }
-

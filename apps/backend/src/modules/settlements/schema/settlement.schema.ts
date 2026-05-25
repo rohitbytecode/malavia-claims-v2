@@ -121,4 +121,3 @@ const settlementSchema = new mongoose.Schema<SettlementDocument>(
 export const SettlementModel =
   mongoose.models.Settlement ||
   mongoose.model<SettlementDocument>("Settlement", settlementSchema);
-

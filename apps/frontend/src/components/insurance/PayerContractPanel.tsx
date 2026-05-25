@@ -62,7 +62,8 @@ export function PayerContractPanel({
             effectiveFrom: draft.effectiveFrom,
             effectiveTo: draft.effectiveTo || null,
             tdsPercent: draft.tdsPercent,
-            defaultHospitalDiscountPercent: draft.defaultHospitalDiscountPercent,
+            defaultHospitalDiscountPercent:
+              draft.defaultHospitalDiscountPercent,
             remarks: draft.remarks,
             departmentPolicies: draft.departmentPolicies,
           })
@@ -71,7 +72,8 @@ export function PayerContractPanel({
             effectiveFrom: draft.effectiveFrom,
             effectiveTo: draft.effectiveTo || undefined,
             tdsPercent: draft.tdsPercent,
-            defaultHospitalDiscountPercent: draft.defaultHospitalDiscountPercent,
+            defaultHospitalDiscountPercent:
+              draft.defaultHospitalDiscountPercent,
             remarks: draft.remarks,
             departmentPolicies: draft.departmentPolicies,
             createdBy: user?._id ?? "",
@@ -335,7 +337,10 @@ export function PayerContractPanel({
             save.mutate();
           }}
         >
-          <div className="modal-body" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+          <div
+            className="modal-body"
+            style={{ maxHeight: "70vh", overflowY: "auto" }}
+          >
             <div className="form-grid-2" style={{ marginBottom: 16 }}>
               <label className="field">
                 <span>Effective From</span>

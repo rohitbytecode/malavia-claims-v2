@@ -112,7 +112,11 @@ export class ClaimRepository {
 
   static async updateBillBreakdown(
     claimId: string,
-    billBreakdown: { departmentCategory: string; amount: number; description?: string }[]
+    billBreakdown: {
+      departmentCategory: string;
+      amount: number;
+      description?: string;
+    }[]
   ) {
     return ClaimModel.findByIdAndUpdate(
       claimId,

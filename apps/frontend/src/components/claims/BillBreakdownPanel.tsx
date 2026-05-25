@@ -1,7 +1,11 @@
 import { useState, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { claimsApi, DEPARTMENT_CATEGORIES } from "../../api/services";
-import type { BillLineItem, Claim, DepartmentCategory } from "../../types/domain";
+import type {
+  BillLineItem,
+  Claim,
+  DepartmentCategory,
+} from "../../types/domain";
 import { formatCurrency, labelize } from "../../utils/format";
 import { Button } from "../ui/Button";
 import { ErrorPanel } from "../ui/ErrorPanel";
@@ -48,7 +52,11 @@ export function BillBreakdownPanel({ claim }: BillBreakdownPanelProps) {
   const diff = claim.totalClaimAmount - total;
   const isBalanced = Math.abs(diff) < 1;
 
-  const updateItem = (idx: number, field: keyof BillLineItem, value: unknown) => {
+  const updateItem = (
+    idx: number,
+    field: keyof BillLineItem,
+    value: unknown
+  ) => {
     setItems((prev) => {
       const next = [...prev];
       next[idx] = { ...next[idx], [field]: value };
@@ -166,7 +174,9 @@ export function BillBreakdownPanel({ claim }: BillBreakdownPanelProps) {
               min={0}
               step="0.01"
               value={item.amount || ""}
-              onChange={(e) => updateItem(idx, "amount", Number(e.target.value))}
+              onChange={(e) =>
+                updateItem(idx, "amount", Number(e.target.value))
+              }
               placeholder="₹ 0"
               style={{ fontSize: 13, padding: "6px 10px" }}
             />
@@ -206,7 +216,10 @@ export function BillBreakdownPanel({ claim }: BillBreakdownPanelProps) {
                 fontSize: 12,
               }}
             >
-              ⚠ {diff > 0 ? `₹${diff.toFixed(2)} unallocated` : `₹${Math.abs(diff).toFixed(2)} over-allocated`}
+              ⚠{" "}
+              {diff > 0
+                ? `₹${diff.toFixed(2)} unallocated`
+                : `₹${Math.abs(diff).toFixed(2)} over-allocated`}
             </span>
           )}
           {isBalanced && total > 0 && (

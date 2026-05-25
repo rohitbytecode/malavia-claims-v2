@@ -39,7 +39,9 @@ export function ClaimDetailsPage() {
   const qc = useQueryClient();
   const [commText, setCommText] = useState("");
   const [medium, setMedium] = useState<CommunicationMedium>("PORTAL");
-  const [activeTab, setActiveTab] = useState<"overview" | "finance">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "finance">(
+    "overview"
+  );
 
   const claim = useQuery({
     queryKey: ["claim", claimId],
@@ -137,8 +139,14 @@ export function ClaimDetailsPage() {
               padding: "10px 16px",
               fontSize: 14,
               fontWeight: 600,
-              color: activeTab === "overview" ? "var(--accent-primary)" : "var(--text-secondary)",
-              borderBottom: activeTab === "overview" ? "2px solid var(--accent-primary)" : "2px solid transparent",
+              color:
+                activeTab === "overview"
+                  ? "var(--accent-primary)"
+                  : "var(--text-secondary)",
+              borderBottom:
+                activeTab === "overview"
+                  ? "2px solid var(--accent-primary)"
+                  : "2px solid transparent",
               background: "none",
               border: "none",
               cursor: "pointer",
@@ -154,8 +162,14 @@ export function ClaimDetailsPage() {
               padding: "10px 16px",
               fontSize: 14,
               fontWeight: 600,
-              color: activeTab === "finance" ? "var(--accent-primary)" : "var(--text-secondary)",
-              borderBottom: activeTab === "finance" ? "2px solid var(--accent-primary)" : "2px solid transparent",
+              color:
+                activeTab === "finance"
+                  ? "var(--accent-primary)"
+                  : "var(--text-secondary)",
+              borderBottom:
+                activeTab === "finance"
+                  ? "2px solid var(--accent-primary)"
+                  : "2px solid transparent",
               background: "none",
               border: "none",
               cursor: "pointer",
@@ -190,8 +204,8 @@ export function ClaimDetailsPage() {
             )}
             {criticalAgeing && !locked && (
               <div className="audit-warning">
-                Ageing risk: this claim is inside backend courier-delay escalation
-                territory.
+                Ageing risk: this claim is inside backend courier-delay
+                escalation territory.
               </div>
             )}
 
@@ -203,87 +217,149 @@ export function ClaimDetailsPage() {
             />
 
             {/* Separated Finance Console CTA Summary Card */}
-            {canSeeFinance(user?.role) && (() => {
-              const settlementStatuses = [
-                "SETTLEMENT_PENDING",
-                "SETTLED",
-                "DEPOSIT_PENDING",
-                "DEPOSIT_RETURNED",
-                "CLOSED",
-              ];
-              const isSettlementReady = settlementStatuses.includes(data.status);
+            {canSeeFinance(user?.role) &&
+              (() => {
+                const settlementStatuses = [
+                  "SETTLEMENT_PENDING",
+                  "SETTLED",
+                  "DEPOSIT_PENDING",
+                  "DEPOSIT_RETURNED",
+                  "CLOSED",
+                ];
+                const isSettlementReady = settlementStatuses.includes(
+                  data.status
+                );
 
-              if (isSettlementReady) {
-                if (data.status === "SETTLEMENT_PENDING") {
-                  return (
-                    <section className="card premium-panel" style={{ border: "1.5px dashed var(--accent-primary)" }}>
-                      <CardHeader
-                        title="Action Required: Finalize Settlement"
-                        eyebrow="Department-wise final breakdown & payer contract rules pending"
-                      />
-                      <div style={{ padding: "0 20px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
-                        <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: 0, maxWidth: "600px" }}>
-                          This claim requires department-wise settlement mapping, deductions calculation, and discount finalization. Click below to open the console.
-                        </p>
-                        <button type="button" onClick={() => setActiveTab("finance")} className="btn btn-primary">
-                          Go to Finance Console →
-                        </button>
-                      </div>
-                    </section>
-                  );
+                if (isSettlementReady) {
+                  if (data.status === "SETTLEMENT_PENDING") {
+                    return (
+                      <section
+                        className="card premium-panel"
+                        style={{ border: "1.5px dashed var(--accent-primary)" }}
+                      >
+                        <CardHeader
+                          title="Action Required: Finalize Settlement"
+                          eyebrow="Department-wise final breakdown & payer contract rules pending"
+                        />
+                        <div
+                          style={{
+                            padding: "0 20px 20px",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            gap: 16,
+                          }}
+                        >
+                          <p
+                            style={{
+                              fontSize: 13,
+                              color: "var(--text-secondary)",
+                              margin: 0,
+                              maxWidth: "600px",
+                            }}
+                          >
+                            This claim requires department-wise settlement
+                            mapping, deductions calculation, and discount
+                            finalization. Click below to open the console.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab("finance")}
+                            className="btn btn-primary"
+                          >
+                            Go to Finance Console →
+                          </button>
+                        </div>
+                      </section>
+                    );
+                  } else {
+                    return (
+                      <Card className="premium-panel">
+                        <CardHeader
+                          title="Finance Execution Finalized"
+                          eyebrow="Settled claim records & vendor payouts"
+                        />
+                        <div
+                          style={{
+                            padding: "0 20px 20px",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            gap: 16,
+                          }}
+                        >
+                          <div>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                color: "var(--text-tertiary)",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
+                              }}
+                            >
+                              Net Settled Amount
+                            </span>
+                            <h2
+                              style={{
+                                fontSize: 24,
+                                fontWeight: 700,
+                                color: "var(--green)",
+                                margin: "4px 0 0 0",
+                              }}
+                            >
+                              {formatCurrency(settlement.data?.netPayable ?? 0)}
+                            </h2>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab("finance")}
+                            className="btn btn-secondary"
+                          >
+                            View Settlement &amp; Breakdown details →
+                          </button>
+                        </div>
+                      </Card>
+                    );
+                  }
                 } else {
                   return (
-                    <Card className="premium-panel">
+                    <Card className="premium-panel restricted-card">
                       <CardHeader
-                        title="Finance Execution Finalized"
-                        eyebrow="Settled claim records & vendor payouts"
+                        title="Finance execution console"
+                        eyebrow="Settlement · allocations · refunds"
                       />
-                      <div style={{ padding: "0 20px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          padding: "16px 20px",
+                          background:
+                            "color-mix(in srgb, var(--amber) 8%, transparent)",
+                          border:
+                            "1px solid color-mix(in srgb, var(--amber) 25%, transparent)",
+                          borderRadius: "var(--r-lg)",
+                          fontSize: 13,
+                          color: "var(--text-secondary)",
+                        }}
+                      >
+                        <span style={{ fontSize: 20 }}>🔒</span>
                         <div>
-                          <span style={{ fontSize: 11, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Net Settled Amount</span>
-                          <h2 style={{ fontSize: 24, fontWeight: 700, color: "var(--green)", margin: "4px 0 0 0" }}>
-                            {formatCurrency(settlement.data?.netPayable ?? 0)}
-                          </h2>
+                          <strong style={{ display: "block", marginBottom: 2 }}>
+                            Settlement not available yet
+                          </strong>
+                          The claim must reach{" "}
+                          <strong>Settlement Pending</strong> status before the
+                          finance console is unlocked. Current status:{" "}
+                          <StatusBadge value={data.status} compact />
                         </div>
-                        <button type="button" onClick={() => setActiveTab("finance")} className="btn btn-secondary">
-                          View Settlement &amp; Breakdown details →
-                        </button>
                       </div>
                     </Card>
                   );
                 }
-              } else {
-                return (
-                  <Card className="premium-panel restricted-card">
-                    <CardHeader
-                      title="Finance execution console"
-                      eyebrow="Settlement · allocations · refunds"
-                    />
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        padding: "16px 20px",
-                        background: "color-mix(in srgb, var(--amber) 8%, transparent)",
-                        border: "1px solid color-mix(in srgb, var(--amber) 25%, transparent)",
-                        borderRadius: "var(--r-lg)",
-                        fontSize: 13,
-                        color: "var(--text-secondary)",
-                      }}
-                    >
-                      <span style={{ fontSize: 20 }}>🔒</span>
-                      <div>
-                        <strong style={{ display: "block", marginBottom: 2 }}>
-                          Settlement not available yet
-                        </strong>
-                        The claim must reach <strong>Settlement Pending</strong> status before the finance console is unlocked. Current status: <StatusBadge value={data.status} compact />
-                      </div>
-                    </div>
-                  </Card>
-                );
-              }
-            })()}
+              })()}
 
             <div className="cockpit-matrix">
               <Card className="premium-panel identity-card">
@@ -295,7 +371,11 @@ export function ClaimDetailsPage() {
                   <dt>Patient ID</dt>
                   <dd>{data.patientId}</dd>
                   <dt>Insurance company</dt>
-                  <dd>{nameOf((data as any).insuranceCompany || data.insuranceCompanyId) || "Not assigned"}</dd>
+                  <dd>
+                    {nameOf(
+                      (data as any).insuranceCompany || data.insuranceCompanyId
+                    ) || "Not assigned"}
+                  </dd>
                   {data.doctor && (
                     <>
                       <dt>Doctor</dt>
@@ -324,7 +404,10 @@ export function ClaimDetailsPage() {
                 </dl>
               </Card>
 
-              <AlertPlaybookPanel alerts={alerts.data ?? []} role={user?.role} />
+              <AlertPlaybookPanel
+                alerts={alerts.data ?? []}
+                role={user?.role}
+              />
             </div>
 
             <Card className="premium-panel">
@@ -430,7 +513,9 @@ export function ClaimDetailsPage() {
                     "DEPOSIT_RETURNED",
                     "CLOSED",
                   ];
-                  const isSettlementReady = settlementStatuses.includes(data.status);
+                  const isSettlementReady = settlementStatuses.includes(
+                    data.status
+                  );
 
                   return isSettlementReady ? (
                     <Card className="premium-panel">
@@ -466,7 +551,10 @@ export function ClaimDetailsPage() {
                           <strong style={{ display: "block", marginBottom: 2 }}>
                             Settlement not available yet
                           </strong>
-                          The claim must reach <strong>Settlement Pending</strong> status before the finance console is unlocked. Current status: <StatusBadge value={data.status} compact />
+                          The claim must reach{" "}
+                          <strong>Settlement Pending</strong> status before the
+                          finance console is unlocked. Current status:{" "}
+                          <StatusBadge value={data.status} compact />
                         </div>
                       </div>
                     </Card>
@@ -480,8 +568,8 @@ export function ClaimDetailsPage() {
                   eyebrow="Role-based control"
                 />
                 <p>
-                  Settlement finalization, TDS, deductions, allocation, and refund
-                  execution are visible to finance/admin roles.
+                  Settlement finalization, TDS, deductions, allocation, and
+                  refund execution are visible to finance/admin roles.
                 </p>
               </Card>
             )}

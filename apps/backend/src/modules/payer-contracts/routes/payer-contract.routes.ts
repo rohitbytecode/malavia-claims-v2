@@ -36,10 +36,6 @@ router.patch(
   PayerContractController.update
 );
 
-router.delete(
-  "/:id",
-  validate(getByIdSchema),
-  PayerContractController.remove
-);
+router.delete("/:id", validate(getByIdSchema), PayerContractController.remove);
 
 export default router;

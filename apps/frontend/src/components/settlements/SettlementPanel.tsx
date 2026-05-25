@@ -62,10 +62,7 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
       const policyMap = new Map(
         (contract?.departmentPolicies ?? [])
           .filter((p) => p.isApplicable !== false)
-          .map((p) => [
-            p.departmentCategory,
-            p,
-          ])
+          .map((p) => [p.departmentCategory, p])
       );
 
       const lines: SettlementDepartmentBreakdown[] = billBreakdown
@@ -76,10 +73,16 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
           const approved = claimed; // default: approved = claimed, user can change
 
           // Apply specific department policy discount, or fallback to default company discount
-          const discountPct = policy?.discountPercent || contract?.defaultHospitalDiscountPercent || 0;
+          const discountPct =
+            policy?.discountPercent ||
+            contract?.defaultHospitalDiscountPercent ||
+            0;
           let discountAmt = (approved * discountPct) / 100;
 
-          if (policy?.maxDiscountAmount && discountAmt > policy.maxDiscountAmount) {
+          if (
+            policy?.maxDiscountAmount &&
+            discountAmt > policy.maxDiscountAmount
+          ) {
             discountAmt = policy.maxDiscountAmount;
           }
           const net = Math.max(0, approved - discountAmt);
@@ -97,8 +100,13 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
       setDeptLines(lines);
 
       if (contract) {
-        const initialTotalNet = lines.reduce((sum, line) => sum + line.netAmount, 0);
-        const initialTds = Math.round((initialTotalNet * (contract.tdsPercent || 0)) / 100);
+        const initialTotalNet = lines.reduce(
+          (sum, line) => sum + line.netAmount,
+          0
+        );
+        const initialTds = Math.round(
+          (initialTotalNet * (contract.tdsPercent || 0)) / 100
+        );
         setTds(initialTds);
 
         setHospitalDiscount(0);
@@ -118,9 +126,7 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
       // Recalculate derived fields
       if (field === "approvedAmount" || field === "discountPercent") {
         const approved =
-          field === "approvedAmount"
-            ? (value as number)
-            : line.approvedAmount;
+          field === "approvedAmount" ? (value as number) : line.approvedAmount;
         const discPct =
           field === "discountPercent"
             ? (value as number)
@@ -132,7 +138,10 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
         const contractPolicy = contract?.departmentPolicies?.find(
           (p) => p.departmentCategory === line.departmentCategory
         );
-        if (contractPolicy?.maxDiscountAmount && discAmt > contractPolicy.maxDiscountAmount) {
+        if (
+          contractPolicy?.maxDiscountAmount &&
+          discAmt > contractPolicy.maxDiscountAmount
+        ) {
           discAmt = contractPolicy.maxDiscountAmount;
         }
 
@@ -158,7 +167,8 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
 
     // TDS on total approved
     const tdsPercent = contract?.tdsPercent ?? 0;
-    const tdsAmount = Math.round((totalApproved * tdsPercent) / 100 * 100) / 100;
+    const tdsAmount =
+      Math.round(((totalApproved * tdsPercent) / 100) * 100) / 100;
 
     const netPayable = Math.max(
       0,
@@ -329,14 +339,10 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
                       <td style={{ padding: "8px 6px", fontWeight: 600 }}>
                         {getCatLabel(line.departmentCategory)}
                       </td>
-                      <td
-                        style={{ textAlign: "right", padding: "8px 6px" }}
-                      >
+                      <td style={{ textAlign: "right", padding: "8px 6px" }}>
                         {formatCurrency(line.claimedAmount)}
                       </td>
-                      <td
-                        style={{ textAlign: "right", padding: "8px 6px" }}
-                      >
+                      <td style={{ textAlign: "right", padding: "8px 6px" }}>
                         {formatCurrency(line.approvedAmount)}
                       </td>
                       <td
@@ -355,7 +361,9 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
                           textAlign: "right",
                           padding: "8px 6px",
                           color:
-                            line.discountAmount > 0 ? "var(--amber)" : undefined,
+                            line.discountAmount > 0
+                              ? "var(--amber)"
+                              : undefined,
                         }}
                       >
                         {line.discountAmount > 0
@@ -422,17 +430,17 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
           style={{
             padding: "8px 14px",
             background: "color-mix(in srgb, var(--green) 8%, transparent)",
-            border: "1px solid color-mix(in srgb, var(--green) 25%, transparent)",
+            border:
+              "1px solid color-mix(in srgb, var(--green) 25%, transparent)",
             borderRadius: "var(--r-md)",
             fontSize: 12,
             color: "var(--text-secondary)",
             marginBottom: 12,
           }}
         >
-          <strong>Payer contract active</strong> · TDS:{" "}
-          {contract.tdsPercent}% · Hospital discount:{" "}
-          {contract.defaultHospitalDiscountPercent}% · Department discounts
-          auto-applied from contract.
+          <strong>Payer contract active</strong> · TDS: {contract.tdsPercent}% ·
+          Hospital discount: {contract.defaultHospitalDiscountPercent}% ·
+          Department discounts auto-applied from contract.
         </div>
       )}
 
@@ -441,7 +449,8 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
           style={{
             padding: "10px 14px",
             background: "color-mix(in srgb, var(--amber) 8%, transparent)",
-            border: "1px solid color-mix(in srgb, var(--amber) 25%, transparent)",
+            border:
+              "1px solid color-mix(in srgb, var(--amber) 25%, transparent)",
             borderRadius: "var(--r-md)",
             fontSize: 12,
             color: "var(--text-secondary)",
@@ -449,18 +458,15 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
           }}
         >
           <strong>⚠ No bill breakdown available.</strong> Enter department-wise
-          bill breakdown in the section above for full department-wise settlement
-          tracking. You can still create a flat settlement below.
+          bill breakdown in the section above for full department-wise
+          settlement tracking. You can still create a flat settlement below.
         </div>
       )}
 
       {/* Department-wise lines */}
       {hasBillBreakdown && deptLines.length > 0 && (
         <div style={{ marginBottom: 16 }}>
-          <p
-            className="eyebrow"
-            style={{ marginBottom: 8, fontSize: 11 }}
-          >
+          <p className="eyebrow" style={{ marginBottom: 8, fontSize: 11 }}>
             Department-wise Settlement
           </p>
           <div style={{ overflowX: "auto" }}>
@@ -488,12 +494,8 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
                   <th style={{ textAlign: "right", padding: "6px" }}>
                     Deducted
                   </th>
-                  <th style={{ textAlign: "right", padding: "6px" }}>
-                    Disc %
-                  </th>
-                  <th style={{ textAlign: "right", padding: "6px" }}>
-                    Disc ₹
-                  </th>
+                  <th style={{ textAlign: "right", padding: "6px" }}>Disc %</th>
+                  <th style={{ textAlign: "right", padding: "6px" }}>Disc ₹</th>
                   <th style={{ textAlign: "right", padding: "6px" }}>Net</th>
                 </tr>
               </thead>

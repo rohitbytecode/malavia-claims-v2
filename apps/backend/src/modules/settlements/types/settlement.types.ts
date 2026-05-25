@@ -29,4 +29,3 @@ export interface SettlementDocument extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
-

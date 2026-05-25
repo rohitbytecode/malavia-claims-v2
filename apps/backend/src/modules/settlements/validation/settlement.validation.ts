@@ -24,7 +24,10 @@ export const createSettlementSchema = z.object({
     remarks: z.string().trim().optional(),
     settledBy: z.string().trim().min(1),
     refundAmount: z.number().nonnegative().optional(),
-    departmentBreakdown: z.array(departmentBreakdownItemSchema).optional().default([]),
+    departmentBreakdown: z
+      .array(departmentBreakdownItemSchema)
+      .optional()
+      .default([]),
     payerContractId: z.string().trim().optional(),
   }),
   query: z.object({}).optional(),
@@ -38,4 +41,3 @@ export const getSettlementByClaimSchema = z.object({
     claimId: z.string().trim().min(1),
   }),
 });
-
