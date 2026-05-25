@@ -31,6 +31,7 @@ interface ExportReportParams {
   startMonth: number;
   endYear: number;
   endMonth: number;
+  exportScope?: string;
 }
 
 export const exportReportToCSV = ({

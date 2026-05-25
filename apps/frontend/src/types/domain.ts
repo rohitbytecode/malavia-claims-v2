@@ -103,7 +103,7 @@ export interface User {
   _id: string;
   id: string;
   fullName: string;
-  email: string;
+  username: string;
   role: Role;
   isActive: boolean;
   createdAt?: string;

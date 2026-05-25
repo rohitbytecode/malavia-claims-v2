@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../../api/services";
 import { Button } from "../../components/ui/Button";
 import { ErrorPanel } from "../../components/ui/ErrorPanel";
-import { Field, TextInput } from "../../components/forms/FormField";
+import { Field, TextInput, SelectInput } from "../../components/forms/FormField";
 import { AuthLayout } from "../../layouts/AuthLayout";
 import { useAuthStore } from "../../store/auth.store";
 import { loginSchema } from "../../validators/forms";
@@ -14,6 +14,12 @@ type LoginForm = z.infer<typeof loginSchema>;
 export function LoginPage() {
   const navigate = useNavigate();
   const setSession = useAuthStore((s) => s.setSession);
+
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ["publicUsers"],
+    queryFn: authApi.getUsers,
+  });
+
   const {
     register,
     handleSubmit,
@@ -34,8 +40,15 @@ export function LoginPage() {
       >
         <p className="eyebrow">Secure Login</p>
         <h2>Operator sign in</h2>
-        <Field label="Email" error={errors.email?.message}>
-          <TextInput type="email" autoComplete="email" {...register("email")} />
+        <Field label="Operator Username" error={errors.username?.message}>
+          <SelectInput {...register("username")} disabled={isLoading}>
+            <option value="">Select Operator</option>
+            {users.map((u) => (
+              <option key={u.username} value={u.username}>
+                {u.fullName} ({u.username})
+              </option>
+            ))}
+          </SelectInput>
         </Field>
         <Field label="Password" error={errors.password?.message}>
           <TextInput

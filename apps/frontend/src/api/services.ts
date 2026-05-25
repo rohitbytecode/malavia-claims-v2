@@ -57,8 +57,10 @@ const normalized = <T>(
   return value;
 };
 export const authApi = {
-  login: (body: { email: string; password: string }) =>
+  login: (body: { username: string; password: string }) =>
     unwrap<AuthPayload>(apiClient.post("/auth/login", body)),
+  getUsers: () =>
+    unwrap<User[]>(apiClient.get("/auth/users")),
   changePassword: (body: { oldPassword: string; newPassword: string }) =>
     unwrap<{ success: boolean }>(apiClient.post("/auth/change-password", body)),
 };
@@ -357,7 +359,7 @@ export const usersApi = {
     ),
   create: (body: {
     fullName: string;
-    email: string;
+    username: string;
     password?: string;
     role: Role;
     isActive?: boolean;
@@ -367,7 +369,7 @@ export const usersApi = {
     userId: string,
     body: Partial<{
       fullName: string;
-      email: string;
+      username: string;
       password: string;
       role: Role;
       isActive: boolean;

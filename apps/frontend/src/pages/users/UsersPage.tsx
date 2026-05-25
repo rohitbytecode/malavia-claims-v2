@@ -19,14 +19,14 @@ import { useAuthStore } from "../../store/auth.store";
 
 type UserDraft = {
   fullName: string;
-  email: string;
+  username: string;
   role: Role;
   isActive: boolean;
 };
 
 const blank: UserDraft = {
   fullName: "",
-  email: "",
+  username: "",
   role: "CLAIM_EXECUTIVE",
   isActive: true,
 };
@@ -38,7 +38,7 @@ export function UsersPage() {
   const [createdUserTempPassword, setCreatedUserTempPassword] = useState<
     string | null
   >(null);
-  const [createdUserEmail, setCreatedUserEmail] = useState<string | null>(null);
+  const [createdUserUsername, setCreatedUserUsername] = useState<string | null>(null);
   const qc = useQueryClient();
 
   const currentUser = useAuthStore((s) => s.user);
@@ -59,7 +59,7 @@ export function UsersPage() {
       closeModal();
       if (!editing && data?.tempPassword) {
         setCreatedUserTempPassword(data.tempPassword);
-        setCreatedUserEmail(data.email);
+        setCreatedUserUsername(data.username);
       }
     },
   });
@@ -79,7 +79,7 @@ export function UsersPage() {
     setEditing(user);
     setDraft({
       fullName: user.fullName,
-      email: user.email,
+      username: user.username,
       role: user.role,
       isActive: user.isActive,
     });
@@ -98,14 +98,14 @@ export function UsersPage() {
       header: "User",
       cell: (u) => <strong>{u.fullName}</strong>,
       sortValue: (u) => u.fullName,
-      searchValue: (u) => `${u.fullName} ${u.email}`,
+      searchValue: (u) => `${u.fullName} ${u.username}`,
     },
     {
-      key: "email",
-      header: "Email",
-      cell: (u) => u.email,
-      sortValue: (u) => u.email,
-      searchValue: (u) => u.email,
+      key: "username",
+      header: "Username",
+      cell: (u) => u.username,
+      sortValue: (u) => u.username,
+      searchValue: (u) => u.username,
     },
     {
       key: "role",
@@ -222,25 +222,25 @@ export function UsersPage() {
                 }
               />
             </Field>
-            <Field label="Email">
+            <Field label="Username">
               <TextInput
                 required
-                type="email"
-                value={draft.email}
+                value={draft.username}
                 onChange={(e) =>
-                  setDraft((d) => ({ ...d, email: e.target.value }))
+                  setDraft((d) => ({ ...d, username: e.target.value }))
                 }
               />
             </Field>
             <Field label="Role">
               <SelectInput
+                disabled={editing?._id === currentUser?._id}
                 value={draft.role}
                 onChange={(e) =>
                   setDraft((d) => ({ ...d, role: e.target.value as Role }))
                 }
               >
                 {operationalRoles
-                  .filter((r) => r !== "SUPER_ADMIN")
+                  .filter((r) => !editing || r === editing.role || r !== "SUPER_ADMIN")
                   .map((role) => (
                     <option key={role} value={role}>
                       {role}
@@ -252,6 +252,7 @@ export function UsersPage() {
               <span>Active</span>
               <input
                 type="checkbox"
+                disabled={editing?._id === currentUser?._id}
                 checked={draft.isActive}
                 onChange={(e) =>
                   setDraft((d) => ({ ...d, isActive: e.target.checked }))
@@ -276,7 +277,7 @@ export function UsersPage() {
           title="User Created Successfully"
           onClose={() => {
             setCreatedUserTempPassword(null);
-            setCreatedUserEmail(null);
+            setCreatedUserUsername(null);
           }}
         >
           <div className="modal-body page-stack">
@@ -298,7 +299,7 @@ export function UsersPage() {
             >
               <div>
                 <span className="text-muted" style={{ fontSize: "0.85em" }}>
-                  Email / Username:
+                  Username:
                 </span>
                 <div
                   style={{
@@ -307,7 +308,7 @@ export function UsersPage() {
                     color: "var(--text-main, #fff)",
                   }}
                 >
-                  {createdUserEmail}
+                  {createdUserUsername}
                 </div>
               </div>
               <div>
@@ -365,7 +366,7 @@ export function UsersPage() {
               type="button"
               onClick={() => {
                 setCreatedUserTempPassword(null);
-                setCreatedUserEmail(null);
+                setCreatedUserUsername(null);
               }}
             >
               Close & Proceed
