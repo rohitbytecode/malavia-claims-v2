@@ -102,7 +102,8 @@ export class UserService {
     }
 
     if (payload.role) {
-      if (payload.role === Roles.SUPER_ADMIN) {
+      const existingUser = await UserRepository.findById(userId);
+      if (payload.role === Roles.SUPER_ADMIN && existingUser?.role !== Roles.SUPER_ADMIN) {
         throw new AppError(
           "Promoting user to SUPER_ADMIN is not permitted",
           400
