@@ -31,11 +31,11 @@ import type {
 const HOSPITAL_NAME = APP_CONFIG.ORG_NAME;
 
 const REPORT_TABS = [
-  { id: "claims-summary",         label: "Claims Summary", icon: "📊"},
-  { id: "detailed-claims",        label: "Detailed Claims", icon: "📝"},
-  { id: "insurance-performance",  label: "Insurance Company Performance", icon: "🏢"},
-  { id: "settlement-review",      label: "Settlement Financial Review", icon: "💰"},
-  { id: "hospital-share",         label: "Hospital Share & Vendor Payout", icon: "🤝"},
+  { id: "claims-summary",         label: "Claims Summary"},
+  { id: "detailed-claims",        label: "Detailed Claims"},
+  { id: "insurance-performance",  label: "Insurance Company Performance"},
+  { id: "settlement-review",      label: "Settlement Financial Review"},
+  { id: "hospital-share",         label: "Hospital Share & Vendor Payout"},
 ] as const;
 
 type TabId = (typeof REPORT_TABS)[number]["id"];
@@ -385,7 +385,6 @@ export function ReportsPage() {
             onClick={() => setActiveTab(tab.id)}
             type="button"
           >
-            <span className="report-tab-icon" aria-hidden="true">{tab.icon}</span>
             {tab.label}
           </button>
         ))}
