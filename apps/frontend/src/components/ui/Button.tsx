@@ -6,12 +6,14 @@ export function Button({
   className,
   disabled,
   variant = "primary",
+  type = "submit",
   ...props
 }: PropsWithChildren<
   ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }
 >) {
   return (
-    <button type="button"
+    <button
+      type={type}
       className={cn(
         "btn",
         `btn-${variant}`,
