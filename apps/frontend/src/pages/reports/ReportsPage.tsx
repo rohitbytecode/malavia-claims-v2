@@ -19,6 +19,7 @@ import { InsurancePerformanceTable } from "./components/InsurancePerformanceTabl
 import { SettlementReviewTable } from "./components/SettlementReviewTable";
 import { HospitalShareTable } from "./components/HospitalShareTable";
 import { APP_CONFIG } from "../../../../backend/src/config/app";
+
 // Type definitions
 import type {
   ReportSummaryRow,
@@ -29,10 +30,30 @@ import type {
 
 const HOSPITAL_NAME = APP_CONFIG.ORG_NAME;
 
+const REPORT_TABS = [
+  { id: "claims-summary",         label: "Claims Summary"},
+  { id: "detailed-claims",        label: "Detailed Claims"},
+  { id: "insurance-performance",  label: "Insurance Company Performance"},
+  { id: "settlement-review",      label: "Settlement Financial Review"},
+  { id: "hospital-share",         label: "Hospital Share & Vendor Payout"},
+] as const;
+
+type TabId = (typeof REPORT_TABS)[number]["id"];
+
+
+function buildPrintStyle(activeTab: TabId): string {
+  return REPORT_TABS.map(({ id }) =>
+    id !== activeTab
+      ? `@media print { [data-report-tab="${id}"] { display: none !important; } }`
+      : ""
+  ).join("\n");
+}
+
 export function ReportsPage() {
   const now = new Date();
 
-  // Date States
+  const [activeTab, setActiveTab] = useState<TabId>("claims-summary");
+
   const [reportMode, setReportMode] = useState<
     "monthly" | "calendar" | "financial" | "custom"
   >("monthly");
@@ -49,11 +70,9 @@ export function ReportsPage() {
   const [endYear, setEndYear] = useState(now.getFullYear());
   const [endMonth, setEndMonth] = useState(now.getMonth() + 1);
 
-  // Search States
   const [patientId, setPatientId] = useState("");
   const [patientInput, setPatientInput] = useState("");
 
-  // Column Visibility State
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(
     {
       claimNo: true,
@@ -68,7 +87,6 @@ export function ReportsPage() {
     }
   );
 
-  // Derived Query Params
   const { queryYear, queryMonth, queryEndYear, queryEndMonth } = useMemo(() => {
     switch (reportMode) {
       case "monthly":
@@ -112,21 +130,10 @@ export function ReportsPage() {
     endMonth,
   ]);
 
-  // Derived Period Labels
   const periodLabel = useMemo(() => {
     const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December",
     ];
     switch (reportMode) {
       case "monthly":
@@ -138,17 +145,7 @@ export function ReportsPage() {
       case "custom":
         return `${monthNames[startMonth - 1]} ${startYear} to ${monthNames[endMonth - 1]} ${endYear}`;
     }
-  }, [
-    reportMode,
-    monthlyMonth,
-    monthlyYear,
-    calendarYear,
-    financialYear,
-    startMonth,
-    startYear,
-    endMonth,
-    endYear,
-  ]);
+  }, [reportMode, monthlyMonth, monthlyYear, calendarYear, financialYear, startMonth, startYear, endMonth, endYear]);
 
   const periodShortLabel = useMemo(() => {
     switch (reportMode) {
@@ -161,31 +158,11 @@ export function ReportsPage() {
       case "custom":
         return `${startMonth.toString().padStart(2, "0")}/${startYear} - ${endMonth.toString().padStart(2, "0")}/${endYear}`;
     }
-  }, [
-    reportMode,
-    monthlyMonth,
-    monthlyYear,
-    calendarYear,
-    financialYear,
-    startMonth,
-    startYear,
-    endMonth,
-    endYear,
-  ]);
+  }, [reportMode, monthlyMonth, monthlyYear, calendarYear, financialYear, startMonth, startYear, endMonth, endYear]);
 
-  // Queries
   const monthly = useQuery({
-    queryKey: [
-      "reports",
-      "monthly",
-      reportMode,
-      queryYear,
-      queryMonth,
-      queryEndYear,
-      queryEndMonth,
-    ],
-    queryFn: () =>
-      reportApi.monthly(queryYear, queryMonth, queryEndYear, queryEndMonth),
+    queryKey: ["reports", "monthly", reportMode, queryYear, queryMonth, queryEndYear, queryEndMonth],
+    queryFn: () => reportApi.monthly(queryYear, queryMonth, queryEndYear, queryEndMonth),
   });
 
   const insurance = useQuery<InsurancePerformanceRow[]>({
@@ -194,41 +171,13 @@ export function ReportsPage() {
   });
 
   const settlementReport = useQuery<SettlementReportData>({
-    queryKey: [
-      "reports",
-      "settlement",
-      reportMode,
-      queryYear,
-      queryMonth,
-      queryEndYear,
-      queryEndMonth,
-    ],
-    queryFn: () =>
-      reportApi.settlementReport(
-        queryYear,
-        queryMonth,
-        queryEndYear,
-        queryEndMonth
-      ) as any,
+    queryKey: ["reports", "settlement", reportMode, queryYear, queryMonth, queryEndYear, queryEndMonth],
+    queryFn: () => reportApi.settlementReport(queryYear, queryMonth, queryEndYear, queryEndMonth) as any,
   });
 
   const hospitalShare = useQuery({
-    queryKey: [
-      "reports",
-      "hospital-share",
-      reportMode,
-      queryYear,
-      queryMonth,
-      queryEndYear,
-      queryEndMonth,
-    ],
-    queryFn: () =>
-      reportApi.hospitalShareReport(
-        queryYear,
-        queryMonth,
-        queryEndYear,
-        queryEndMonth
-      ),
+    queryKey: ["reports", "hospital-share", reportMode, queryYear, queryMonth, queryEndYear, queryEndMonth],
+    queryFn: () => reportApi.hospitalShareReport(queryYear, queryMonth, queryEndYear, queryEndMonth),
   });
 
   const patient = useQuery<ReportSummaryRow[]>({
@@ -237,22 +186,10 @@ export function ReportsPage() {
     queryFn: () => reportApi.patientClaims(patientId) as any,
   });
 
-  const patientsQuery = useQuery({
-    queryKey: ["patients"],
-    queryFn: () => patientApi.list({ limit: 100 }),
-  });
+  const patientsQuery  = useQuery({ queryKey: ["patients"],    queryFn: () => patientApi.list({ limit: 100 }) });
+  const doctorsQuery   = useQuery({ queryKey: ["doctors"],     queryFn: () => doctorApi.list({ limit: 100 }) });
+  const departmentsQuery = useQuery({ queryKey: ["departments"], queryFn: () => departmentApi.list({ limit: 100 }) });
 
-  const doctorsQuery = useQuery({
-    queryKey: ["doctors"],
-    queryFn: () => doctorApi.list({ limit: 100 }),
-  });
-
-  const departmentsQuery = useQuery({
-    queryKey: ["departments"],
-    queryFn: () => departmentApi.list({ limit: 100 }),
-  });
-
-  // Derived Maps
   const patientMap = useMemo(() => {
     const map = new Map<string, string>();
     for (const p of patientsQuery.data?.data ?? []) {
@@ -280,7 +217,6 @@ export function ReportsPage() {
     return map;
   }, [departmentsQuery.data]);
 
-  // Derived Report Statistics (Memoized to prevent recalculations on every render)
   const monthlyData = monthly.data as any;
 
   const summary = useMemo<ReportSummaryRow[]>(() => {
@@ -289,60 +225,115 @@ export function ReportsPage() {
   }, [monthlyData]);
 
   const detailedClaims = useMemo<DetailedClaim[]>(() => {
-    return Array.isArray(monthlyData?.detailedClaims)
-      ? monthlyData.detailedClaims
-      : [];
+    return Array.isArray(monthlyData?.detailedClaims) ? monthlyData.detailedClaims : [];
   }, [monthlyData]);
 
   const totalClaims = useMemo<number>(() => {
-    return (
-      monthlyData?.totalClaims ??
-      summary.reduce((sum, r) => sum + (r.count ?? 0), 0)
-    );
+    return monthlyData?.totalClaims ?? summary.reduce((sum, r) => sum + (r.count ?? 0), 0);
   }, [monthlyData, summary]);
 
   const totalAmount = useMemo<number>(() => {
-    return (
-      monthlyData?.totalAmount ??
-      summary.reduce((sum, r) => sum + (r.totalAmount ?? 0), 0)
-    );
+    return monthlyData?.totalAmount ?? summary.reduce((sum, r) => sum + (r.totalAmount ?? 0), 0);
   }, [monthlyData, summary]);
 
-  // Export Action Handler
-  const handleExportExcel = () => {
-    const sData = settlementReport.data;
-    exportReportToCSV({
-      periodLabel,
-      totalClaims,
-      totalAmount,
-      summary,
-      insuranceData: insurance.data ?? [],
-      settlements: sData?.settlements ?? [],
-      settlementTotals: sData?.totals ?? {
-        totalClaimAmount: 0,
-        totalApproved: 0,
-        totalDeductions: 0,
-        totalTds: 0,
-        totalHospitalDiscount: 0,
-        totalNetPayable: 0,
-      },
-      settlementCount: sData?.count ?? 0,
-      detailedClaims,
-      visibleColumns,
-      patientMap,
-      doctorMap,
-      departmentMap,
-      reportMode,
-      monthlyYear,
-      monthlyMonth,
-      calendarYear,
-      financialYear,
-      startYear,
-      startMonth,
-      endYear,
-      endMonth,
-    });
+  const sharedExportBase = {
+    periodLabel,
+    totalClaims,
+    totalAmount,
+    summary,
+    patientMap,
+    doctorMap,
+    departmentMap,
+    reportMode,
+    monthlyYear,
+    monthlyMonth,
+    calendarYear,
+    financialYear,
+    startYear,
+    startMonth,
+    endYear,
+    endMonth,
+  } as const;
+
+  const sData = settlementReport.data;
+
+  const exportHandlers: Record<TabId, (() => void) | null> = {
+    "claims-summary": () =>
+      exportReportToCSV({
+        ...sharedExportBase,
+        insuranceData: [],
+        settlements: [],
+        settlementTotals: emptySettlementTotals,
+        settlementCount: 0,
+        detailedClaims: [],
+        visibleColumns,
+        exportScope: "claims-summary",
+      }),
+
+    "detailed-claims": detailedClaims.length > 0
+      ? () =>
+          exportReportToCSV({
+            ...sharedExportBase,
+            insuranceData: [],
+            settlements: [],
+            settlementTotals: emptySettlementTotals,
+            settlementCount: 0,
+            detailedClaims,
+            visibleColumns,
+            exportScope: "detailed-claims",
+          })
+      : null,
+
+    "insurance-performance": () =>
+      exportReportToCSV({
+        ...sharedExportBase,
+        insuranceData: insurance.data ?? [],
+        settlements: [],
+        settlementTotals: emptySettlementTotals,
+        settlementCount: 0,
+        detailedClaims: [],
+        visibleColumns,
+        exportScope: "insurance-performance",
+      }),
+
+    "settlement-review": () =>
+      exportReportToCSV({
+        ...sharedExportBase,
+        insuranceData: [],
+        settlements: sData?.settlements ?? [],
+        settlementTotals: sData?.totals ?? emptySettlementTotals,
+        settlementCount: sData?.count ?? 0,
+        detailedClaims: [],
+        visibleColumns,
+        exportScope: "settlement-review",
+      }),
+
+    "hospital-share": () =>
+      exportReportToCSV({
+        ...sharedExportBase,
+        insuranceData: [],
+        settlements: [],
+        settlementTotals: emptySettlementTotals,
+        settlementCount: 0,
+        detailedClaims: [],
+        visibleColumns,
+        exportScope: "hospital-share",
+      }),
   };
+
+  const handlePrint = () => {
+
+    let styleEl = document.getElementById("report-print-style") as HTMLStyleElement | null;
+    if (!styleEl) {
+      styleEl = document.createElement("style");
+      styleEl.id = "report-print-style";
+      document.head.appendChild(styleEl);
+    }
+    styleEl.textContent = buildPrintStyle(activeTab);
+    window.print();
+  };
+
+  const activeTabLabel = REPORT_TABS.find((t) => t.id === activeTab)?.label ?? "";
 
   return (
     <div className="page-stack">
@@ -355,6 +346,7 @@ export function ReportsPage() {
         </span>
       </div>
 
+      {/* ── Filters (shared across all tabs) ── */}
       <ReportFilters
         reportMode={reportMode}
         setReportMode={setReportMode}
@@ -378,50 +370,44 @@ export function ReportsPage() {
         setPatientInput={setPatientInput}
         onSearchPatient={setPatientId}
         now={now}
-      >
-        <div
-          style={{ display: "flex", gap: "8px", marginLeft: "auto" }}
-          className="no-print"
-        >
+      />
+
+      {/* ── Tab navigation ── */}
+      <div className="report-tabs no-print" role="tablist" aria-label="Report sections">
+        {REPORT_TABS.map((tab) => (
           <button
-            className="btn btn-primary"
+            key={tab.id}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            aria-controls={`tabpanel-${tab.id}`}
+            id={`tab-${tab.id}`}
+            className={`report-tab-btn${activeTab === tab.id ? " report-tab-btn--active" : ""}`}
+            onClick={() => setActiveTab(tab.id)}
             type="button"
-            onClick={() => window.print()}
           >
-            Export PDF / Print
+            <span className="report-tab-icon" aria-hidden="true">{tab.icon}</span>
+            {tab.label}
           </button>
-          <button
-            className="btn btn-success"
-            type="button"
-            onClick={handleExportExcel}
-            disabled={detailedClaims.length === 0}
-          >
-            Export as Excel
-          </button>
-        </div>
-      </ReportFilters>
+        ))}
+      </div>
 
       {monthly.isError && <ErrorPanel error={monthly.error} />}
       {monthly.isLoading && <Skeleton rows={4} />}
 
+      {/* ── Report preview wrapper ── */}
       <div className="report-preview">
         <div className="report-watermark">{HOSPITAL_NAME}</div>
 
-        {/* Printable Report Header */}
+        {/* Shared printable header — always visible */}
         <div className="report-header">
           <div>
-            <p
-              style={{
-                fontSize: 12,
-                color: "var(--text-tertiary)",
-                fontWeight: 600,
-                marginBottom: 4,
-              }}
-            >
+            <p style={{ fontSize: 12, color: "var(--text-tertiary)", fontWeight: 600, marginBottom: 4 }}>
               {HOSPITAL_NAME}
             </p>
-            <h2>Insurance Claims Financial Review</h2>
-            <p style={{ marginTop: 4 }}>Period {periodLabel}</p>
+            <h2>
+              {activeTabLabel}
+            </h2>
+            <p style={{ marginTop: 4 }}>Period: {periodLabel}</p>
           </div>
           <div className="report-meta">
             <div>Page 1</div>
@@ -429,95 +415,160 @@ export function ReportsPage() {
           </div>
         </div>
 
-        {/* Claims KPI and Status Summaries */}
-        <ClaimsSummary
-          totalClaims={totalClaims}
-          totalAmount={totalAmount}
-          periodShortLabel={periodShortLabel}
-          periodLabel={periodLabel}
-          summary={summary}
-          isLoading={monthly.isLoading}
-          formatCurrency={formatCurrency}
-          labelize={labelize}
-        />
-
-        {/* Detailed Claims list with column visibility settings */}
-        <DetailedClaimsTable
-          detailedClaims={detailedClaims}
-          visibleColumns={visibleColumns}
-          setVisibleColumns={setVisibleColumns}
-          patientMap={patientMap}
-          doctorMap={doctorMap}
-          departmentMap={departmentMap}
-          formatCurrency={formatCurrency}
-          labelize={labelize}
-        />
-
-        {/* Insurance Performance section */}
-        <InsurancePerformanceTable
-          insuranceData={insurance.data ?? []}
-          isLoading={insurance.isLoading}
-          formatCurrency={formatCurrency}
-        />
-
-        {/* Settlement Financial Review section */}
-        <SettlementReviewTable
-          settlementData={settlementReport.data}
-          isLoading={settlementReport.isLoading}
-          formatCurrency={formatCurrency}
-          labelize={labelize}
-        />
-
-        {/* Hospital Share & Vendor Payout section */}
-        <HospitalShareTable
-          data={hospitalShare.data}
-          isLoading={hospitalShare.isLoading}
-          formatCurrency={formatCurrency}
-        />
-
-        {/* Patient claim breakdown search results (if requested) */}
-        {patient.isLoading && patientId && <Skeleton rows={3} />}
-        {patient.isError && <ErrorPanel error={patient.error} />}
-        {patient.data && patient.data.length > 0 && (
-          <div style={{ marginBottom: 24 }}>
-            <h3
-              style={{
-                fontSize: 13,
-                fontWeight: 800,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                color: "var(--accent-primary)",
-                marginBottom: 12,
-              }}
+        {/* ── Per-tab action bar ── */}
+        <div
+          className="report-tab-actions no-print"
+          style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginBottom: 16 }}
+        >
+          <button className="btn btn-primary" type="button" onClick={handlePrint}>
+            Export PDF / Print
+          </button>
+          {exportHandlers[activeTab] && (
+            <button
+              className="btn btn-success"
+              type="button"
+              onClick={exportHandlers[activeTab]!}
             >
-              Patient Claim Summary — {patientId}
-            </h3>
-            <div className="report-summary">
-              {patient.data.map((row: any) => (
-                <div
-                  className="report-summary-cell"
-                  key={row._id ?? row.status}
-                >
-                  <span>{labelize(row._id ?? row.status)}</span>
-                  <strong>{row.count ?? 0}</strong>
-                  <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-                    {formatCurrency(row.totalAmount)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+              Export as Excel
+            </button>
+          )}
+        </div>
 
-        {/* Document Footer / Signatures */}
+        {/* ── Tab panels ── */}
+
+        {/* 1. Claims Summary */}
+        <div
+          id="tabpanel-claims-summary"
+          role="tabpanel"
+          aria-labelledby="tab-claims-summary"
+          data-report-tab="claims-summary"
+          hidden={activeTab !== "claims-summary"}
+        >
+          <ClaimsSummary
+            totalClaims={totalClaims}
+            totalAmount={totalAmount}
+            periodShortLabel={periodShortLabel}
+            periodLabel={periodLabel}
+            summary={summary}
+            isLoading={monthly.isLoading}
+            formatCurrency={formatCurrency}
+            labelize={labelize}
+          />
+
+          {patient.isLoading && patientId && <Skeleton rows={3} />}
+          {patient.isError && <ErrorPanel error={patient.error} />}
+          {patient.data && patient.data.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <h3
+                style={{
+                  fontSize: 13,
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "var(--accent-primary)",
+                  marginBottom: 12,
+                }}
+              >
+                Patient Claim Summary — {patientId}
+              </h3>
+              <div className="report-summary">
+                {patient.data.map((row: any) => (
+                  <div className="report-summary-cell" key={row._id ?? row.status}>
+                    <span>{labelize(row._id ?? row.status)}</span>
+                    <strong>{row.count ?? 0}</strong>
+                    <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                      {formatCurrency(row.totalAmount)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 2. Detailed Claims */}
+        <div
+          id="tabpanel-detailed-claims"
+          role="tabpanel"
+          aria-labelledby="tab-detailed-claims"
+          data-report-tab="detailed-claims"
+          hidden={activeTab !== "detailed-claims"}
+        >
+          <DetailedClaimsTable
+            detailedClaims={detailedClaims}
+            visibleColumns={visibleColumns}
+            setVisibleColumns={setVisibleColumns}
+            patientMap={patientMap}
+            doctorMap={doctorMap}
+            departmentMap={departmentMap}
+            formatCurrency={formatCurrency}
+            labelize={labelize}
+          />
+        </div>
+
+        {/* 3. Insurance Company Performance */}
+        <div
+          id="tabpanel-insurance-performance"
+          role="tabpanel"
+          aria-labelledby="tab-insurance-performance"
+          data-report-tab="insurance-performance"
+          hidden={activeTab !== "insurance-performance"}
+        >
+          <InsurancePerformanceTable
+            insuranceData={insurance.data ?? []}
+            isLoading={insurance.isLoading}
+            formatCurrency={formatCurrency}
+          />
+        </div>
+
+        {/* 4. Settlement Financial Review */}
+        <div
+          id="tabpanel-settlement-review"
+          role="tabpanel"
+          aria-labelledby="tab-settlement-review"
+          data-report-tab="settlement-review"
+          hidden={activeTab !== "settlement-review"}
+        >
+          <SettlementReviewTable
+            settlementData={settlementReport.data}
+            isLoading={settlementReport.isLoading}
+            formatCurrency={formatCurrency}
+            labelize={labelize}
+          />
+        </div>
+
+        {/* 5. Hospital Share & Vendor Payout */}
+        <div
+          id="tabpanel-hospital-share"
+          role="tabpanel"
+          aria-labelledby="tab-hospital-share"
+          data-report-tab="hospital-share"
+          hidden={activeTab !== "hospital-share"}
+        >
+          <HospitalShareTable
+            data={hospitalShare.data}
+            isLoading={hospitalShare.isLoading}
+            formatCurrency={formatCurrency}
+          />
+        </div>
+
+        {/* Shared printable footer — always visible */}
         <div className="report-footer">
-          <span>
-            Prepared for administration, insurers, auditors and financial
-            review.
-          </span>
+          <span>Prepared for administration, insurers, auditors and financial review.</span>
           <span>Authorized signature: __________________</span>
         </div>
       </div>
     </div>
   );
 }
+
+//Helpers
+
+const emptySettlementTotals = {
+  totalClaimAmount: 0,
+  totalApproved: 0,
+  totalDeductions: 0,
+  totalTds: 0,
+  totalHospitalDiscount: 0,
+  totalNetPayable: 0,
+};

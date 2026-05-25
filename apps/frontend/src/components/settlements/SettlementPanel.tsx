@@ -46,6 +46,7 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
 
   const billBreakdown = claim.billBreakdown ?? [];
   const contract: PayerContract | null | undefined = contractQuery.data;
+  const hasBillBreakdown = billBreakdown.length > 0;
 
   // Initialize department lines from bill breakdown
   const [deptLines, setDeptLines] = useState<SettlementDepartmentBreakdown[]>(
@@ -54,6 +55,7 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
   const [method, setMethod] = useState<SettlementMethod>("PORTAL");
   const [hospitalDiscount, setHospitalDiscount] = useState(0);
   const [tds, setTds] = useState(0);
+  const [isTdsUserEdited, setIsTdsUserEdited] = useState(false);
   const [refundAmount, setRefundAmount] = useState(claim.depositAmount || 0);
 
   // Build initial department lines when data is available
@@ -70,13 +72,12 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
         .map((b) => {
           const policy = policyMap.get(b.departmentCategory);
           const claimed = b.amount;
-          const approved = claimed; // default: approved = claimed, user can change
+          const approved = claimed;
 
-          // Apply specific department policy discount, or fallback to default company discount
           const discountPct =
-            policy?.discountPercent ||
-            contract?.defaultHospitalDiscountPercent ||
-            0;
+            policy !== undefined && policy.discountPercent !== 0
+              ? policy.discountPercent
+              : contract?.defaultHospitalDiscountPercent || 0;
           let discountAmt = (approved * discountPct) / 100;
 
           if (
@@ -109,10 +110,31 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
         );
         setTds(initialTds);
 
-        setHospitalDiscount(0);
+        const initialTotalDiscount = lines.reduce(
+          (sum, line) => sum + line.discountAmount,
+          0
+        );
+        setHospitalDiscount(initialTotalDiscount);
+      }
+    } else {
+      if (contract) {
+        const defaultDiscountPct = contract.defaultHospitalDiscountPercent || 0;
+        const initialDiscount = Math.round(
+          (claim.totalClaimAmount * defaultDiscountPct) / 100
+        );
+        setHospitalDiscount(initialDiscount);
+
+        const netAfterDiscount = Math.max(
+          0,
+          claim.totalClaimAmount - initialDiscount
+        );
+        const initialTds = Math.round(
+          (netAfterDiscount * (contract.tdsPercent || 0)) / 100
+        );
+        setTds(initialTds);
       }
     }
-  }, [billBreakdown.length, contract?._id]);
+  }, [billBreakdown.length, contract, claim.totalClaimAmount]);
 
   const updateLine = (
     idx: number,
@@ -165,14 +187,18 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
     const totalDiscounts = deptLines.reduce((s, l) => s + l.discountAmount, 0);
     const totalNet = deptLines.reduce((s, l) => s + l.netAmount, 0);
 
-    // TDS on total approved
-    const tdsPercent = contract?.tdsPercent ?? 0;
-    const tdsAmount =
-      Math.round(((totalApproved * tdsPercent) / 100) * 100) / 100;
+    const activeApproved = hasBillBreakdown ? totalApproved : claim.totalClaimAmount;
+    const activeDiscount = hasBillBreakdown ? totalDiscounts : hospitalDiscount;
+    const activeNet = Math.max(0, activeApproved - activeDiscount);
 
+    // TDS on total net (after deductions and after discount)
+    const tdsPercent = contract?.tdsPercent ?? 0;
+    const tdsAmount = Math.round((activeNet * tdsPercent) / 100);
+
+    const extraRefund = Math.max(0, refundAmount - (claim.depositAmount || 0));
     const netPayable = Math.max(
       0,
-      totalNet - (tds || tdsAmount) - hospitalDiscount
+      activeNet - (tds !== undefined && tds !== 0 ? tds : tdsAmount) - extraRefund
     );
 
     return {
@@ -185,23 +211,32 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
       tdsAmount,
       netPayable,
     };
-  }, [deptLines, tds, hospitalDiscount, contract]);
+  }, [
+    deptLines,
+    tds,
+    hospitalDiscount,
+    contract,
+    hasBillBreakdown,
+    claim.totalClaimAmount,
+    refundAmount,
+    claim.depositAmount,
+  ]);
 
   // Auto-set TDS from computed
   useEffect(() => {
-    if (contract && tds === 0 && totals.tdsAmount > 0) {
+    if (contract && !isTdsUserEdited && totals.tdsAmount > 0) {
       setTds(totals.tdsAmount);
     }
-  }, [totals.tdsAmount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [totals.tdsAmount, isTdsUserEdited, contract]);
 
   const create = useMutation({
     mutationFn: () =>
       settlementApi.create({
         claimId: claim.id,
-        approvedAmount: totals.totalApproved,
-        deductions: totals.totalDeductions,
+        approvedAmount: hasBillBreakdown ? totals.totalApproved : claim.totalClaimAmount,
+        deductions: hasBillBreakdown ? totals.totalDeductions : 0,
         tds,
-        hospitalDiscount,
+        hospitalDiscount: hasBillBreakdown ? totals.totalDiscounts : hospitalDiscount,
         settlementMethod: method,
         settledBy: user?._id ?? "",
         remarks: "Recorded from Smart Finance Console",
@@ -413,7 +448,6 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
   }
 
   // ────── CREATE SETTLEMENT FORM ──────
-  const hasBillBreakdown = billBreakdown.length > 0;
 
   return (
     <form
@@ -659,13 +693,16 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
             className="input"
             type="number"
             value={tds}
-            onChange={(e) => setTds(Number(e.target.value))}
+            onChange={(e) => {
+              setTds(Number(e.target.value));
+              setIsTdsUserEdited(true);
+            }}
             min={0}
           />
           {contract && (
             <small style={{ color: "var(--text-tertiary)", fontSize: 11 }}>
               Contract TDS: {contract.tdsPercent}% = ₹
-              {totals.tdsAmount.toFixed(2)}
+              {totals.tdsAmount}
             </small>
           )}
         </label>
@@ -675,8 +712,9 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
           <input
             className="input"
             type="number"
-            value={hospitalDiscount}
+            value={hasBillBreakdown ? totals.totalDiscounts : hospitalDiscount}
             onChange={(e) => setHospitalDiscount(Number(e.target.value))}
+            readOnly={hasBillBreakdown}
             min={0}
           />
         </label>

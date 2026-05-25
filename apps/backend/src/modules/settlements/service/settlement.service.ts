@@ -61,13 +61,14 @@ export class SettlementService {
     const hospitalDiscount = params.hospitalDiscount ?? 0;
     const deductions = params.deductions ?? 0;
     const tds = params.tds ?? 0;
+    const refundAmount = params.refundAmount ?? 0;
+    const depositAmount = claim.depositAmount ?? 0;
+    const extraRefund = Math.max(0, refundAmount - depositAmount);
 
-    const netPayable =
-      params.approvedAmount - hospitalDiscount - deductions - tds;
-
-    if (netPayable < 0) {
-      throw new AppError("Net payable amount cannot be negative", 400);
-    }
+    const netPayable = Math.max(
+      0,
+      params.approvedAmount - hospitalDiscount - tds - extraRefund
+    );
 
     // Process department breakdown if provided
     const departmentBreakdown = (params.departmentBreakdown ?? []).map(
