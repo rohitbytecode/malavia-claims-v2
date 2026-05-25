@@ -10,6 +10,18 @@ import { ClaimService } from "@/modules/claims/service/claim.service.js";
 import { ClaimStatus } from "@/modules/claims/constant/claim-status.enum.js";
 import { DepositRepository } from "@/modules/deposits/repository/deposit.repository.js";
 import { RefundStatus } from "@/modules/deposits/constant/refund-status.enum.js";
+import { DepartmentCategory } from "@/modules/payer-contracts/constant/department-category.enum.js";
+
+interface DepartmentBreakdownItem {
+  departmentCategory: DepartmentCategory;
+  claimedAmount: number;
+  approvedAmount: number;
+  deduction: number;
+  discountPercent: number;
+  discountAmount: number;
+  netAmount: number;
+  remarks?: string;
+}
 
 interface CreateSettlementParams {
   claimId: string;
@@ -21,6 +33,8 @@ interface CreateSettlementParams {
   remarks?: string;
   settledBy: string;
   refundAmount?: number;
+  departmentBreakdown?: DepartmentBreakdownItem[];
+  payerContractId?: string;
 }
 
 export class SettlementService {
@@ -55,6 +69,20 @@ export class SettlementService {
       throw new AppError("Net payable amount cannot be negative", 400);
     }
 
+    // Process department breakdown if provided
+    const departmentBreakdown = (params.departmentBreakdown ?? []).map(
+      (item) => ({
+        departmentCategory: item.departmentCategory,
+        claimedAmount: item.claimedAmount,
+        approvedAmount: item.approvedAmount,
+        deduction: item.deduction ?? Math.max(0, item.claimedAmount - item.approvedAmount),
+        discountPercent: item.discountPercent ?? 0,
+        discountAmount: item.discountAmount ?? 0,
+        netAmount: item.netAmount ?? Math.max(0, item.approvedAmount - (item.discountAmount ?? 0)),
+        remarks: item.remarks ?? "",
+      })
+    );
+
     const settlementPayload = {
       claimId: new Types.ObjectId(params.claimId),
       approvedAmount: params.approvedAmount,
@@ -62,6 +90,10 @@ export class SettlementService {
       deductions,
       tds,
       netPayable,
+      departmentBreakdown,
+      payerContractId: params.payerContractId
+        ? new Types.ObjectId(params.payerContractId)
+        : undefined,
       settlementMethod: params.settlementMethod,
       remarks: params.remarks ? [params.remarks] : [],
       settledBy: new Types.ObjectId(params.settledBy),
@@ -121,3 +153,4 @@ export class SettlementService {
     return settlement;
   }
 }
+

@@ -17,6 +17,7 @@ import { ClaimsSummary } from "./components/ClaimsSummary";
 import { DetailedClaimsTable } from "./components/DetailedClaimsTable";
 import { InsurancePerformanceTable } from "./components/InsurancePerformanceTable";
 import { SettlementReviewTable } from "./components/SettlementReviewTable";
+import { HospitalShareTable } from "./components/HospitalShareTable";
 import { APP_CONFIG } from "../../../../backend/src/config/app";
 // Type definitions
 import type {
@@ -209,6 +210,25 @@ export function ReportsPage() {
         queryEndYear,
         queryEndMonth
       ) as any,
+  });
+
+  const hospitalShare = useQuery({
+    queryKey: [
+      "reports",
+      "hospital-share",
+      reportMode,
+      queryYear,
+      queryMonth,
+      queryEndYear,
+      queryEndMonth,
+    ],
+    queryFn: () =>
+      reportApi.hospitalShareReport(
+        queryYear,
+        queryMonth,
+        queryEndYear,
+        queryEndMonth
+      ),
   });
 
   const patient = useQuery<ReportSummaryRow[]>({
@@ -446,6 +466,13 @@ export function ReportsPage() {
           isLoading={settlementReport.isLoading}
           formatCurrency={formatCurrency}
           labelize={labelize}
+        />
+
+        {/* Hospital Share & Vendor Payout section */}
+        <HospitalShareTable
+          data={hospitalShare.data}
+          isLoading={hospitalShare.isLoading}
+          formatCurrency={formatCurrency}
         />
 
         {/* Patient claim breakdown search results (if requested) */}

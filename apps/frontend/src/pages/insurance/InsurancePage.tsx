@@ -10,6 +10,7 @@ import { Modal } from "../../components/ui/Modal";
 import { Field, TextArea, TextInput } from "../../components/forms/FormField";
 import type { InsuranceCompany, SubmissionMethod } from "../../types/domain";
 import { labelize } from "../../utils/format";
+import { PayerContractPanel } from "../../components/insurance/PayerContractPanel";
 
 type CompanyDraft = {
   name: string;
@@ -72,6 +73,7 @@ function toPayload(draft: CompanyDraft) {
 }
 
 export function InsurancePage() {
+  const [selectedCompany, setSelectedCompany] = useState<InsuranceCompany | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<InsuranceCompany | null>(null);
   const [draft, setDraft] = useState<CompanyDraft>(blank);
@@ -195,6 +197,9 @@ export function InsurancePage() {
           <Button variant="secondary" onClick={() => openEdit(c)}>
             Edit
           </Button>
+          <Button variant="secondary" onClick={() => setSelectedCompany(c)}>
+            Contracts
+          </Button>
           <Button
             variant={c.isActive ? "danger" : "success"}
             onClick={() => toggle.mutate(c)}
@@ -210,6 +215,22 @@ export function InsurancePage() {
   if (query.isLoading) return <Skeleton rows={8} />;
   if (query.isError) return <ErrorPanel error={query.error} />;
 
+  if (selectedCompany) {
+    return (
+      <div className="page-stack">
+        <div style={{ marginBottom: 12 }}>
+          <Button variant="secondary" onClick={() => setSelectedCompany(null)}>
+            ← Back to Insurance Companies
+          </Button>
+        </div>
+        <PayerContractPanel
+          insuranceCompanyId={selectedCompany._id}
+          companyName={selectedCompany.name}
+        />
+      </div>
+    );
+  }
+
   const rows = query.data?.data ?? [];
 
   return (
@@ -221,6 +242,7 @@ export function InsurancePage() {
           Submission channels, escalation matrix and operational TAT visibility.
         </span>
       </div>
+
 
       <DataTable
         title="Payer directory"

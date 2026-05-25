@@ -32,6 +32,7 @@ import timelinesRouter from "./modules/timelines/index.js";
 import notificationsRouter from "./modules/notifications/index.js";
 import patientsRouter from "./modules/patients/index.js";
 import doctorsRouter from "./modules/doctors/index.js";
+import payerContractsRouter from "./modules/payer-contracts/index.js";
 
 import { setupSwagger } from "./config/swagger.js";
 
@@ -163,6 +164,7 @@ app.use("/api/v1/timelines", timelinesRouter);
 app.use("/api/v1/notifications", notificationsRouter);
 app.use("/api/v1/patients", patientsRouter);
 app.use("/api/v1/doctors", doctorsRouter);
+app.use("/api/v1/payer-contracts", payerContractsRouter);
 
 app.use(errorMiddleware);
 

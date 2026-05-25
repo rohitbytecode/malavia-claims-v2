@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ClaimStatus } from "@/modules/claims/constant/claim-status.enum.js";
 import { ClaimType } from "@/modules/claims/constant/claim-type.enum.js";
+import { DepartmentCategory } from "@/modules/payer-contracts/constant/department-category.enum.js";
 
 const createClaimBodySchema = z.object({
   type: z.nativeEnum(ClaimType),
@@ -60,3 +61,20 @@ export const transitionClaimStatusSchema = z.object({
     claimId: z.string().trim().min(1),
   }),
 });
+
+export const updateBillBreakdownSchema = z.object({
+  body: z.object({
+    billBreakdown: z.array(
+      z.object({
+        departmentCategory: z.nativeEnum(DepartmentCategory),
+        amount: z.number().nonnegative(),
+        description: z.string().trim().optional().default(""),
+      })
+    ),
+  }),
+  query: z.object({}).optional(),
+  params: z.object({
+    claimId: z.string().trim().min(1),
+  }),
+});
+

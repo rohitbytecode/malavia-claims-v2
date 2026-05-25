@@ -127,4 +127,29 @@ export class ClaimController {
       next(error);
     }
   }
+
+  static async updateBillBreakdown(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const claimId = Array.isArray(req.params.claimId)
+        ? req.params.claimId[0]
+        : req.params.claimId;
+
+      const claim = await ClaimService.updateBillBreakdown(
+        claimId,
+        req.body.billBreakdown
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Bill breakdown updated successfully",
+        data: claim,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

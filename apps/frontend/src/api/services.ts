@@ -4,20 +4,24 @@ import type {
   Allocation,
   AuditLog,
   AuthPayload,
+  BillLineItem,
   Claim,
   ClaimDocument,
   ClaimHistory,
   Communication,
   DashboardMetrics,
   Department,
+  DepartmentCategory,
   Deposit,
   InsuranceCompany,
   Patient,
+  PayerContract,
   Doctor,
   ListParams,
   Paginated,
   ReportRow,
   Settlement,
+  SettlementDepartmentBreakdown,
   TimelineEvent,
   User,
   ClaimStatus,
@@ -92,6 +96,13 @@ export const claimsApi = {
     unwrap<Claim>(apiClient.post(`/claims/${claimId}/status-transition`, body)),
   history: (claimId: string) =>
     unwrap<ClaimHistory[]>(apiClient.get(`/claims/${claimId}/history`)),
+  updateBillBreakdown: (
+    claimId: string,
+    billBreakdown: BillLineItem[]
+  ) =>
+    unwrap<Claim>(
+      apiClient.patch(`/claims/${claimId}/bill-breakdown`, { billBreakdown })
+    ),
 };
 export const dashboardApi = {
   metrics: () => unwrap<DashboardMetrics>(apiClient.get("/dashboard/metrics")),
@@ -109,6 +120,8 @@ export const settlementApi = {
     remarks?: string;
     settledBy: string;
     refundAmount?: number;
+    departmentBreakdown?: SettlementDepartmentBreakdown[];
+    payerContractId?: string;
   }) => unwrap<Settlement>(apiClient.post("/settlements", body)),
 };
 export const allocationApi = {
@@ -216,6 +229,17 @@ export const reportApi = {
   ) =>
     unwrap<any>(
       apiClient.get("/reports/settlement-report", {
+        params: { year, month, endYear, endMonth },
+      })
+    ),
+  hospitalShareReport: (
+    year: number,
+    month: number,
+    endYear?: number,
+    endMonth?: number
+  ) =>
+    unwrap<any>(
+      apiClient.get("/reports/hospital-share-report", {
         params: { year, month, endYear, endMonth },
       })
     ),
@@ -365,3 +389,51 @@ export const documentTypes: DocumentType[] = [
   "PHARMACY_BILL",
   "OTHER",
 ];
+
+export const DEPARTMENT_CATEGORIES: { value: DepartmentCategory; label: string }[] = [
+  { value: "PHARMACY", label: "Pharmacy" },
+  { value: "LABORATORY", label: "Laboratory" },
+  { value: "RADIOLOGY", label: "Radiology" },
+  { value: "ROOM_CHARGES", label: "Room / Bed Charges" },
+  { value: "DOCTOR_FEES", label: "Doctor Fees" },
+  { value: "OT_CHARGES", label: "OT Charges" },
+  { value: "CONSUMABLES", label: "Consumables" },
+  { value: "OTHER", label: "Other" },
+];
+
+export const payerContractApi = {
+  listByCompany: (insuranceCompanyId: string) =>
+    unwrap<PayerContract[]>(
+      apiClient.get(`/payer-contracts/company/${insuranceCompanyId}`)
+    ),
+  getActive: (insuranceCompanyId: string) =>
+    unwrap<PayerContract | null>(
+      apiClient.get(`/payer-contracts/active/${insuranceCompanyId}`)
+    ),
+  getById: (id: string) =>
+    unwrap<PayerContract>(apiClient.get(`/payer-contracts/${id}`)),
+  create: (body: {
+    insuranceCompanyId: string;
+    effectiveFrom?: string;
+    effectiveTo?: string;
+    departmentPolicies?: PayerContract["departmentPolicies"];
+    tdsPercent?: number;
+    defaultHospitalDiscountPercent?: number;
+    remarks?: string;
+    createdBy: string;
+  }) => unwrap<PayerContract>(apiClient.post("/payer-contracts", body)),
+  update: (
+    id: string,
+    body: Partial<{
+      effectiveFrom: string;
+      effectiveTo: string | null;
+      isActive: boolean;
+      departmentPolicies: PayerContract["departmentPolicies"];
+      tdsPercent: number;
+      defaultHospitalDiscountPercent: number;
+      remarks: string;
+    }>
+  ) => unwrap<PayerContract>(apiClient.patch(`/payer-contracts/${id}`, body)),
+  remove: (id: string) =>
+    unwrap<void>(apiClient.delete(`/payer-contracts/${id}`)),
+};

@@ -42,6 +42,8 @@ export const toClaimResponse = (claim: any) => {
 
     remarks: claimObject.remarks,
 
+    billBreakdown: claimObject.billBreakdown ?? [],
+
     createdBy: mapRelation(claimObject.createdBy),
 
     updatedBy: mapRelation(claimObject.updatedBy),

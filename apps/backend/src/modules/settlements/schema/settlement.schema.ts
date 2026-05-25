@@ -1,6 +1,53 @@
 import mongoose from "mongoose";
 import { SettlementDocument } from "../types/settlement.types.js";
 import { SettlementMethod } from "../constant/settlement-method.enum.js";
+import { DepartmentCategory } from "@/modules/payer-contracts/constant/department-category.enum.js";
+
+const departmentBreakdownSchema = new mongoose.Schema(
+  {
+    departmentCategory: {
+      type: String,
+      enum: Object.values(DepartmentCategory),
+      required: true,
+    },
+    claimedAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    approvedAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    deduction: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    discountPercent: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    discountAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    netAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    remarks: {
+      type: String,
+      default: "",
+    },
+  },
+  { _id: false }
+);
 
 const settlementSchema = new mongoose.Schema<SettlementDocument>(
   {
@@ -38,6 +85,14 @@ const settlementSchema = new mongoose.Schema<SettlementDocument>(
       required: true,
       min: 0,
     },
+    departmentBreakdown: {
+      type: [departmentBreakdownSchema],
+      default: [],
+    },
+    payerContractId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PayerContract",
+    },
     settlementMethod: {
       type: String,
       enum: Object.values(SettlementMethod),
@@ -66,3 +121,4 @@ const settlementSchema = new mongoose.Schema<SettlementDocument>(
 export const SettlementModel =
   mongoose.models.Settlement ||
   mongoose.model<SettlementDocument>("Settlement", settlementSchema);
+

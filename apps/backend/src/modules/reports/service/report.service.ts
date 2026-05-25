@@ -253,4 +253,115 @@ export class ReportService {
       totals,
     };
   }
+
+  static async generateHospitalShareReport(
+    year: number,
+    month: number,
+    endYear?: number,
+    endMonth?: number
+  ) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate =
+      endYear && endMonth
+        ? new Date(endYear, endMonth, 0, 23, 59, 59, 999)
+        : new Date(year, month, 0, 23, 59, 59, 999);
+
+    const settlements = await mongoose.model("Settlement").aggregate([
+      { $match: { settlementDate: { $gte: startDate, $lte: endDate } } },
+      {
+        $lookup: {
+          from: "claims",
+          localField: "claimId",
+          foreignField: "_id",
+          as: "claim",
+        },
+      },
+      { $unwind: { path: "$claim", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "insurancecompanies",
+          localField: "claim.insuranceCompanyId",
+          foreignField: "_id",
+          as: "insurance",
+        },
+      },
+      {
+        $unwind: { path: "$insurance", preserveNullAndEmptyArrays: true },
+      },
+      {
+        $project: {
+          claimNumber: "$claim.claimNumber",
+          claimId: "$claimId",
+          insuranceCompany: "$insurance.name",
+          approvedAmount: { $ifNull: ["$approvedAmount", 0] },
+          netPayable: { $ifNull: ["$netPayable", 0] },
+          settlementDate: "$settlementDate",
+          departmentBreakdown: { $ifNull: ["$departmentBreakdown", []] },
+        },
+      },
+      { $sort: { settlementDate: -1 } },
+    ]);
+
+    const rows = settlements.map((s) => {
+      let pharmacyShare = 0;
+      let labShare = 0;
+      let radiologyShare = 0;
+
+      for (const item of s.departmentBreakdown || []) {
+        if (item.departmentCategory === "PHARMACY") {
+          pharmacyShare = item.netAmount ?? 0;
+        } else if (item.departmentCategory === "LABORATORY") {
+          labShare = item.netAmount ?? 0;
+        } else if (item.departmentCategory === "RADIOLOGY") {
+          radiologyShare = item.netAmount ?? 0;
+        }
+      }
+
+      const vendorPayout = pharmacyShare + labShare + radiologyShare;
+      const hospitalShare = Math.max(0, s.netPayable - vendorPayout);
+
+      return {
+        _id: s._id,
+        claimNumber: s.claimNumber,
+        claimId: s.claimId,
+        insuranceCompany: s.insuranceCompany,
+        settlementDate: s.settlementDate,
+        approvedAmount: s.approvedAmount,
+        netPayable: s.netPayable,
+        pharmacyShare,
+        labShare,
+        radiologyShare,
+        vendorPayout,
+        hospitalShare,
+      };
+    });
+
+    const totals = rows.reduce(
+      (acc, r) => {
+        acc.totalApproved += r.approvedAmount;
+        acc.totalNetPayable += r.netPayable;
+        acc.totalPharmacyShare += r.pharmacyShare;
+        acc.totalLabShare += r.labShare;
+        acc.totalRadiologyShare += r.radiologyShare;
+        acc.totalVendorPayout += r.vendorPayout;
+        acc.totalHospitalShare += r.hospitalShare;
+        return acc;
+      },
+      {
+        totalApproved: 0,
+        totalNetPayable: 0,
+        totalPharmacyShare: 0,
+        totalLabShare: 0,
+        totalRadiologyShare: 0,
+        totalVendorPayout: 0,
+        totalHospitalShare: 0,
+      }
+    );
+
+    return {
+      rows,
+      totals,
+      count: rows.length,
+    };
+  }
 }

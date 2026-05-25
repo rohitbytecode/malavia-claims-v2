@@ -72,4 +72,28 @@ export class ReportController {
       data: report,
     });
   }
+
+  static async getHospitalShareReport(req: Request, res: Response) {
+    const { year, month, endYear, endMonth } = req.query;
+
+    if (!year || !month) {
+      return res.status(400).json({
+        success: false,
+        message: "Year and month query parameters are required",
+      });
+    }
+
+    const report = await ReportService.generateHospitalShareReport(
+      Number(year),
+      Number(month),
+      endYear ? Number(endYear) : undefined,
+      endMonth ? Number(endMonth) : undefined
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Hospital Share report generated successfully",
+      data: report,
+    });
+  }
 }

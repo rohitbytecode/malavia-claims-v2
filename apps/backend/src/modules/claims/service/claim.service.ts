@@ -325,4 +325,25 @@ export class ClaimService {
     const history = await ClaimStatusHistoryRepository.findByClaimId(claimId);
     return history.map(toClaimStatusHistoryResponse);
   }
+
+  static async updateBillBreakdown(
+    claimId: string,
+    billBreakdown: { departmentCategory: string; amount: number; description?: string }[]
+  ) {
+    const claim = await ClaimRepository.findClaimById(claimId);
+    if (!claim) {
+      throw new AppError("Claim not found", 404);
+    }
+
+    const updatedClaim = await ClaimRepository.updateBillBreakdown(
+      claimId,
+      billBreakdown
+    );
+
+    if (!updatedClaim) {
+      throw new AppError("Unable to update bill breakdown", 500);
+    }
+
+    return toClaimResponse(updatedClaim);
+  }
 }

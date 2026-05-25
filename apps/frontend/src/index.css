@@ -2472,9 +2472,15 @@ select.input {
    ============================================================ */
 .settlement-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: 280px 1.5fr 1fr;
+  gap: 20px;
 }
+
+.settlement-grid .detail-list {
+  grid-template-columns: 120px 1fr;
+  gap: 8px 12px;
+}
+
 
 .readonly-total {
   padding: 14px;

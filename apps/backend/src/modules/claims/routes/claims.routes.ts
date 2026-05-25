@@ -6,6 +6,7 @@ import {
   getClaimParamsSchema,
   listClaimsSchema,
   transitionClaimStatusSchema,
+  updateBillBreakdownSchema,
 } from "@/modules/claims/validation/claim.validation.js";
 
 const router = Router();
@@ -27,5 +28,11 @@ router.get(
   validate(getClaimParamsSchema),
   ClaimController.getClaimHistory
 );
+router.patch(
+  "/:claimId/bill-breakdown",
+  validate(updateBillBreakdownSchema),
+  ClaimController.updateBillBreakdown
+);
 
 export default router;
+

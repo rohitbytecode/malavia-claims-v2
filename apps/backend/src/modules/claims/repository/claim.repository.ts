@@ -109,4 +109,21 @@ export class ClaimRepository {
       .populate("updatedBy")
       .lean();
   }
+
+  static async updateBillBreakdown(
+    claimId: string,
+    billBreakdown: { departmentCategory: string; amount: number; description?: string }[]
+  ) {
+    return ClaimModel.findByIdAndUpdate(
+      claimId,
+      { $set: { billBreakdown } },
+      { new: true }
+    )
+      .populate("insuranceCompanyId")
+      .populate("departmentId")
+      .populate("doctorId")
+      .populate("createdBy")
+      .populate("updatedBy")
+      .lean();
+  }
 }

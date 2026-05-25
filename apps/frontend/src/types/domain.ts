@@ -28,6 +28,15 @@ export type SettlementMethod = "PORTAL" | "EMAIL" | "COURIER";
 export type SubmissionMethod = "PORTAL" | "EMAIL" | "COURIER";
 export type RefundMode = "CASH" | "ONLINE";
 export type RefundStatus = "PENDING" | "COMPLETED";
+export type DepartmentCategory =
+  | "PHARMACY"
+  | "LABORATORY"
+  | "RADIOLOGY"
+  | "ROOM_CHARGES"
+  | "DOCTOR_FEES"
+  | "OT_CHARGES"
+  | "CONSUMABLES"
+  | "OTHER";
 export type DocumentType =
   | "PREAUTH"
   | "FINAL_BILL"
@@ -129,6 +138,7 @@ export interface Claim {
   depositAmount?: number;
   refundAmount?: number;
   remarks?: string | string[];
+  billBreakdown?: BillLineItem[];
   createdBy?: string | User;
   createdAt: string;
   updatedAt: string;
@@ -150,6 +160,8 @@ export interface Settlement {
   deductions: number;
   tds: number;
   netPayable: number;
+  departmentBreakdown?: SettlementDepartmentBreakdown[];
+  payerContractId?: string;
   settlementMethod: SettlementMethod;
   settlementDate: string;
   remarks?: string[];
@@ -337,4 +349,40 @@ export interface ReportRow {
   totalClaimAmount?: number;
   settledClaims?: number;
   settlementRatio?: number;
+}
+export interface BillLineItem {
+  departmentCategory: DepartmentCategory;
+  amount: number;
+  description?: string;
+}
+export interface SettlementDepartmentBreakdown {
+  departmentCategory: DepartmentCategory;
+  claimedAmount: number;
+  approvedAmount: number;
+  deduction: number;
+  discountPercent: number;
+  discountAmount: number;
+  netAmount: number;
+  remarks?: string;
+}
+export interface DepartmentPolicyItem {
+  departmentCategory: DepartmentCategory;
+  discountPercent: number;
+  maxDiscountAmount?: number;
+  deductionRules?: string;
+  isApplicable: boolean;
+}
+export interface PayerContract {
+  _id: string;
+  insuranceCompanyId: string;
+  effectiveFrom: string;
+  effectiveTo?: string;
+  isActive: boolean;
+  departmentPolicies: DepartmentPolicyItem[];
+  tdsPercent: number;
+  defaultHospitalDiscountPercent: number;
+  remarks?: string;
+  createdBy: string | User;
+  createdAt: string;
+  updatedAt: string;
 }

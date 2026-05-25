@@ -2,6 +2,28 @@ import mongoose from "mongoose";
 import { ClaimStatus } from "@/modules/claims/constant/claim-status.enum.js";
 import { ClaimType } from "@/modules/claims/constant/claim-type.enum.js";
 import { ClaimDocument } from "@/modules/claims/types/claim.types.js";
+import { DepartmentCategory } from "@/modules/payer-contracts/constant/department-category.enum.js";
+
+const billLineItemSchema = new mongoose.Schema(
+  {
+    departmentCategory: {
+      type: String,
+      enum: Object.values(DepartmentCategory),
+      required: true,
+    },
+    amount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+  },
+  { _id: false }
+);
 
 const claimSchema = new mongoose.Schema<ClaimDocument>(
   {
@@ -90,6 +112,10 @@ const claimSchema = new mongoose.Schema<ClaimDocument>(
     },
     remarks: {
       type: [String],
+      default: [],
+    },
+    billBreakdown: {
+      type: [billLineItemSchema],
       default: [],
     },
     createdBy: {
