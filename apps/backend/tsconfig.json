@@ -7,8 +7,8 @@
     "allowSyntheticDefaultImports": true,
     "paths": {
       "@/*": ["*"]
-    },
-    "types": ["vitest/globals"]
+    }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts", "src/**/__tests__/*", "src/tests/**/*"]
 }
