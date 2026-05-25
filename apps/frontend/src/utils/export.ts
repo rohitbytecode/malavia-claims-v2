@@ -32,6 +32,11 @@ interface ExportReportParams {
   endYear: number;
   endMonth: number;
   exportScope?: string;
+  hospitalShareData?: {
+    rows: any[];
+    totals: any;
+    count: number;
+  };
 }
 
 export const exportReportToCSV = ({
@@ -57,6 +62,7 @@ export const exportReportToCSV = ({
   startMonth,
   endYear,
   endMonth,
+  hospitalShareData,
 }: ExportReportParams) => {
   const sections: string[] = [];
 
@@ -221,6 +227,27 @@ export const exportReportToCSV = ({
       })
       .join(",");
     sections.push(totalsRow);
+  }
+
+  // --- Section 5: Hospital Share & Vendor Payout ---
+  if (hospitalShareData && hospitalShareData.rows && hospitalShareData.rows.length > 0) {
+    sections.push(`"HOSPITAL SHARE & VENDOR PAYOUT"`);
+    sections.push(`"Date","Claim Number","Insurance Company","Approved","Net Payable","Pharmacy","Laboratory","Radiology","Total Vendor","Hospital Share"`);
+    
+    hospitalShareData.rows.forEach((row) => {
+      const dateStr = row.settlementDate ? new Date(row.settlementDate).toLocaleDateString("en-IN") : "—";
+      sections.push(
+        `"${dateStr}","${(row.claimNumber || "—").replace(/"/g, '""')}","${(row.insuranceCompany || "—").replace(/"/g, '""')}","${row.approvedAmount ?? 0}","${row.netPayable ?? 0}","${row.pharmacyShare ?? 0}","${row.labShare ?? 0}","${row.radiologyShare ?? 0}","${row.vendorPayout ?? 0}","${row.hospitalShare ?? 0}"`
+      );
+    });
+
+    const totals = hospitalShareData.totals;
+    if (totals) {
+      sections.push(
+        `"TOTALS","","","${totals.totalApproved ?? 0}","${totals.totalNetPayable ?? 0}","${totals.totalPharmacyShare ?? 0}","${totals.totalLabShare ?? 0}","${totals.totalRadiologyShare ?? 0}","${totals.totalVendorPayout ?? 0}","${totals.totalHospitalShare ?? 0}"`
+      );
+    }
+    sections.push(""); // spacer
   }
 
   const csvContent = "\uFEFF" + sections.join("\n");

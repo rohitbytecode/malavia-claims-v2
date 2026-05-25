@@ -317,6 +317,7 @@ export function ReportsPage() {
         settlementCount: 0,
         detailedClaims: [],
         visibleColumns,
+        hospitalShareData: hospitalShare.data,
         exportScope: "hospital-share",
       }),
   };
