@@ -598,15 +598,18 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
                         max={100}
                         step="0.5"
                         value={line.discountPercent}
-                        readOnly
-                        disabled
+                        onChange={(e) =>
+                          updateLine(
+                            idx,
+                            "discountPercent",
+                            Number(e.target.value)
+                          )
+                        }
                         style={{
                           width: 60,
                           fontSize: 12,
                           padding: "3px 6px",
                           textAlign: "right",
-                          background: "var(--bg-secondary)",
-                          cursor: "not-allowed",
                         }}
                       />
                     </td>
