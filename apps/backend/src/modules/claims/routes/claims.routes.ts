@@ -8,10 +8,17 @@ import {
   transitionClaimStatusSchema,
   updateBillBreakdownSchema,
 } from "@/modules/claims/validation/claim.validation.js";
+import { denyRoles } from "@/middleware/permission.middleware.js";
+import { Roles } from "@/core/enums/roles.enum.js";
 
 const router = Router();
 
-router.post("/", validate(createClaimSchema), ClaimController.createClaim);
+router.post(
+  "/",
+  denyRoles(Roles.PHARMACIST),
+  validate(createClaimSchema),
+  ClaimController.createClaim
+);
 router.get("/", validate(listClaimsSchema), ClaimController.listClaims);
 router.get(
   "/:claimId",

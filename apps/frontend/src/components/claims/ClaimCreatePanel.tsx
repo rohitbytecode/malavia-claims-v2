@@ -126,6 +126,16 @@ export function ClaimCreatePanel() {
     },
   });
 
+  const isPharmacist = user?.role === "PHARMACIST";
+  if (isPharmacist) {
+    return (
+      <div className="quick-form">
+        <h3>Fast claim entry</h3>
+        <p>Pharmacists are not allowed to create claims.</p>
+      </div>
+    );
+  }
+
   return (
     <form
       className="quick-form"
@@ -237,8 +247,12 @@ export function ClaimCreatePanel() {
         </Field>
       </div>
 
-      <Button disabled={mutation.isPending}>
-        {mutation.isPending ? "Creating..." : "Create claim"}
+      <Button disabled={mutation.isPending || isPharmacist}>
+        {isPharmacist
+          ? "Pharmacist not allowed to create claims"
+          : mutation.isPending
+            ? "Creating..."
+            : "Create claim"}
       </Button>
     </form>
   );

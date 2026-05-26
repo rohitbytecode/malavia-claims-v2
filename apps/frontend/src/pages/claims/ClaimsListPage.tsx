@@ -22,6 +22,7 @@ import {
   formatDate,
   nameOf,
 } from "../../utils/format";
+import { useAuthStore } from "../../store/auth.store";
 
 export function ClaimsListPage() {
   const navigate = useNavigate();
@@ -29,6 +30,8 @@ export function ClaimsListPage() {
   const [params, setParams] = useSearchParams();
 
   const [search, setSearch] = useState("");
+
+  const user = useAuthStore((s) => s.user);
 
   const page = Number(params.get("page") ?? 1);
 
@@ -130,11 +133,27 @@ export function ClaimsListPage() {
 
     {
       key: "amount",
-      header: "Claim Amount",
+      header: user?.role === "PHARMACIST" ? "Pharmacy Amount" : "Claim Amount",
 
-      cell: (c) => formatCurrency(c.totalClaimAmount),
+      cell: (c) => {
+        if (user?.role === "PHARMACIST") {
+          const pharmacyItem = c.billBreakdown?.find(
+            (b) => b.departmentCategory === "PHARMACY"
+          );
+          return formatCurrency(pharmacyItem?.amount ?? 0);
+        }
+        return formatCurrency(c.totalClaimAmount);
+      },
 
-      sortValue: (c) => c.totalClaimAmount,
+      sortValue: (c) => {
+        if (user?.role === "PHARMACIST") {
+          return (
+            c.billBreakdown?.find((b) => b.departmentCategory === "PHARMACY")
+              ?.amount ?? 0
+          );
+        }
+        return c.totalClaimAmount;
+      },
 
       className: "numeric",
     },
