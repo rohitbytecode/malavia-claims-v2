@@ -18,7 +18,6 @@ import type {
 
 const VENDOR_DEPARTMENTS: string[] = ["PHARMACY", "LABORATORY", "RADIOLOGY"];
 
-type DiscountSource = "POLICY" | "DEFAULT" | "MANUAL";
 
 interface SettlementLineState extends SettlementDepartmentBreakdown {
   companyDiscountPercent: number;
@@ -389,13 +388,26 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
               </dd>
               <dt>TDS</dt>
               <dd>{formatCurrency(data.tds)}</dd>
-              <dt>Net Payable from Company</dt>
+              <dt>Net Payable from Company (Before TDS)</dt>
+              <dd>
+                <strong>{formatCurrency(data.netPayable + (data.tds ?? 0))}</strong>
+              </dd>
+              <dt>Net Payable from Company (After TDS)</dt>
               <dd>
                 <strong>{formatCurrency(data.netPayable)}</strong>
               </dd>
               <dt>Total Vendor Payout</dt>
               <dd>{formatCurrency(data.totalVendorPayout ?? 0)}</dd>
-              <dt>Net Hospital Share (Without Vendor)</dt>
+              <dt>Net Hospital Share (Before TDS)</dt>
+              <dd>
+                <strong style={{ color: "var(--emerald)" }}>
+                  {formatCurrency(
+                    (data.hospitalNetShare ??
+                      data.netPayable - (data.totalVendorPayout ?? 0)) + (data.tds ?? 0)
+                  )}
+                </strong>
+              </dd>
+              <dt>Net Hospital Share (After TDS)</dt>
               <dd
                 style={{
                   padding: "4px 8px",
@@ -1081,10 +1093,21 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
           }}
         >
           <div className="readonly-total" style={{ flex: 1 }}>
-            <span>Net Payable from Company (auto-calculated)</span>
-            <strong style={{ fontSize: 18 }}>
-              {formatCurrency(totals.netPayable)}
-            </strong>
+            <span>Net Payable from Company</span>
+            <div style={{ display: "flex", gap: 16, marginTop: 4 }}>
+              <div>
+                <span style={{ fontSize: 10, color: "var(--text-secondary)", textTransform: "uppercase", display: "block" }}>Before TDS</span>
+                <strong style={{ fontSize: 16 }}>
+                  {formatCurrency(totals.netPayable + tds)}
+                </strong>
+              </div>
+              <div style={{ borderLeft: "1px solid var(--border)", paddingLeft: 16 }}>
+                <span style={{ fontSize: 10, color: "var(--text-secondary)", textTransform: "uppercase", display: "block" }}>After TDS</span>
+                <strong style={{ fontSize: 16 }}>
+                  {formatCurrency(totals.netPayable)}
+                </strong>
+              </div>
+            </div>
           </div>
           <div
             className="readonly-total"
@@ -1097,9 +1120,20 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
             <span style={{ color: "var(--emerald)" }}>
               Net Hospital Share (Without Vendor)
             </span>
-            <strong style={{ fontSize: 18, color: "var(--emerald)" }}>
-              {formatCurrency(totals.hospitalNetShare)}
-            </strong>
+            <div style={{ display: "flex", gap: 16, marginTop: 4 }}>
+              <div>
+                <span style={{ fontSize: 10, color: "var(--text-secondary)", textTransform: "uppercase", display: "block" }}>Before TDS</span>
+                <strong style={{ fontSize: 16, color: "var(--emerald)" }}>
+                  {formatCurrency(totals.hospitalNetShare + tds)}
+                </strong>
+              </div>
+              <div style={{ borderLeft: "1px solid var(--emerald)", paddingLeft: 16 }}>
+                <span style={{ fontSize: 10, color: "var(--text-secondary)", textTransform: "uppercase", display: "block" }}>After TDS</span>
+                <strong style={{ fontSize: 16, color: "var(--emerald)" }}>
+                  {formatCurrency(totals.hospitalNetShare)}
+                </strong>
+              </div>
+            </div>
           </div>
         </div>
       </div>

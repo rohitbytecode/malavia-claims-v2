@@ -110,7 +110,7 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
           </h4>
 
           <div className="report-table-wrapper" style={{ overflowX: "auto" }}>
-            <table className="report-table" style={{ "--visible-cols": 10 } as React.CSSProperties}>
+            <table className="report-table" style={{ "--visible-cols": 11 } as React.CSSProperties}>
               <thead>
                 <tr>
                   <th>Patient Name &amp; ID</th>
@@ -122,7 +122,8 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
                   <th style={{ textAlign: "right" }}>Laboratory</th>
                   <th style={{ textAlign: "right" }}>Radiology</th>
                   <th style={{ textAlign: "right" }}>Others</th>
-                  <th style={{ textAlign: "right" }}>Net Payable</th>
+                  <th style={{ textAlign: "right" }}>Net (Before TDS)</th>
+                  <th style={{ textAlign: "right" }}>Net (After TDS)</th>
                 </tr>
               </thead>
               <tbody>
@@ -154,6 +155,9 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
                     <td style={{ textAlign: "right", color: "var(--text-secondary)" }}>
                       {formatCurrency(row.others)}
                     </td>
+                    <td style={{ textAlign: "right", fontWeight: 600, color: "#059669" }}>
+                      {formatCurrency(row.netPayable + row.tds)}
+                    </td>
                     <td style={{ textAlign: "right", fontWeight: 700, color: "#059669" }}>
                       {formatCurrency(row.netPayable)}
                     </td>
@@ -177,6 +181,7 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
                   <td style={{ textAlign: "right" }}>{formatCurrency(group.totals.lab)}</td>
                   <td style={{ textAlign: "right" }}>{formatCurrency(group.totals.radiology)}</td>
                   <td style={{ textAlign: "right" }}>{formatCurrency(group.totals.others)}</td>
+                  <td style={{ textAlign: "right", color: "#059669" }}>{formatCurrency(group.totals.netPayable + group.totals.tds)}</td>
                   <td style={{ textAlign: "right", color: "#059669" }}>{formatCurrency(group.totals.netPayable)}</td>
                 </tr>
               </tbody>
@@ -220,7 +225,11 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
             <strong style={{ fontSize: 15 }}>{formatCurrency(grandTotals.others)}</strong>
           </div>
           <div className="report-summary-cell">
-            <span>Grand Net Payable</span>
+            <span>Grand Net (Before TDS)</span>
+            <strong style={{ fontSize: 15, color: "#059669" }}>{formatCurrency(grandTotals.netPayable + grandTotals.tds)}</strong>
+          </div>
+          <div className="report-summary-cell">
+            <span>Grand Net (After TDS)</span>
             <strong style={{ fontSize: 15, color: "#059669" }}>{formatCurrency(grandTotals.netPayable)}</strong>
           </div>
         </div>

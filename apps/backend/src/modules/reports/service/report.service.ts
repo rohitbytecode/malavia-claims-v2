@@ -297,6 +297,7 @@ export class ReportService {
           insuranceCompany: "$insurance.name",
           approvedAmount: { $ifNull: ["$approvedAmount", 0] },
           netPayable: { $ifNull: ["$netPayable", 0] },
+          tds: { $ifNull: ["$tds", 0] },
           totalVendorPayout: { $ifNull: ["$totalVendorPayout", undefined] },
           hospitalNetShare: { $ifNull: ["$hospitalNetShare", undefined] },
           settlementDate: "$settlementDate",
@@ -343,6 +344,7 @@ export class ReportService {
         settlementDate: s.settlementDate,
         approvedAmount: s.approvedAmount,
         netPayable: s.netPayable,
+        tds: s.tds || 0,
         pharmacyShare,
         labShare,
         radiologyShare,
@@ -355,6 +357,7 @@ export class ReportService {
       (acc, r) => {
         acc.totalApproved += r.approvedAmount;
         acc.totalNetPayable += r.netPayable;
+        acc.totalTds += r.tds;
         acc.totalPharmacyShare += r.pharmacyShare;
         acc.totalLabShare += r.labShare;
         acc.totalRadiologyShare += r.radiologyShare;
@@ -365,6 +368,7 @@ export class ReportService {
       {
         totalApproved: 0,
         totalNetPayable: 0,
+        totalTds: 0,
         totalPharmacyShare: 0,
         totalLabShare: 0,
         totalRadiologyShare: 0,

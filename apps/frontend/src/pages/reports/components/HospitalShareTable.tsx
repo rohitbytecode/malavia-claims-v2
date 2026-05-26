@@ -7,6 +7,7 @@ interface HospitalShareRow {
   settlementDate: string;
   approvedAmount: number;
   netPayable: number;
+  tds?: number;
   pharmacyShare: number;
   labShare: number;
   radiologyShare: number;
@@ -17,6 +18,7 @@ interface HospitalShareRow {
 interface HospitalShareTotals {
   totalApproved: number;
   totalNetPayable: number;
+  totalTds?: number;
   totalPharmacyShare: number;
   totalLabShare: number;
   totalRadiologyShare: number;
@@ -43,6 +45,7 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
   const totals = data?.totals ?? {
     totalApproved: 0,
     totalNetPayable: 0,
+    totalTds: 0,
     totalPharmacyShare: 0,
     totalLabShare: 0,
     totalRadiologyShare: 0,
@@ -67,7 +70,7 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
       <div className="report-table-wrapper" style={{ overflowX: "auto" }}>
         <table
           className="report-table"
-          style={{ "--visible-cols": 10 } as React.CSSProperties}
+          style={{ "--visible-cols": 12 } as React.CSSProperties}
         >
           <thead>
             <tr>
@@ -75,19 +78,21 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
               <th>Claim Number</th>
               <th>Insurance Company</th>
               <th style={{ textAlign: "right" }}>Approved</th>
-              <th style={{ textAlign: "right" }}>Net Payable</th>
+              <th style={{ textAlign: "right" }}>Net (Before TDS)</th>
+              <th style={{ textAlign: "right" }}>Net (After TDS)</th>
               <th style={{ textAlign: "right" }}>Pharmacy</th>
               <th style={{ textAlign: "right" }}>Laboratory</th>
               <th style={{ textAlign: "right" }}>Radiology</th>
               <th style={{ textAlign: "right" }}>Total Vendor</th>
-              <th style={{ textAlign: "right" }}>Hospital Share</th>
+              <th style={{ textAlign: "right" }}>Share (Before TDS)</th>
+              <th style={{ textAlign: "right" }}>Share (After TDS)</th>
             </tr>
           </thead>
           <tbody>
             {isLoading && (
               <tr>
                 <td
-                  colSpan={10}
+                  colSpan={12}
                   style={{
                     textAlign: "center",
                     padding: "16px",
@@ -101,7 +106,7 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
             {!isLoading && rows.length === 0 && (
               <tr>
                 <td
-                  colSpan={10}
+                  colSpan={12}
                   style={{
                     textAlign: "center",
                     padding: "16px",
@@ -123,6 +128,9 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
                   {formatCurrency(row.approvedAmount)}
                 </td>
                 <td style={{ textAlign: "right" }}>
+                  {formatCurrency(row.netPayable + (row.tds || 0))}
+                </td>
+                <td style={{ textAlign: "right" }}>
                   {formatCurrency(row.netPayable)}
                 </td>
                 <td
@@ -142,6 +150,15 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
                 </td>
                 <td style={{ textAlign: "right", fontWeight: 600 }}>
                   {formatCurrency(row.vendorPayout)}
+                </td>
+                <td
+                  style={{
+                    textAlign: "right",
+                    fontWeight: 600,
+                    color: "var(--green)",
+                  }}
+                >
+                  {formatCurrency(row.hospitalShare + (row.tds || 0))}
                 </td>
                 <td
                   style={{
@@ -169,6 +186,9 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
                   {formatCurrency(totals.totalApproved)}
                 </td>
                 <td style={{ textAlign: "right" }}>
+                  {formatCurrency(totals.totalNetPayable + (totals.totalTds || 0))}
+                </td>
+                <td style={{ textAlign: "right" }}>
                   {formatCurrency(totals.totalNetPayable)}
                 </td>
                 <td style={{ textAlign: "right" }}>
@@ -182,6 +202,9 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
                 </td>
                 <td style={{ textAlign: "right" }}>
                   {formatCurrency(totals.totalVendorPayout)}
+                </td>
+                <td style={{ textAlign: "right", color: "var(--green)" }}>
+                  {formatCurrency(totals.totalHospitalShare + (totals.totalTds || 0))}
                 </td>
                 <td style={{ textAlign: "right", color: "var(--green)" }}>
                   {formatCurrency(totals.totalHospitalShare)}

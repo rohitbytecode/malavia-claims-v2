@@ -41,9 +41,15 @@ export function FinancialControlDeck({
           <p className="eyebrow">FINANCIAL COMMAND DECK</p>
           <h2>Settlement · TDS · Deductions · Refunds</h2>
         </div>
-        <div className="net-payable">
-          <span className="net-label">Net Payable</span>
-          <strong>{formatCurrency(netPayable)}</strong>
+        <div className="net-payable" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+          <span className="net-label">Net Payable (Before TDS)</span>
+          <strong style={{ fontSize: 18 }}>
+            {formatCurrency(netPayable + (settlement?.tds ?? claim.tdsAmount ?? 0))}
+          </strong>
+          <span className="net-label" style={{ fontSize: 10, marginTop: 4 }}>Net Payable (After TDS)</span>
+          <strong style={{ fontSize: 14, opacity: 0.9 }}>
+            {formatCurrency(netPayable)}
+          </strong>
         </div>
       </div>
 

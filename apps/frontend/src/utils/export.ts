@@ -117,28 +117,30 @@ export const exportReportToCSV = ({
 
     // Totals KPI row
     sections.push(
-      `"Settlements Count","Total Approved","Total Deductions","Total TDS","Total Hospital Discount","Total Net Payable"`
+      `"Settlements Count","Total Approved","Total Deductions","Total TDS","Total Hospital Discount","Total Net Payable (Before TDS)","Total Net Payable (After TDS)"`
     );
+    const totalNetBeforeTds = (settlementTotals.totalNetPayable ?? 0) + (settlementTotals.totalTds ?? 0);
     sections.push(
-      `"${settlementCount}","${settlementTotals.totalApproved ?? 0}","${settlementTotals.totalDeductions ?? 0}","${settlementTotals.totalTds ?? 0}","${settlementTotals.totalHospitalDiscount ?? 0}","${settlementTotals.totalNetPayable ?? 0}"`
+      `"${settlementCount}","${settlementTotals.totalApproved ?? 0}","${settlementTotals.totalDeductions ?? 0}","${settlementTotals.totalTds ?? 0}","${settlementTotals.totalHospitalDiscount ?? 0}","${totalNetBeforeTds}","${settlementTotals.totalNetPayable ?? 0}"`
     );
     sections.push(""); // spacer
 
     // Detail Rows
     sections.push(
-      `"Claim No.","Patient ID","Insurance Company","Claim Amount","Approved","Deductions","TDS","Hospital Discount","Net Payable","Method","Date"`
+      `"Claim No.","Patient ID","Insurance Company","Claim Amount","Approved","Deductions","TDS","Hospital Discount","Net Payable (Before TDS)","Net Payable (After TDS)","Method","Date"`
     );
     settlements.forEach((s) => {
       const dateStr = s.settlementDate
         ? new Date(s.settlementDate).toLocaleDateString("en-IN")
         : "—";
+      const netBeforeTds = (s.netPayable ?? 0) + (s.tds ?? 0);
       sections.push(
-        `"${(s.claimNumber || "—").replace(/"/g, '""')}","${(s.patientId || "—").replace(/"/g, '""')}","${(s.insuranceCompany || "—").replace(/"/g, '""')}","${s.totalClaimAmount ?? 0}","${s.approvedAmount ?? 0}","${s.deductions ?? 0}","${s.tds ?? 0}","${s.hospitalDiscount ?? 0}","${s.netPayable ?? 0}","${labelize(s.settlementMethod)}","${dateStr}"`
+        `"${(s.claimNumber || "—").replace(/"/g, '""')}","${(s.patientId || "—").replace(/"/g, '""')}","${(s.insuranceCompany || "—").replace(/"/g, '""')}","${s.totalClaimAmount ?? 0}","${s.approvedAmount ?? 0}","${s.deductions ?? 0}","${s.tds ?? 0}","${s.hospitalDiscount ?? 0}","${netBeforeTds}","${s.netPayable ?? 0}","${labelize(s.settlementMethod)}","${dateStr}"`
       );
     });
     // Totals footer row at the end of detail rows
     sections.push(
-      `"TOTALS","","","${settlementTotals.totalClaimAmount ?? 0}","${settlementTotals.totalApproved ?? 0}","${settlementTotals.totalDeductions ?? 0}","${settlementTotals.totalTds ?? 0}","${settlementTotals.totalHospitalDiscount ?? 0}","${settlementTotals.totalNetPayable ?? 0}","",""`
+      `"TOTALS","","","${settlementTotals.totalClaimAmount ?? 0}","${settlementTotals.totalApproved ?? 0}","${settlementTotals.totalDeductions ?? 0}","${settlementTotals.totalTds ?? 0}","${settlementTotals.totalHospitalDiscount ?? 0}","${totalNetBeforeTds}","${settlementTotals.totalNetPayable ?? 0}","",""`
     );
     sections.push(""); // Empty spacer row
   }
@@ -247,22 +249,26 @@ export const exportReportToCSV = ({
   ) {
     sections.push(`"HOSPITAL SHARE & VENDOR PAYOUT"`);
     sections.push(
-      `"Date","Claim Number","Insurance Company","Approved","Net Payable","Pharmacy","Laboratory","Radiology","Total Vendor","Hospital Share"`
+      `"Date","Claim Number","Insurance Company","Approved","Net Payable (Before TDS)","Net Payable (After TDS)","Pharmacy","Laboratory","Radiology","Total Vendor","Hospital Share (Before TDS)","Hospital Share (After TDS)"`
     );
 
     hospitalShareData.rows.forEach((row) => {
       const dateStr = row.settlementDate
         ? new Date(row.settlementDate).toLocaleDateString("en-IN")
         : "—";
+      const netBeforeTds = (row.netPayable ?? 0) + (row.tds ?? 0);
+      const shareBeforeTds = (row.hospitalShare ?? 0) + (row.tds ?? 0);
       sections.push(
-        `"${dateStr}","${(row.claimNumber || "—").replace(/"/g, '""')}","${(row.insuranceCompany || "—").replace(/"/g, '""')}","${row.approvedAmount ?? 0}","${row.netPayable ?? 0}","${row.pharmacyShare ?? 0}","${row.labShare ?? 0}","${row.radiologyShare ?? 0}","${row.vendorPayout ?? 0}","${row.hospitalShare ?? 0}"`
+        `"${dateStr}","${(row.claimNumber || "—").replace(/"/g, '""')}","${(row.insuranceCompany || "—").replace(/"/g, '""')}","${row.approvedAmount ?? 0}","${netBeforeTds}","${row.netPayable ?? 0}","${row.pharmacyShare ?? 0}","${row.labShare ?? 0}","${row.radiologyShare ?? 0}","${row.vendorPayout ?? 0}","${shareBeforeTds}","${row.hospitalShare ?? 0}"`
       );
     });
 
     const totals = hospitalShareData.totals;
     if (totals) {
+      const totalNetBeforeTds = (totals.totalNetPayable ?? 0) + (totals.totalTds ?? 0);
+      const totalShareBeforeTds = (totals.totalHospitalShare ?? 0) + (totals.totalTds ?? 0);
       sections.push(
-        `"TOTALS","","","${totals.totalApproved ?? 0}","${totals.totalNetPayable ?? 0}","${totals.totalPharmacyShare ?? 0}","${totals.totalLabShare ?? 0}","${totals.totalRadiologyShare ?? 0}","${totals.totalVendorPayout ?? 0}","${totals.totalHospitalShare ?? 0}"`
+        `"TOTALS","","","${totals.totalApproved ?? 0}","${totalNetBeforeTds}","${totals.totalNetPayable ?? 0}","${totals.totalPharmacyShare ?? 0}","${totals.totalLabShare ?? 0}","${totals.totalRadiologyShare ?? 0}","${totals.totalVendorPayout ?? 0}","${totalShareBeforeTds}","${totals.totalHospitalShare ?? 0}"`
       );
     }
     sections.push(""); // spacer
@@ -276,23 +282,26 @@ export const exportReportToCSV = ({
     departmentReportData.groups.forEach((group) => {
       sections.push(`"DEPARTMENT: ${group.departmentName.toUpperCase()}"`);
       sections.push(
-        `"Patient ID / Name","Claim No.","Approved Amount","Deductions","TDS","Pharmacy","Laboratory","Radiology","Others","Net Payable"`
+        `"Patient ID / Name","Claim No.","Approved Amount","Deductions","TDS","Pharmacy","Laboratory","Radiology","Others","Net (Before TDS)","Net (After TDS)"`
       );
       group.rows.forEach((row) => {
+        const netBeforeTds = (row.netPayable ?? 0) + (row.tds ?? 0);
         sections.push(
-          `"${row.patientName} (${row.patientId})","${row.claimNumber || "—"}","${row.approvedAmount}","${row.deductions}","${row.tds}","${row.pharmacy}","${row.lab}","${row.radiology}","${row.others}","${row.netPayable}"`
+          `"${row.patientName} (${row.patientId})","${row.claimNumber || "—"}","${row.approvedAmount}","${row.deductions}","${row.tds}","${row.pharmacy}","${row.lab}","${row.radiology}","${row.others}","${netBeforeTds}","${row.netPayable}"`
         );
       });
+      const groupNetBeforeTds = (group.totals.netPayable ?? 0) + (group.totals.tds ?? 0);
       sections.push(
-        `"DEPARTMENT TOTAL","","${group.totals.approvedAmount}","${group.totals.deductions}","${group.totals.tds}","${group.totals.pharmacy}","${group.totals.lab}","${group.totals.radiology}","${group.totals.others}","${group.totals.netPayable}"`
+        `"DEPARTMENT TOTAL","","${group.totals.approvedAmount}","${group.totals.deductions}","${group.totals.tds}","${group.totals.pharmacy}","${group.totals.lab}","${group.totals.radiology}","${group.totals.others}","${groupNetBeforeTds}","${group.totals.netPayable}"`
       );
       sections.push(""); // spacer
     });
 
     const gt = departmentReportData.grandTotals;
     if (gt) {
+      const grandNetBeforeTds = (gt.netPayable ?? 0) + (gt.tds ?? 0);
       sections.push(
-        `"GRAND TOTALS","","${gt.approvedAmount}","${gt.deductions}","${gt.tds}","${gt.pharmacy}","${gt.lab}","${gt.radiology}","${gt.others}","${gt.netPayable}"`
+        `"GRAND TOTALS","","${gt.approvedAmount}","${gt.deductions}","${gt.tds}","${gt.pharmacy}","${gt.lab}","${gt.radiology}","${gt.others}","${grandNetBeforeTds}","${gt.netPayable}"`
       );
     }
     sections.push(""); // spacer

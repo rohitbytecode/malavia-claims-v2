@@ -291,26 +291,20 @@ export function ClaimDetailsPage() {
                           }}
                         >
                           <div>
-                            <span
-                              style={{
-                                fontSize: 11,
-                                color: "var(--text-tertiary)",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.05em",
-                              }}
-                            >
-                              Net Settled Amount
-                            </span>
-                            <h2
-                              style={{
-                                fontSize: 24,
-                                fontWeight: 700,
-                                color: "var(--green)",
-                                margin: "4px 0 0 0",
-                              }}
-                            >
-                              {formatCurrency(settlement.data?.netPayable ?? 0)}
-                            </h2>
+                          <div style={{ display: "flex", gap: 16 }}>
+                            <div>
+                              <span style={{ fontSize: 10, color: "var(--text-tertiary)", textTransform: "uppercase", display: "block" }}>Net Settled (Before TDS)</span>
+                              <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)", margin: "4px 0 0 0" }}>
+                                {formatCurrency((settlement.data?.netPayable ?? 0) + (settlement.data?.tds ?? 0))}
+                              </h2>
+                            </div>
+                            <div style={{ borderLeft: "1px solid var(--border)", paddingLeft: 16 }}>
+                              <span style={{ fontSize: 10, color: "var(--text-tertiary)", textTransform: "uppercase", display: "block" }}>Net Settled (After TDS)</span>
+                              <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--green)", margin: "4px 0 0 0" }}>
+                                {formatCurrency(settlement.data?.netPayable ?? 0)}
+                              </h2>
+                            </div>
+                          </div>
                           </div>
                           <button
                             type="button"

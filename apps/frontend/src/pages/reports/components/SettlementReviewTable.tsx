@@ -99,7 +99,13 @@ export const SettlementReviewTable: React.FC<SettlementReviewTableProps> = ({
               </strong>
             </div>
             <div className="report-summary-cell">
-              <span>Net Payable</span>
+              <span>Net Payable (Before TDS)</span>
+              <strong style={{ color: "#059669", fontSize: 16 }}>
+                {formatCurrency(totals.totalNetPayable + totals.totalTds)}
+              </strong>
+            </div>
+            <div className="report-summary-cell">
+              <span>Net Payable (After TDS)</span>
               <strong style={{ color: "#059669", fontSize: 16 }}>
                 {formatCurrency(totals.totalNetPayable)}
               </strong>
@@ -121,7 +127,8 @@ export const SettlementReviewTable: React.FC<SettlementReviewTableProps> = ({
                   <th>Deductions</th>
                   <th>TDS</th>
                   <th>Hospital Discount</th>
-                  <th>Net Payable</th>
+                  <th>Net (Before TDS)</th>
+                  <th>Net (After TDS)</th>
                   <th>Method</th>
                   <th>Date</th>
                 </tr>
@@ -161,6 +168,15 @@ export const SettlementReviewTable: React.FC<SettlementReviewTableProps> = ({
                       }}
                     >
                       {formatCurrency(s.hospitalDiscount)}
+                    </td>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        fontWeight: 600,
+                        color: "#059669",
+                      }}
+                    >
+                      {formatCurrency(s.netPayable + s.tds)}
                     </td>
                     <td
                       style={{
@@ -205,6 +221,9 @@ export const SettlementReviewTable: React.FC<SettlementReviewTableProps> = ({
                   </td>
                   <td style={{ textAlign: "right", color: "#f59e0b" }}>
                     {formatCurrency(totals.totalHospitalDiscount)}
+                  </td>
+                  <td style={{ textAlign: "right", color: "#059669" }}>
+                    {formatCurrency(totals.totalNetPayable + totals.totalTds)}
                   </td>
                   <td style={{ textAlign: "right", color: "#059669" }}>
                     {formatCurrency(totals.totalNetPayable)}
