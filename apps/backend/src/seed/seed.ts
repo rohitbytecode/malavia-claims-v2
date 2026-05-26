@@ -70,6 +70,23 @@ const runSeeders = async () => {
       logger.info("Super Admin User already exists.");
     }
 
+    const pharmacistExists = await UserModel.findOne({
+      username: "pharmacist",
+    });
+    if (!pharmacistExists) {
+      const hashedPassword = await bcrypt.hash("Pharmacist@123!", 10);
+      await UserModel.create({
+        fullName: "Pharmacy Vendor Admin",
+        username: "pharmacist",
+        password: hashedPassword,
+        role: Roles.PHARMACIST,
+        isActive: true,
+      });
+      logger.info("Default Pharmacist User created.");
+    } else {
+      logger.info("Pharmacist User already exists.");
+    }
+
     // 2. Seed Departments
     const departments = [
       "Cardiology",

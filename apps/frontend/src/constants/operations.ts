@@ -251,6 +251,26 @@ export const roleExperiences: Record<Role, RoleExperience> = {
       "Department allocations cannot exceed settlement",
     ],
   },
+  PHARMACIST: {
+    role: "PHARMACIST",
+    title: "Pharmacy Vendor Control Desk",
+    mission:
+      "Track pharmacy department billing, verify approved shares, and coordinate Pharmacy vendor payouts.",
+    primaryQueues: [
+      "SETTLEMENT_PENDING",
+      "SETTLED",
+    ],
+    visibleModules: ["Claims", "Reports"],
+    criticalActions: [
+      "Review pharmacy bill breakdown",
+      "Verify Pharmacy vendor payout and discount allocations",
+      "Track settled pharmacy claims",
+    ],
+    guardrails: [
+      "Only pharmacy department payouts are visible",
+      "Cannot modify settlements or claim statuses",
+    ],
+  },
 };
 
 export const alertPlaybook: Record<
@@ -297,7 +317,7 @@ export const severityRank: Record<AlertSeverity, number> = {
 };
 
 export const canSeeFinance = (role?: Role): boolean =>
-  Boolean(role && accountantRoles.includes(role));
+  Boolean(role && (accountantRoles.includes(role) || role === "PHARMACIST"));
 export const canSeeAdminControls = (role?: Role): boolean =>
   Boolean(role && adminRoles.includes(role));
 export const canOperateClaims = (role?: Role): boolean =>

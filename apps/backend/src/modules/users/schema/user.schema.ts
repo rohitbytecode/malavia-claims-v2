@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema<UserDocument>(
         "CLAIM_MANAGER",
         "CLAIM_EXECUTIVE",
         "ACCOUNTANT",
+        "PHARMACIST",
       ],
     },
     isActive: {

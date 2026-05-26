@@ -369,6 +369,106 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
   // ────── POST-SETTLEMENT VIEW ──────
   if (data) {
     const bd = data.departmentBreakdown ?? [];
+    
+    const isPharmacist = user?.role === "PHARMACIST";
+    if (isPharmacist) {
+      const pharmacyLine = bd.find(item => item.departmentCategory === "PHARMACY");
+      const pharmacyClaimed = pharmacyLine?.claimedAmount ?? 0;
+      const pharmacyApproved = pharmacyLine?.approvedAmount ?? 0;
+      const pharmacyDeduction = pharmacyLine?.deduction ?? 0;
+      const pharmacyDiscount = pharmacyLine?.vendorDiscountAmount ?? 0;
+      const pharmacyPayout = pharmacyLine?.vendorPayout ?? 0;
+
+      return (
+        <div className="settlement-grid" style={{ gap: 20 }}>
+          {/* Left Column: Summary */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <div>
+              <h3>Pharmacy Payout Summary</h3>
+              <dl className="detail-list">
+                <dt>Pharmacy Claimed</dt>
+                <dd>{formatCurrency(pharmacyClaimed)}</dd>
+                <dt>Pharmacy Approved</dt>
+                <dd>{formatCurrency(pharmacyApproved)}</dd>
+                <dt>Pharmacy Deduction</dt>
+                <dd>{formatCurrency(pharmacyDeduction)}</dd>
+                <dt>Pharmacy Vendor Discount</dt>
+                <dd>{formatCurrency(pharmacyDiscount)}</dd>
+                <dt>Net Pharmacy Payout</dt>
+                <dd style={{
+                  padding: "4px 8px",
+                  background: "color-mix(in srgb, var(--emerald) 10%, transparent)",
+                  borderRadius: 4,
+                }}>
+                  <strong style={{ color: "var(--emerald)" }}>
+                    {formatCurrency(pharmacyPayout)}
+                  </strong>
+                </dd>
+                <dt>Settlement Method</dt>
+                <dd>{labelize(data.settlementMethod)}</dd>
+                <dt>Settlement Date</dt>
+                <dd>{formatDateTime(data.settlementDate)}</dd>
+              </dl>
+            </div>
+          </div>
+
+          {/* Department breakdown */}
+          {pharmacyLine && (
+            <div>
+              <h3>Department-wise settlement breakdown</h3>
+              <div style={{ overflowX: "auto" }}>
+                <table
+                  style={{
+                    width: "100%",
+                    fontSize: 12,
+                    borderCollapse: "collapse",
+                  }}
+                >
+                  <thead>
+                    <tr
+                      style={{
+                        borderBottom:
+                          "1px solid color-mix(in srgb, var(--text-tertiary) 20%, transparent)",
+                      }}
+                    >
+                      <th style={{ textAlign: "left", padding: "8px 6px" }}>Department</th>
+                      <th style={{ textAlign: "right", padding: "8px 6px" }}>Claimed</th>
+                      <th style={{ textAlign: "right", padding: "8px 6px" }}>Approved</th>
+                      <th style={{ textAlign: "right", padding: "8px 6px" }}>Deducted</th>
+                      <th style={{ textAlign: "right", padding: "8px 6px" }}>Vendor Discount</th>
+                      <th style={{ textAlign: "right", padding: "8px 6px" }}>Pharmacy Payout</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ borderBottom: "1px solid color-mix(in srgb, var(--text-tertiary) 10%, transparent)" }}>
+                      <td style={{ padding: "8px 6px" }}>
+                        <strong>{getCatLabel(pharmacyLine.departmentCategory)}</strong>
+                      </td>
+                      <td style={{ textAlign: "right", padding: "8px 6px" }}>
+                        {formatCurrency(pharmacyClaimed)}
+                      </td>
+                      <td style={{ textAlign: "right", padding: "8px 6px" }}>
+                        {formatCurrency(pharmacyApproved)}
+                      </td>
+                      <td style={{ textAlign: "right", padding: "8px 6px" }}>
+                        {formatCurrency(pharmacyDeduction)}
+                      </td>
+                      <td style={{ textAlign: "right", padding: "8px 6px" }}>
+                        {formatCurrency(pharmacyDiscount)}
+                      </td>
+                      <td style={{ textAlign: "right", padding: "8px 6px", fontWeight: 700, color: "var(--emerald)" }}>
+                        {formatCurrency(pharmacyPayout)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className="settlement-grid" style={{ gap: 20 }}>
         {/* Left Column: Summary & Deposits */}
@@ -636,6 +736,28 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
   }
 
   // ────── CREATE SETTLEMENT FORM ──────
+  const isPharmacist = user?.role === "PHARMACIST";
+  if (isPharmacist) {
+    return (
+      <div className="card premium-panel" style={{ padding: "24px", textAlign: "center" }}>
+        <h3 style={{ color: "var(--accent-primary)", marginBottom: "12px" }}>Awaiting Final Settlement</h3>
+        <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "16px" }}>
+          🔒 Settlement recording, TDS, and final allocations are restricted to Accountant and Admin roles. 
+          The settlement for this claim has not yet been registered.
+        </p>
+        <div style={{ 
+          display: "inline-block", 
+          padding: "8px 16px", 
+          background: "color-mix(in srgb, var(--accent-primary) 10%, transparent)", 
+          borderRadius: "var(--r-md)",
+          fontSize: "13px",
+          color: "var(--text-secondary)"
+        }}>
+          Please coordinate with the finance department to finalize the settlement.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form

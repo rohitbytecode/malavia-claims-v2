@@ -10,6 +10,7 @@ import { ErrorPanel } from "../../components/ui/ErrorPanel";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { formatCurrency, labelize } from "../../utils/format";
 import { exportReportToCSV } from "../../utils/export";
+import { useAuthStore } from "../../store/auth.store";
 
 // Sub-components
 import { ReportFilters } from "./components/ReportFilters";
@@ -60,6 +61,7 @@ function ReportGeneratedTime() {
 
 export function ReportsPage() {
   const now = new Date();
+  const user = useAuthStore((s) => s.user);
 
   const [activeTab, setActiveTab] = useState<TabId>("claims-summary");
 
@@ -943,6 +945,7 @@ export function ReportsPage() {
             }}
             isLoading={hospitalShare.isLoading}
             formatCurrency={formatCurrency}
+            role={user?.role}
           />
         </div>
 

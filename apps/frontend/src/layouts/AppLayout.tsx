@@ -224,6 +224,7 @@ const ROLE_META: Record<Role, { label: string; color: string; abbr: string }> =
       abbr: "CE",
     },
     ACCOUNTANT: { label: "Accountant", color: "var(--amber)", abbr: "AC" },
+    PHARMACIST: { label: "Pharmacist", color: "var(--emerald)", abbr: "PH" },
   };
 
 export function AppLayout({ children }: PropsWithChildren) {

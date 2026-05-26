@@ -3,7 +3,8 @@ export type Role =
   | "ADMIN"
   | "CLAIM_MANAGER"
   | "CLAIM_EXECUTIVE"
-  | "ACCOUNTANT";
+  | "ACCOUNTANT"
+  | "PHARMACIST";
 export type ClaimType = "CASHLESS" | "REIMBURSEMENT";
 export type ClaimStatus =
   | "DRAFT"

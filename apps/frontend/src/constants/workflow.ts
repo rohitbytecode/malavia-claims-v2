@@ -26,6 +26,7 @@ export const operationalRoles: Role[] = [
   "CLAIM_MANAGER",
   "CLAIM_EXECUTIVE",
   "ACCOUNTANT",
+  "PHARMACIST",
 ];
 export const adminRoles: Role[] = ["SUPER_ADMIN", "ADMIN"];
 export const accountantRoles: Role[] = ["SUPER_ADMIN", "ADMIN", "ACCOUNTANT"];

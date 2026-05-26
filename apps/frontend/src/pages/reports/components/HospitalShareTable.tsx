@@ -34,12 +34,14 @@ interface HospitalShareTableProps {
   };
   isLoading: boolean;
   formatCurrency: (val: number) => string;
+  role?: string;
 }
 
 export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
   data,
   isLoading,
   formatCurrency,
+  role,
 }) => {
   const rows = data?.rows ?? [];
   const totals = data?.totals ?? {
@@ -52,6 +54,8 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
     totalVendorPayout: 0,
     totalHospitalShare: 0,
   };
+
+  const isPharmacist = role === "PHARMACIST";
 
   return (
     <div style={{ marginBottom: 40 }}>
@@ -70,29 +74,39 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
       <div className="report-table-wrapper" style={{ overflowX: "auto" }}>
         <table
           className="report-table"
-          style={{ "--visible-cols": 12 } as React.CSSProperties}
+          style={{ "--visible-cols": isPharmacist ? 5 : 12 } as React.CSSProperties}
         >
           <thead>
-            <tr>
-              <th>Date</th>
-              <th>Claim Number</th>
-              <th>Insurance Company</th>
-              <th style={{ textAlign: "right" }}>Approved</th>
-              <th style={{ textAlign: "right" }}>Net (Before TDS)</th>
-              <th style={{ textAlign: "right" }}>Net (After TDS)</th>
-              <th style={{ textAlign: "right" }}>Pharmacy</th>
-              <th style={{ textAlign: "right" }}>Laboratory</th>
-              <th style={{ textAlign: "right" }}>Radiology</th>
-              <th style={{ textAlign: "right" }}>Total Vendor</th>
-              <th style={{ textAlign: "right" }}>Share (Before TDS)</th>
-              <th style={{ textAlign: "right" }}>Share (After TDS)</th>
-            </tr>
+            {isPharmacist ? (
+              <tr>
+                <th>Date</th>
+                <th>Claim Number</th>
+                <th>Insurance Company</th>
+                <th style={{ textAlign: "right" }}>Approved</th>
+                <th style={{ textAlign: "right" }}>Pharmacy Payout</th>
+              </tr>
+            ) : (
+              <tr>
+                <th>Date</th>
+                <th>Claim Number</th>
+                <th>Insurance Company</th>
+                <th style={{ textAlign: "right" }}>Approved</th>
+                <th style={{ textAlign: "right" }}>Net (Before TDS)</th>
+                <th style={{ textAlign: "right" }}>Net (After TDS)</th>
+                <th style={{ textAlign: "right" }}>Pharmacy</th>
+                <th style={{ textAlign: "right" }}>Laboratory</th>
+                <th style={{ textAlign: "right" }}>Radiology</th>
+                <th style={{ textAlign: "right" }}>Total Vendor</th>
+                <th style={{ textAlign: "right" }}>Share (Before TDS)</th>
+                <th style={{ textAlign: "right" }}>Share (After TDS)</th>
+              </tr>
+            )}
           </thead>
           <tbody>
             {isLoading && (
               <tr>
                 <td
-                  colSpan={12}
+                  colSpan={isPharmacist ? 5 : 12}
                   style={{
                     textAlign: "center",
                     padding: "16px",
@@ -106,7 +120,7 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
             {!isLoading && rows.length === 0 && (
               <tr>
                 <td
-                  colSpan={12}
+                  colSpan={isPharmacist ? 5 : 12}
                   style={{
                     textAlign: "center",
                     padding: "16px",
@@ -124,51 +138,64 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
                   <strong>{row.claimNumber || "—"}</strong>
                 </td>
                 <td>{row.insuranceCompany || "—"}</td>
-                <td style={{ textAlign: "right" }}>
-                  {formatCurrency(row.approvedAmount)}
-                </td>
-                <td style={{ textAlign: "right" }}>
-                  {formatCurrency(row.netPayable + (row.tds || 0))}
-                </td>
-                <td style={{ textAlign: "right" }}>
-                  {formatCurrency(row.netPayable)}
-                </td>
-                <td
-                  style={{ textAlign: "right", color: "var(--text-secondary)" }}
-                >
-                  {formatCurrency(row.pharmacyShare)}
-                </td>
-                <td
-                  style={{ textAlign: "right", color: "var(--text-secondary)" }}
-                >
-                  {formatCurrency(row.labShare)}
-                </td>
-                <td
-                  style={{ textAlign: "right", color: "var(--text-secondary)" }}
-                >
-                  {formatCurrency(row.radiologyShare)}
-                </td>
-                <td style={{ textAlign: "right", fontWeight: 600 }}>
-                  {formatCurrency(row.vendorPayout)}
-                </td>
-                <td
-                  style={{
-                    textAlign: "right",
-                    fontWeight: 600,
-                    color: "var(--green)",
-                  }}
-                >
-                  {formatCurrency(row.hospitalShare + (row.tds || 0))}
-                </td>
-                <td
-                  style={{
-                    textAlign: "right",
-                    fontWeight: 700,
-                    color: "var(--green)",
-                  }}
-                >
-                  {formatCurrency(row.hospitalShare)}
-                </td>
+                {isPharmacist ? (
+                  <>
+                    <td style={{ textAlign: "right" }}>
+                      {formatCurrency(row.approvedAmount)}
+                    </td>
+                    <td style={{ textAlign: "right", fontWeight: 700, color: "var(--emerald)" }}>
+                      {formatCurrency(row.pharmacyShare)}
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td style={{ textAlign: "right" }}>
+                      {formatCurrency(row.approvedAmount)}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      {formatCurrency(row.netPayable + (row.tds || 0))}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      {formatCurrency(row.netPayable)}
+                    </td>
+                    <td
+                      style={{ textAlign: "right", color: "var(--text-secondary)" }}
+                    >
+                      {formatCurrency(row.pharmacyShare)}
+                    </td>
+                    <td
+                      style={{ textAlign: "right", color: "var(--text-secondary)" }}
+                    >
+                      {formatCurrency(row.labShare)}
+                    </td>
+                    <td
+                      style={{ textAlign: "right", color: "var(--text-secondary)" }}
+                    >
+                      {formatCurrency(row.radiologyShare)}
+                    </td>
+                    <td style={{ textAlign: "right", fontWeight: 600 }}>
+                      {formatCurrency(row.vendorPayout)}
+                    </td>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        fontWeight: 600,
+                        color: "var(--green)",
+                      }}
+                    >
+                      {formatCurrency(row.hospitalShare + (row.tds || 0))}
+                    </td>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        fontWeight: 700,
+                        color: "var(--green)",
+                      }}
+                    >
+                      {formatCurrency(row.hospitalShare)}
+                    </td>
+                  </>
+                )}
               </tr>
             ))}
             {rows.length > 0 && (
@@ -181,34 +208,48 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
                     "var(--background-secondary, rgba(255, 255, 255, 0.02))",
                 }}
               >
-                <td colSpan={3}>TOTAL</td>
-                <td style={{ textAlign: "right" }}>
-                  {formatCurrency(totals.totalApproved)}
-                </td>
-                <td style={{ textAlign: "right" }}>
-                  {formatCurrency(totals.totalNetPayable + (totals.totalTds || 0))}
-                </td>
-                <td style={{ textAlign: "right" }}>
-                  {formatCurrency(totals.totalNetPayable)}
-                </td>
-                <td style={{ textAlign: "right" }}>
-                  {formatCurrency(totals.totalPharmacyShare)}
-                </td>
-                <td style={{ textAlign: "right" }}>
-                  {formatCurrency(totals.totalLabShare)}
-                </td>
-                <td style={{ textAlign: "right" }}>
-                  {formatCurrency(totals.totalRadiologyShare)}
-                </td>
-                <td style={{ textAlign: "right" }}>
-                  {formatCurrency(totals.totalVendorPayout)}
-                </td>
-                <td style={{ textAlign: "right", color: "var(--green)" }}>
-                  {formatCurrency(totals.totalHospitalShare + (totals.totalTds || 0))}
-                </td>
-                <td style={{ textAlign: "right", color: "var(--green)" }}>
-                  {formatCurrency(totals.totalHospitalShare)}
-                </td>
+                {isPharmacist ? (
+                  <>
+                    <td colSpan={3}>TOTAL</td>
+                    <td style={{ textAlign: "right" }}>
+                      {formatCurrency(totals.totalApproved)}
+                    </td>
+                    <td style={{ textAlign: "right", color: "var(--emerald)" }}>
+                      {formatCurrency(totals.totalPharmacyShare)}
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td colSpan={3}>TOTAL</td>
+                    <td style={{ textAlign: "right" }}>
+                      {formatCurrency(totals.totalApproved)}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      {formatCurrency(totals.totalNetPayable + (totals.totalTds || 0))}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      {formatCurrency(totals.totalNetPayable)}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      {formatCurrency(totals.totalPharmacyShare)}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      {formatCurrency(totals.totalLabShare)}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      {formatCurrency(totals.totalRadiologyShare)}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      {formatCurrency(totals.totalVendorPayout)}
+                    </td>
+                    <td style={{ textAlign: "right", color: "var(--green)" }}>
+                      {formatCurrency(totals.totalHospitalShare + (totals.totalTds || 0))}
+                    </td>
+                    <td style={{ textAlign: "right", color: "var(--green)" }}>
+                      {formatCurrency(totals.totalHospitalShare)}
+                    </td>
+                  </>
+                )}
               </tr>
             )}
           </tbody>
