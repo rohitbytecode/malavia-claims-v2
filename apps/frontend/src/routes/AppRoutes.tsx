@@ -19,6 +19,7 @@ import {
   adminRoles,
   accountantRoles,
   operationalRoles,
+  pharmacistRoles,
 } from "../constants/workflow";
 export function AppRoutes() {
   return (
@@ -118,7 +119,7 @@ export function AppRoutes() {
       <Route
         path="/insurance"
         element={
-          <ProtectedRoute roles={adminRoles}>
+          <ProtectedRoute roles={pharmacistRoles}>
             <AppLayout>
               <InsurancePage />
             </AppLayout>
@@ -128,7 +129,7 @@ export function AppRoutes() {
       <Route
         path="/departments"
         element={
-          <ProtectedRoute roles={adminRoles}>
+          <ProtectedRoute roles={pharmacistRoles}>
             <AppLayout>
               <DepartmentsPage />
             </AppLayout>

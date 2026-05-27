@@ -8,6 +8,7 @@ import {
   adminRoles,
   accountantRoles,
   operationalRoles,
+  pharmacistRoles,
 } from "../constants/workflow";
 import { alertApi } from "../api/services";
 import type { Role } from "../types/domain";
@@ -179,14 +180,14 @@ const NAV_ITEMS: {
     to: "/insurance",
     label: "Insurance",
     icon: "insurance",
-    roles: adminRoles,
+    roles: pharmacistRoles,
     group: "administration",
   },
   {
     to: "/departments",
     label: "Departments",
     icon: "departments",
-    roles: adminRoles,
+    roles: pharmacistRoles,
     group: "administration",
   },
   {

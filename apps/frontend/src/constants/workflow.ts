@@ -29,6 +29,7 @@ export const operationalRoles: Role[] = [
   "PHARMACIST",
 ];
 export const adminRoles: Role[] = ["SUPER_ADMIN", "ADMIN"];
+export const pharmacistRoles: Role[] = ["SUPER_ADMIN", "ADMIN", "PHARMACIST"];
 export const accountantRoles: Role[] = ["SUPER_ADMIN", "ADMIN", "ACCOUNTANT"];
 export const managerRoles: Role[] = ["SUPER_ADMIN", "ADMIN", "CLAIM_MANAGER"];
 const cashless: Partial<Record<ClaimStatus, ClaimStatus[]>> = {

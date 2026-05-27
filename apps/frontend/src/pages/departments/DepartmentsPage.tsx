@@ -8,6 +8,7 @@ import { Button } from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
 import { Field, TextArea, TextInput } from "../../components/forms/FormField";
 import type { Department } from "../../types/domain";
+import { useAuthStore } from "../../store/auth.store";
 
 type DepartmentDraft = {
   name: string;
@@ -28,6 +29,9 @@ export function DepartmentsPage() {
   const [editing, setEditing] = useState<Department | null>(null);
   const [draft, setDraft] = useState<DepartmentDraft>(blank);
   const qc = useQueryClient();
+
+  const user = useAuthStore((s) => s.user);
+  const isPharmacist = user?.role === "PHARMACIST";
 
   const query = useQuery({
     queryKey: ["departments"],
@@ -92,13 +96,13 @@ export function DepartmentsPage() {
       sortValue: (d) => d.name,
       searchValue: (d) => d.name,
     },
-    {
+    ...(!isPharmacist ? [{
       key: "description",
       header: "Description",
-      cell: (d) => d.description ?? "—",
-      sortValue: (d) => d.description ?? "",
-      searchValue: (d) => d.description ?? "",
-    },
+      cell: (d: Department) => isPharmacist ? null : (d.description ?? "—"),
+      sortValue: (d: Department) => d.description ?? "",
+      searchValue: (d: Department) => d.description ?? "",
+    }]:[]),
     {
       key: "active",
       header: "Active",
@@ -107,8 +111,8 @@ export function DepartmentsPage() {
     },
     {
       key: "actions",
-      header: "Actions",
-      cell: (d) => (
+      header: isPharmacist ? "" : "Actions",
+      cell: (d) => isPharmacist ? null :(
         <div className="chip-cloud">
           <Button type="button" variant="secondary" onClick={() => openEdit(d)}>
             Edit
@@ -156,9 +160,11 @@ export function DepartmentsPage() {
         columns={columns}
         getRowId={(row) => row._id}
         actions={
-          <Button type="button" onClick={openCreate}>
-            New department
-          </Button>
+          !isPharmacist && (
+            <Button type="button" onClick={openCreate}>
+              New department
+            </Button>
+          )
         }
       />
 

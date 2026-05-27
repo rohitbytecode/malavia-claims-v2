@@ -62,6 +62,7 @@ function ReportGeneratedTime() {
 export function ReportsPage() {
   const now = new Date();
   const user = useAuthStore((s) => s.user);
+  const isPharmacist = user?.role === "PHARMACIST";
 
   const [activeTab, setActiveTab] = useState<TabId>("claims-summary");
 
@@ -684,6 +685,33 @@ export function ReportsPage() {
 
   const activeTabLabel =
     REPORT_TABS.find((t) => t.id === activeTab)?.label ?? "";
+
+    if (isPharmacist) {
+  return (
+    <div className="page-stack">
+      <div className="page-title">
+        <p className="eyebrow">Audit-ready reporting</p>
+        <h1>Reports &amp; PDF Preview</h1>
+      </div>
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "64px 32px",
+        textAlign: "center",
+        gap: 16,
+      }}>
+        <span style={{ fontSize: 48 }}>🚧</span>
+        <h2 style={{ margin: 0 }}>Reports Section is Under Development for Pharmacy</h2>
+        <p style={{ color: "var(--text-muted, #888)", maxWidth: 480, lineHeight: 1.7, margin: 0 }}>
+          We're building comprehensive reports that truly matter to the pharmacist.
+          Thank you for your patience.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="page-stack">

@@ -11,6 +11,7 @@ import { Field, TextArea, TextInput } from "../../components/forms/FormField";
 import type { InsuranceCompany, SubmissionMethod } from "../../types/domain";
 import { labelize } from "../../utils/format";
 import { PayerContractPanel } from "../../components/insurance/PayerContractPanel";
+import { useAuthStore } from "../../store/auth.store";
 
 type CompanyDraft = {
   name: string;
@@ -80,6 +81,9 @@ export function InsurancePage() {
   const [draft, setDraft] = useState<CompanyDraft>(blank);
   const [showPasswordId, setShowPasswordId] = useState<string | null>(null);
   const qc = useQueryClient();
+
+  const user = useAuthStore((s) => s.user);
+  const isPharmacist = user?.role === "PHARMACIST";
 
   const query = useQuery({
     queryKey: ["insurance"],
@@ -155,63 +159,61 @@ export function InsurancePage() {
     draft.submissionMethods.includes(method);
 
   const columns: Column<InsuranceCompany>[] = [
-    {
-      key: "name",
-      header: "Company",
-      cell: (c) => <strong>{c.name}</strong>,
-      sortValue: (c) => c.name,
-    },
+  {
+    key: "name",
+    header: "Company",
+    cell: (c) => <strong>{c.name}</strong>,
+    sortValue: (c) => c.name,
+  },
+  ...(!isPharmacist ? [
     {
       key: "methods",
       header: "Submission",
-      cell: (c) => (
+      cell: (c: InsuranceCompany) => (
         <div className="chip-cloud">
           {c.submissionMethods.map((m) => (
             <StatusBadge key={m} value={m} compact />
           ))}
         </div>
       ),
-      sortValue: (c) => c.submissionMethods.join(","),
+      sortValue: (c: InsuranceCompany) => c.submissionMethods.join(","),
     },
     {
       key: "tat",
       header: "TAT",
-      cell: (c) => `${c.tatDays ?? 0} days`,
-      sortValue: (c) => c.tatDays ?? 0,
+      cell: (c: InsuranceCompany) => `${c.tatDays ?? 0} days`,
+      sortValue: (c: InsuranceCompany) => c.tatDays ?? 0,
     },
     {
       key: "contact",
       header: "Contact",
-      cell: (c) => c.email ?? c.contactPersons?.[0]?.email ?? "—",
-      sortValue: (c) => c.email ?? "",
+      cell: (c: InsuranceCompany) => c.email ?? c.contactPersons?.[0]?.email ?? "—",
+      sortValue: (c: InsuranceCompany) => c.email ?? "",
     },
-    {
-      key: "status",
-      header: "Status",
-      cell: (c) => labelize(c.isActive ? "ACTIVE" : "INACTIVE"),
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      cell: (c) => (
-        <div className="chip-cloud">
-          <Button variant="secondary" onClick={() => openEdit(c)}>
-            Edit
-          </Button>
-          <Button variant="secondary" onClick={() => setSelectedCompany(c)}>
-            Contracts
-          </Button>
-          <Button
-            variant={c.isActive ? "danger" : "success"}
-            onClick={() => toggle.mutate(c)}
-            disabled={toggle.isPending}
-          >
-            {c.isActive ? "Inactivate" : "Activate"}
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  ] : []),
+  {
+    key: "status",
+    header: "Status",
+    cell: (c) => labelize(c.isActive ? "ACTIVE" : "INACTIVE"),
+  },
+  {
+    key: "actions",
+    header: isPharmacist ? "" : "Actions",
+    cell: (c) => isPharmacist ? null : (
+      <div className="chip-cloud">
+        <Button variant="secondary" onClick={() => openEdit(c)}>Edit</Button>
+        <Button variant="secondary" onClick={() => setSelectedCompany(c)}>Contracts</Button>
+        <Button
+          variant={c.isActive ? "danger" : "success"}
+          onClick={() => toggle.mutate(c)}
+          disabled={toggle.isPending}
+        >
+          {c.isActive ? "Inactivate" : "Activate"}
+        </Button>
+      </div>
+    ),
+  },
+];
 
   if (query.isLoading) return <Skeleton rows={8} />;
   if (query.isError) return <ErrorPanel error={query.error} />;
@@ -249,8 +251,8 @@ export function InsurancePage() {
         rows={rows}
         columns={columns}
         getRowId={(row) => row._id}
-        actions={<Button onClick={openCreate}>New payer</Button>}
-        expandedRow={(row) => (
+        actions={!isPharmacist && <Button onClick={openCreate}>New payer</Button>}
+        expandedRow={!isPharmacist ? (row) => (
           <div className="form-grid-3">
             <div>
               <p className="eyebrow">Portal</p>
@@ -419,7 +421,7 @@ export function InsurancePage() {
               <strong>{row.escalationMatrix?.length ?? 0} contacts</strong>
             </div>
           </div>
-        )}
+        ): undefined}
       />
 
       <Modal
