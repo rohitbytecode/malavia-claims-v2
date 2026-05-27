@@ -12,11 +12,15 @@ const allowed = ["application/pdf", "image/jpeg", "image/png"];
 export function DocumentManager({
   claimId,
   locked = false,
+  allowedCategory,
 }: {
   claimId: string;
   locked?: boolean;
+  allowedCategory?: DocumentType;
 }) {
-  const [documentType, setDocumentType] = useState<DocumentType>("PREAUTH");
+  const [documentType, setDocumentType] = useState<DocumentType>(
+    allowedCategory ?? "PREAUTH"
+  );
   const [remarks, setRemarks] = useState("");
   const [error, setError] = useState("");
   const input = useRef<HTMLInputElement>(null);
@@ -91,9 +95,11 @@ export function DocumentManager({
           value={documentType}
           onChange={(e) => setDocumentType(e.target.value as DocumentType)}
         >
-          {documentTypes.map((type) => (
-            <option key={type}>{type}</option>
-          ))}
+          {documentTypes
+            .filter((type) => !allowedCategory || type === allowedCategory)
+            .map((type) => (
+              <option key={type}>{type}</option>
+            ))}
         </select>
         <textarea
           className="input textarea"

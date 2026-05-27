@@ -16,6 +16,22 @@ export interface DetailedClaim {
   status: string;
   totalClaimAmount: number;
   depositAmount: number;
+  doctor?: { name: string };
+  department?: { name: string };
+  billBreakdown?: { departmentCategory: string; amount: number }[];
+}
+
+export interface DetailedClaim {
+  claimId: string;
+  claimNumber: string;
+  patientId: string;
+  patientName?: string;
+  doctorId: string;
+  departmentId: string;
+  type: string;
+  status: string;
+  totalClaimAmount: number;
+  depositAmount: number;
   doctor?: {
     name: string;
   };

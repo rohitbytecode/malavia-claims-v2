@@ -10,6 +10,7 @@ interface ClaimsSummaryProps {
   isLoading: boolean;
   formatCurrency: (val: number) => string;
   labelize: (val: string) => string;
+  amountLabel?: string;
 }
 
 export const ClaimsSummary: React.FC<ClaimsSummaryProps> = ({
@@ -21,6 +22,7 @@ export const ClaimsSummary: React.FC<ClaimsSummaryProps> = ({
   isLoading,
   formatCurrency,
   labelize,
+  amountLabel = "Total Amount",
 }) => {
   return (
     <>
@@ -33,7 +35,7 @@ export const ClaimsSummary: React.FC<ClaimsSummaryProps> = ({
           </strong>
         </div>
         <div className="report-summary-cell">
-          <span>Total Amount</span>
+          <span>{amountLabel}</span>
           <strong style={{ color: "var(--accent-primary)" }}>
             {formatCurrency(totalAmount)}
           </strong>

@@ -117,18 +117,24 @@ export function ClaimDetailsPage() {
           </div>
           <div className="cockpit-hero-status">
             <StatusBadge value={data.status} />
-            {user?.role === "PHARMACIST" ?(
+            {user?.role === "PHARMACIST" ? (
               (() => {
                 const pharmacyItem = data.billBreakdown?.find(
                   (b) => b.departmentCategory === "PHARMACY"
                 );
-                return pharmacyItem
-                ? <strong>{formatCurrency(pharmacyItem.amount)}</strong>
-                : <span style={{ fontSize: 13, color: "var(--text-muted, #888)" }}>Pharmacy amount not configured</span>;
+                return pharmacyItem ? (
+                  <strong>{formatCurrency(pharmacyItem.amount)}</strong>
+                ) : (
+                  <span
+                    style={{ fontSize: 13, color: "var(--text-muted, #888)" }}
+                  >
+                    Pharmacy amount not configured
+                  </span>
+                );
               })()
-              ) :(
-            <strong>{formatCurrency(data.totalClaimAmount)}</strong>
-              )}
+            ) : (
+              <strong>{formatCurrency(data.totalClaimAmount)}</strong>
+            )}
           </div>
         </section>
 
@@ -220,7 +226,10 @@ export function ClaimDetailsPage() {
               </div>
             )}
 
-            <WorkflowRail claim={data} isPharmacist={user?.role === "PHARMACIST"} />
+            <WorkflowRail
+              claim={data}
+              isPharmacist={user?.role === "PHARMACIST"}
+            />
             <FinancialControlDeck
               claim={data}
               settlement={settlement.data}
@@ -271,17 +280,19 @@ export function ClaimDetailsPage() {
                               maxWidth: "600px",
                             }}
                           >
-                            This claim requires department-wise settlement
-                            mapping, deductions calculation, and discount
-                            finalization. Click below to open the console.
+                            {user?.role === "PHARMACIST"
+                              ? "Settlement is being processed. Please wait for the administrative staff to finalize the settlement."
+                              : "This claim requires department-wise settlement mapping, deductions calculation, and discount finalization. Click below to open the console."}
                           </p>
-                          <button
-                            type="button"
-                            onClick={() => setActiveTab("finance")}
-                            className="btn btn-primary"
-                          >
-                            Go to Finance Console →
-                          </button>
+                          {user?.role !== "PHARMACIST" && (
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("finance")}
+                              className="btn btn-primary"
+                            >
+                              Go to Finance Console →
+                            </button>
+                          )}
                         </div>
                       </section>
                     );
@@ -303,20 +314,62 @@ export function ClaimDetailsPage() {
                           }}
                         >
                           <div>
-                          <div style={{ display: "flex", gap: 16 }}>
-                            <div>
-                              <span style={{ fontSize: 10, color: "var(--text-tertiary)", textTransform: "uppercase", display: "block" }}>Net Settled (Before TDS)</span>
-                              <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)", margin: "4px 0 0 0" }}>
-                                {formatCurrency((settlement.data?.netPayable ?? 0) + (settlement.data?.tds ?? 0))}
-                              </h2>
+                            <div style={{ display: "flex", gap: 16 }}>
+                              <div>
+                                <span
+                                  style={{
+                                    fontSize: 10,
+                                    color: "var(--text-tertiary)",
+                                    textTransform: "uppercase",
+                                    display: "block",
+                                  }}
+                                >
+                                  Net Settled (Before TDS)
+                                </span>
+                                <h2
+                                  style={{
+                                    fontSize: 18,
+                                    fontWeight: 700,
+                                    color: "var(--text-primary)",
+                                    margin: "4px 0 0 0",
+                                  }}
+                                >
+                                  {formatCurrency(
+                                    (settlement.data?.netPayable ?? 0) +
+                                      (settlement.data?.tds ?? 0)
+                                  )}
+                                </h2>
+                              </div>
+                              <div
+                                style={{
+                                  borderLeft: "1px solid var(--border)",
+                                  paddingLeft: 16,
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontSize: 10,
+                                    color: "var(--text-tertiary)",
+                                    textTransform: "uppercase",
+                                    display: "block",
+                                  }}
+                                >
+                                  Net Settled (After TDS)
+                                </span>
+                                <h2
+                                  style={{
+                                    fontSize: 18,
+                                    fontWeight: 700,
+                                    color: "var(--green)",
+                                    margin: "4px 0 0 0",
+                                  }}
+                                >
+                                  {formatCurrency(
+                                    settlement.data?.netPayable ?? 0
+                                  )}
+                                </h2>
+                              </div>
                             </div>
-                            <div style={{ borderLeft: "1px solid var(--border)", paddingLeft: 16 }}>
-                              <span style={{ fontSize: 10, color: "var(--text-tertiary)", textTransform: "uppercase", display: "block" }}>Net Settled (After TDS)</span>
-                              <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--green)", margin: "4px 0 0 0" }}>
-                                {formatCurrency(settlement.data?.netPayable ?? 0)}
-                              </h2>
-                            </div>
-                          </div>
                           </div>
                           <button
                             type="button"
@@ -395,8 +448,12 @@ export function ClaimDetailsPage() {
                   )}
                   <dt>Department</dt>
                   <dd>{nameOf(data.departmentId) || "Not assigned"}</dd>
-                  <dt>Created by</dt>
-                  <dd>{nameOf(data.createdBy)}</dd>
+                  {user?.role !== "PHARMACIST" && (
+                    <>
+                      <dt>Created by</dt>
+                      <dd>{nameOf(data.createdBy)}</dd>
+                    </>
+                  )}
                   <dt>Operational notes</dt>
                   <dd>
                     {Array.isArray(data.remarks)
@@ -433,7 +490,13 @@ export function ClaimDetailsPage() {
                 title="Secure document control"
                 eyebrow="Versioned claim evidence"
               />
-              <DocumentManager claimId={data.id || data._id} locked={locked} />
+              <DocumentManager
+                claimId={data.id || data._id}
+                locked={locked}
+                allowedCategory={
+                  user?.role === "PHARMACIST" ? "PHARMACY_BILL" : undefined
+                }
+              />
             </Card>
 
             <div className="cockpit-matrix">
@@ -511,7 +574,9 @@ export function ClaimDetailsPage() {
             <WorkflowRail claim={data} />
             {canSeeFinance(user?.role) ? (
               <>
-                <BillBreakdownPanel claim={data} />
+                {user?.role !== "PHARMACIST" && (
+                  <BillBreakdownPanel claim={data} />
+                )}
                 {(() => {
                   const settlementStatuses = [
                     "SETTLEMENT_PENDING",

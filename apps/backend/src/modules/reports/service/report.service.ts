@@ -154,6 +154,7 @@ export class ReportService {
           settledAmount: "$settledAmount",
           tdsAmount: "$tdsAmount",
           hospitalDiscount: "$hospitalDiscount",
+          billBreakdown: { $ifNull: ["$billBreakdown", []] },
 
           insuranceCompanyId: "$insuranceCompanyId", // if exists
           createdAt: "$createdAt",

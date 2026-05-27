@@ -4,6 +4,7 @@ import type { DetailedClaim } from "../../../types/reports";
 interface DetailedClaimsTableProps {
   detailedClaims: DetailedClaim[];
   visibleColumns: Record<string, boolean>;
+  pharmacyAmountMap?: Map<string, number>;
   setVisibleColumns: React.Dispatch<
     React.SetStateAction<Record<string, boolean>>
   >;
@@ -23,6 +24,7 @@ export const DetailedClaimsTable: React.FC<DetailedClaimsTableProps> = ({
   departmentMap,
   formatCurrency,
   labelize,
+  pharmacyAmountMap,
 }) => {
   const visibleColumnCount = useMemo(() => {
     return Object.values(visibleColumns).filter(Boolean).length;
@@ -31,7 +33,8 @@ export const DetailedClaimsTable: React.FC<DetailedClaimsTableProps> = ({
   const totals = useMemo(() => {
     return {
       claimAmount: detailedClaims.reduce(
-        (sum, c) => sum + (c.totalClaimAmount ?? 0),
+        (sum, c) =>
+          sum + (pharmacyAmountMap?.get(c.claimId) ?? c.totalClaimAmount ?? 0),
         0
       ),
       deposit: detailedClaims.reduce(
@@ -151,7 +154,11 @@ export const DetailedClaimsTable: React.FC<DetailedClaimsTableProps> = ({
                 {visibleColumns.department && <th>department</th>}
                 {visibleColumns.type && <th>Type</th>}
                 {visibleColumns.status && <th>Status</th>}
-                {visibleColumns.claimAmount && <th>Claim amount</th>}
+                {visibleColumns.claimAmount && (
+                  <th>
+                    {pharmacyAmountMap ? "Pharmacy Amount" : "Claim Amount"}
+                  </th>
+                )}
                 {visibleColumns.deposit && <th>deposit</th>}
               </tr>
             </thead>
@@ -202,7 +209,10 @@ export const DetailedClaimsTable: React.FC<DetailedClaimsTableProps> = ({
                   )}
                   {visibleColumns.claimAmount && (
                     <td style={{ fontWeight: 600, textAlign: "right" }}>
-                      {formatCurrency(claim.totalClaimAmount)}
+                      {formatCurrency(
+                        pharmacyAmountMap?.get(claim.claimId) ??
+                          claim.totalClaimAmount
+                      )}
                     </td>
                   )}
                   {visibleColumns.deposit && (
