@@ -119,7 +119,9 @@ export const exportReportToCSV = ({
     sections.push(
       `"Settlements Count","Total Approved","Total Deductions","Total TDS","Total Hospital Discount","Total Net Payable (Before TDS)","Total Net Payable (After TDS)"`
     );
-    const totalNetBeforeTds = (settlementTotals.totalNetPayable ?? 0) + (settlementTotals.totalTds ?? 0);
+    const totalNetBeforeTds =
+      (settlementTotals.totalNetPayable ?? 0) +
+      (settlementTotals.totalTds ?? 0);
     sections.push(
       `"${settlementCount}","${settlementTotals.totalApproved ?? 0}","${settlementTotals.totalDeductions ?? 0}","${settlementTotals.totalTds ?? 0}","${settlementTotals.totalHospitalDiscount ?? 0}","${totalNetBeforeTds}","${settlementTotals.totalNetPayable ?? 0}"`
     );
@@ -265,8 +267,10 @@ export const exportReportToCSV = ({
 
     const totals = hospitalShareData.totals;
     if (totals) {
-      const totalNetBeforeTds = (totals.totalNetPayable ?? 0) + (totals.totalTds ?? 0);
-      const totalShareBeforeTds = (totals.totalHospitalShare ?? 0) + (totals.totalTds ?? 0);
+      const totalNetBeforeTds =
+        (totals.totalNetPayable ?? 0) + (totals.totalTds ?? 0);
+      const totalShareBeforeTds =
+        (totals.totalHospitalShare ?? 0) + (totals.totalTds ?? 0);
       sections.push(
         `"TOTALS","","","${totals.totalApproved ?? 0}","${totalNetBeforeTds}","${totals.totalNetPayable ?? 0}","${totals.totalPharmacyShare ?? 0}","${totals.totalLabShare ?? 0}","${totals.totalRadiologyShare ?? 0}","${totals.totalVendorPayout ?? 0}","${totalShareBeforeTds}","${totals.totalHospitalShare ?? 0}"`
       );
@@ -275,7 +279,11 @@ export const exportReportToCSV = ({
   }
 
   // --- Section 6: Department-wise Report ---
-  if (departmentReportData && departmentReportData.groups && departmentReportData.groups.length > 0) {
+  if (
+    departmentReportData &&
+    departmentReportData.groups &&
+    departmentReportData.groups.length > 0
+  ) {
     sections.push(`"DEPARTMENT-WISE FINANCIAL REPORT"`);
     sections.push("");
 
@@ -290,7 +298,8 @@ export const exportReportToCSV = ({
           `"${row.patientName} (${row.patientId})","${row.claimNumber || "—"}","${row.approvedAmount}","${row.deductions}","${row.tds}","${row.pharmacy}","${row.lab}","${row.radiology}","${row.others}","${netBeforeTds}","${row.netPayable}"`
         );
       });
-      const groupNetBeforeTds = (group.totals.netPayable ?? 0) + (group.totals.tds ?? 0);
+      const groupNetBeforeTds =
+        (group.totals.netPayable ?? 0) + (group.totals.tds ?? 0);
       sections.push(
         `"DEPARTMENT TOTAL","","${group.totals.approvedAmount}","${group.totals.deductions}","${group.totals.tds}","${group.totals.pharmacy}","${group.totals.lab}","${group.totals.radiology}","${group.totals.others}","${groupNetBeforeTds}","${group.totals.netPayable}"`
       );

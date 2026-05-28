@@ -95,7 +95,11 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
       </h3>
 
       {groups.map((group) => (
-        <div key={group.departmentId} style={{ marginBottom: 36 }} className="department-section">
+        <div
+          key={group.departmentId}
+          style={{ marginBottom: 36 }}
+          className="department-section"
+        >
           <h4
             style={{
               fontSize: 14,
@@ -110,7 +114,10 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
           </h4>
 
           <div className="report-table-wrapper" style={{ overflowX: "auto" }}>
-            <table className="report-table" style={{ "--visible-cols": 11 } as React.CSSProperties}>
+            <table
+              className="report-table"
+              style={{ "--visible-cols": 11 } as React.CSSProperties}
+            >
               <thead>
                 <tr>
                   <th>Patient Name &amp; ID</th>
@@ -131,34 +138,82 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
                   <tr key={row.claimId}>
                     <td>
                       <div style={{ fontWeight: 600 }}>{row.patientName}</div>
-                      <div style={{ fontSize: 10, color: "var(--text-tertiary)" }}>{row.patientId}</div>
+                      <div
+                        style={{ fontSize: 10, color: "var(--text-tertiary)" }}
+                      >
+                        {row.patientId}
+                      </div>
                     </td>
                     <td>
                       <strong>{row.claimNumber || "—"}</strong>
                     </td>
-                    <td style={{ textAlign: "right" }}>{formatCurrency(row.approvedAmount)}</td>
-                    <td style={{ textAlign: "right", color: row.deductions > 0 ? "#dc2626" : undefined }}>
+                    <td style={{ textAlign: "right" }}>
+                      {formatCurrency(row.approvedAmount)}
+                    </td>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        color: row.deductions > 0 ? "#dc2626" : undefined,
+                      }}
+                    >
                       {formatCurrency(row.deductions)}
                     </td>
-                    <td style={{ textAlign: "right", color: row.tds > 0 ? "#dc2626" : undefined }}>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        color: row.tds > 0 ? "#dc2626" : undefined,
+                      }}
+                    >
                       {formatCurrency(row.tds)}
                     </td>
-                    <td style={{ textAlign: "right", color: "var(--text-secondary)" }}>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
                       {formatCurrency(row.pharmacy)}
                     </td>
-                    <td style={{ textAlign: "right", color: "var(--text-secondary)" }}>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
                       {formatCurrency(row.lab)}
                     </td>
-                    <td style={{ textAlign: "right", color: "var(--text-secondary)" }}>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
                       {formatCurrency(row.radiology)}
                     </td>
-                    <td style={{ textAlign: "right", color: "var(--text-secondary)" }}>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        color: "var(--text-secondary)",
+                      }}
+                    >
                       {formatCurrency(row.others)}
                     </td>
-                    <td style={{ textAlign: "right", fontWeight: 600, color: "#059669" }}>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        fontWeight: 600,
+                        color: "#059669",
+                      }}
+                    >
                       {formatCurrency(row.netPayable + row.tds)}
                     </td>
-                    <td style={{ textAlign: "right", fontWeight: 700, color: "#059669" }}>
+                    <td
+                      style={{
+                        textAlign: "right",
+                        fontWeight: 700,
+                        color: "#059669",
+                      }}
+                    >
                       {formatCurrency(row.netPayable)}
                     </td>
                   </tr>
@@ -174,15 +229,33 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
                   <td colSpan={2} style={{ textAlign: "right" }}>
                     {group.departmentName} Total
                   </td>
-                  <td style={{ textAlign: "right" }}>{formatCurrency(group.totals.approvedAmount)}</td>
-                  <td style={{ textAlign: "right", color: "#dc2626" }}>{formatCurrency(group.totals.deductions)}</td>
-                  <td style={{ textAlign: "right", color: "#dc2626" }}>{formatCurrency(group.totals.tds)}</td>
-                  <td style={{ textAlign: "right" }}>{formatCurrency(group.totals.pharmacy)}</td>
-                  <td style={{ textAlign: "right" }}>{formatCurrency(group.totals.lab)}</td>
-                  <td style={{ textAlign: "right" }}>{formatCurrency(group.totals.radiology)}</td>
-                  <td style={{ textAlign: "right" }}>{formatCurrency(group.totals.others)}</td>
-                  <td style={{ textAlign: "right", color: "#059669" }}>{formatCurrency(group.totals.netPayable + group.totals.tds)}</td>
-                  <td style={{ textAlign: "right", color: "#059669" }}>{formatCurrency(group.totals.netPayable)}</td>
+                  <td style={{ textAlign: "right" }}>
+                    {formatCurrency(group.totals.approvedAmount)}
+                  </td>
+                  <td style={{ textAlign: "right", color: "#dc2626" }}>
+                    {formatCurrency(group.totals.deductions)}
+                  </td>
+                  <td style={{ textAlign: "right", color: "#dc2626" }}>
+                    {formatCurrency(group.totals.tds)}
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    {formatCurrency(group.totals.pharmacy)}
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    {formatCurrency(group.totals.lab)}
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    {formatCurrency(group.totals.radiology)}
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    {formatCurrency(group.totals.others)}
+                  </td>
+                  <td style={{ textAlign: "right", color: "#059669" }}>
+                    {formatCurrency(group.totals.netPayable + group.totals.tds)}
+                  </td>
+                  <td style={{ textAlign: "right", color: "#059669" }}>
+                    {formatCurrency(group.totals.netPayable)}
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -191,46 +264,86 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
       ))}
 
       {/* Grand Total Section */}
-      <div style={{ marginTop: 24, padding: "16px 20px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
-        <h4 style={{ fontSize: 13, fontWeight: 800, textTransform: "uppercase", color: "var(--accent-primary)", marginBottom: 12 }}>
+      <div
+        style={{
+          marginTop: 24,
+          padding: "16px 20px",
+          background: "var(--surface-2)",
+          borderRadius: 8,
+          border: "1px solid var(--border)",
+        }}
+      >
+        <h4
+          style={{
+            fontSize: 13,
+            fontWeight: 800,
+            textTransform: "uppercase",
+            color: "var(--accent-primary)",
+            marginBottom: 12,
+          }}
+        >
           Grand Summary
         </h4>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+            gap: 12,
+          }}
+        >
           <div className="report-summary-cell">
             <span>Grand Approved</span>
-            <strong style={{ fontSize: 15 }}>{formatCurrency(grandTotals.approvedAmount)}</strong>
+            <strong style={{ fontSize: 15 }}>
+              {formatCurrency(grandTotals.approvedAmount)}
+            </strong>
           </div>
           <div className="report-summary-cell">
             <span>Grand Deductions</span>
-            <strong style={{ fontSize: 15, color: "#dc2626" }}>{formatCurrency(grandTotals.deductions)}</strong>
+            <strong style={{ fontSize: 15, color: "#dc2626" }}>
+              {formatCurrency(grandTotals.deductions)}
+            </strong>
           </div>
           <div className="report-summary-cell">
             <span>Grand TDS</span>
-            <strong style={{ fontSize: 15, color: "#dc2626" }}>{formatCurrency(grandTotals.tds)}</strong>
+            <strong style={{ fontSize: 15, color: "#dc2626" }}>
+              {formatCurrency(grandTotals.tds)}
+            </strong>
           </div>
           <div className="report-summary-cell">
             <span>Grand Pharmacy</span>
-            <strong style={{ fontSize: 15 }}>{formatCurrency(grandTotals.pharmacy)}</strong>
+            <strong style={{ fontSize: 15 }}>
+              {formatCurrency(grandTotals.pharmacy)}
+            </strong>
           </div>
           <div className="report-summary-cell">
             <span>Grand Laboratory</span>
-            <strong style={{ fontSize: 15 }}>{formatCurrency(grandTotals.lab)}</strong>
+            <strong style={{ fontSize: 15 }}>
+              {formatCurrency(grandTotals.lab)}
+            </strong>
           </div>
           <div className="report-summary-cell">
             <span>Grand Radiology</span>
-            <strong style={{ fontSize: 15 }}>{formatCurrency(grandTotals.radiology)}</strong>
+            <strong style={{ fontSize: 15 }}>
+              {formatCurrency(grandTotals.radiology)}
+            </strong>
           </div>
           <div className="report-summary-cell">
             <span>Grand Others</span>
-            <strong style={{ fontSize: 15 }}>{formatCurrency(grandTotals.others)}</strong>
+            <strong style={{ fontSize: 15 }}>
+              {formatCurrency(grandTotals.others)}
+            </strong>
           </div>
           <div className="report-summary-cell">
             <span>Grand Net (Before TDS)</span>
-            <strong style={{ fontSize: 15, color: "#059669" }}>{formatCurrency(grandTotals.netPayable + grandTotals.tds)}</strong>
+            <strong style={{ fontSize: 15, color: "#059669" }}>
+              {formatCurrency(grandTotals.netPayable + grandTotals.tds)}
+            </strong>
           </div>
           <div className="report-summary-cell">
             <span>Grand Net (After TDS)</span>
-            <strong style={{ fontSize: 15, color: "#059669" }}>{formatCurrency(grandTotals.netPayable)}</strong>
+            <strong style={{ fontSize: 15, color: "#059669" }}>
+              {formatCurrency(grandTotals.netPayable)}
+            </strong>
           </div>
         </div>
       </div>

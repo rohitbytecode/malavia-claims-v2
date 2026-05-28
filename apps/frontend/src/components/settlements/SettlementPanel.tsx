@@ -18,7 +18,6 @@ import type {
 
 const VENDOR_DEPARTMENTS: string[] = ["PHARMACY", "LABORATORY", "RADIOLOGY"];
 
-
 interface SettlementLineState extends SettlementDepartmentBreakdown {
   companyDiscountPercent: number;
   companyDiscountAmount: number;
@@ -369,10 +368,12 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
   // ────── POST-SETTLEMENT VIEW ──────
   if (data) {
     const bd = data.departmentBreakdown ?? [];
-    
+
     const isPharmacist = user?.role === "PHARMACIST";
     if (isPharmacist) {
-      const pharmacyLine = bd.find(item => item.departmentCategory === "PHARMACY");
+      const pharmacyLine = bd.find(
+        (item) => item.departmentCategory === "PHARMACY"
+      );
       const pharmacyClaimed = pharmacyLine?.claimedAmount ?? 0;
       const pharmacyApproved = pharmacyLine?.approvedAmount ?? 0;
       const pharmacyDeduction = pharmacyLine?.deduction ?? 0;
@@ -395,11 +396,14 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
                 <dt>Pharmacy Vendor Discount</dt>
                 <dd>{formatCurrency(pharmacyDiscount)}</dd>
                 <dt>Net Pharmacy Payout</dt>
-                <dd style={{
-                  padding: "4px 8px",
-                  background: "color-mix(in srgb, var(--emerald) 10%, transparent)",
-                  borderRadius: 4,
-                }}>
+                <dd
+                  style={{
+                    padding: "4px 8px",
+                    background:
+                      "color-mix(in srgb, var(--emerald) 10%, transparent)",
+                    borderRadius: 4,
+                  }}
+                >
                   <strong style={{ color: "var(--emerald)" }}>
                     {formatCurrency(pharmacyPayout)}
                   </strong>
@@ -431,18 +435,37 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
                           "1px solid color-mix(in srgb, var(--text-tertiary) 20%, transparent)",
                       }}
                     >
-                      <th style={{ textAlign: "left", padding: "8px 6px" }}>Department</th>
-                      <th style={{ textAlign: "right", padding: "8px 6px" }}>Claimed</th>
-                      <th style={{ textAlign: "right", padding: "8px 6px" }}>Approved</th>
-                      <th style={{ textAlign: "right", padding: "8px 6px" }}>Deducted</th>
-                      <th style={{ textAlign: "right", padding: "8px 6px" }}>Vendor Discount</th>
-                      <th style={{ textAlign: "right", padding: "8px 6px" }}>Pharmacy Payout</th>
+                      <th style={{ textAlign: "left", padding: "8px 6px" }}>
+                        Department
+                      </th>
+                      <th style={{ textAlign: "right", padding: "8px 6px" }}>
+                        Claimed
+                      </th>
+                      <th style={{ textAlign: "right", padding: "8px 6px" }}>
+                        Approved
+                      </th>
+                      <th style={{ textAlign: "right", padding: "8px 6px" }}>
+                        Deducted
+                      </th>
+                      <th style={{ textAlign: "right", padding: "8px 6px" }}>
+                        Vendor Discount
+                      </th>
+                      <th style={{ textAlign: "right", padding: "8px 6px" }}>
+                        Pharmacy Payout
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr style={{ borderBottom: "1px solid color-mix(in srgb, var(--text-tertiary) 10%, transparent)" }}>
+                    <tr
+                      style={{
+                        borderBottom:
+                          "1px solid color-mix(in srgb, var(--text-tertiary) 10%, transparent)",
+                      }}
+                    >
                       <td style={{ padding: "8px 6px" }}>
-                        <strong>{getCatLabel(pharmacyLine.departmentCategory)}</strong>
+                        <strong>
+                          {getCatLabel(pharmacyLine.departmentCategory)}
+                        </strong>
                       </td>
                       <td style={{ textAlign: "right", padding: "8px 6px" }}>
                         {formatCurrency(pharmacyClaimed)}
@@ -456,7 +479,14 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
                       <td style={{ textAlign: "right", padding: "8px 6px" }}>
                         {formatCurrency(pharmacyDiscount)}
                       </td>
-                      <td style={{ textAlign: "right", padding: "8px 6px", fontWeight: 700, color: "var(--emerald)" }}>
+                      <td
+                        style={{
+                          textAlign: "right",
+                          padding: "8px 6px",
+                          fontWeight: 700,
+                          color: "var(--emerald)",
+                        }}
+                      >
                         {formatCurrency(pharmacyPayout)}
                       </td>
                     </tr>
@@ -490,7 +520,9 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
               <dd>{formatCurrency(data.tds)}</dd>
               <dt>Net Payable from Company (Before TDS)</dt>
               <dd>
-                <strong>{formatCurrency(data.netPayable + (data.tds ?? 0))}</strong>
+                <strong>
+                  {formatCurrency(data.netPayable + (data.tds ?? 0))}
+                </strong>
               </dd>
               <dt>Net Payable from Company (After TDS)</dt>
               <dd>
@@ -503,7 +535,8 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
                 <strong style={{ color: "var(--emerald)" }}>
                   {formatCurrency(
                     (data.hospitalNetShare ??
-                      data.netPayable - (data.totalVendorPayout ?? 0)) + (data.tds ?? 0)
+                      data.netPayable - (data.totalVendorPayout ?? 0)) +
+                      (data.tds ?? 0)
                   )}
                 </strong>
               </dd>
@@ -739,21 +772,37 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
   const isPharmacist = user?.role === "PHARMACIST";
   if (isPharmacist) {
     return (
-      <div className="card premium-panel" style={{ padding: "24px", textAlign: "center" }}>
-        <h3 style={{ color: "var(--accent-primary)", marginBottom: "12px" }}>Awaiting Final Settlement</h3>
-        <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "16px" }}>
-          🔒 Settlement recording, TDS, and final allocations are restricted to Accountant and Admin roles. 
-          The settlement for this claim has not yet been registered.
+      <div
+        className="card premium-panel"
+        style={{ padding: "24px", textAlign: "center" }}
+      >
+        <h3 style={{ color: "var(--accent-primary)", marginBottom: "12px" }}>
+          Awaiting Final Settlement
+        </h3>
+        <p
+          style={{
+            color: "var(--text-secondary)",
+            fontSize: "14px",
+            marginBottom: "16px",
+          }}
+        >
+          🔒 Settlement recording, TDS, and final allocations are restricted to
+          Accountant and Admin roles. The settlement for this claim has not yet
+          been registered.
         </p>
-        <div style={{ 
-          display: "inline-block", 
-          padding: "8px 16px", 
-          background: "color-mix(in srgb, var(--accent-primary) 10%, transparent)", 
-          borderRadius: "var(--r-md)",
-          fontSize: "13px",
-          color: "var(--text-secondary)"
-        }}>
-          Please coordinate with the finance department to finalize the settlement.
+        <div
+          style={{
+            display: "inline-block",
+            padding: "8px 16px",
+            background:
+              "color-mix(in srgb, var(--accent-primary) 10%, transparent)",
+            borderRadius: "var(--r-md)",
+            fontSize: "13px",
+            color: "var(--text-secondary)",
+          }}
+        >
+          Please coordinate with the finance department to finalize the
+          settlement.
         </div>
       </div>
     );
@@ -1218,13 +1267,36 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
             <span>Net Payable from Company</span>
             <div style={{ display: "flex", gap: 16, marginTop: 4 }}>
               <div>
-                <span style={{ fontSize: 10, color: "var(--text-secondary)", textTransform: "uppercase", display: "block" }}>Before TDS</span>
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: "var(--text-secondary)",
+                    textTransform: "uppercase",
+                    display: "block",
+                  }}
+                >
+                  Before TDS
+                </span>
                 <strong style={{ fontSize: 16 }}>
                   {formatCurrency(totals.netPayable + tds)}
                 </strong>
               </div>
-              <div style={{ borderLeft: "1px solid var(--border)", paddingLeft: 16 }}>
-                <span style={{ fontSize: 10, color: "var(--text-secondary)", textTransform: "uppercase", display: "block" }}>After TDS</span>
+              <div
+                style={{
+                  borderLeft: "1px solid var(--border)",
+                  paddingLeft: 16,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: "var(--text-secondary)",
+                    textTransform: "uppercase",
+                    display: "block",
+                  }}
+                >
+                  After TDS
+                </span>
                 <strong style={{ fontSize: 16 }}>
                   {formatCurrency(totals.netPayable)}
                 </strong>
@@ -1244,13 +1316,36 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
             </span>
             <div style={{ display: "flex", gap: 16, marginTop: 4 }}>
               <div>
-                <span style={{ fontSize: 10, color: "var(--text-secondary)", textTransform: "uppercase", display: "block" }}>Before TDS</span>
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: "var(--text-secondary)",
+                    textTransform: "uppercase",
+                    display: "block",
+                  }}
+                >
+                  Before TDS
+                </span>
                 <strong style={{ fontSize: 16, color: "var(--emerald)" }}>
                   {formatCurrency(totals.hospitalNetShare + tds)}
                 </strong>
               </div>
-              <div style={{ borderLeft: "1px solid var(--emerald)", paddingLeft: 16 }}>
-                <span style={{ fontSize: 10, color: "var(--text-secondary)", textTransform: "uppercase", display: "block" }}>After TDS</span>
+              <div
+                style={{
+                  borderLeft: "1px solid var(--emerald)",
+                  paddingLeft: 16,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: "var(--text-secondary)",
+                    textTransform: "uppercase",
+                    display: "block",
+                  }}
+                >
+                  After TDS
+                </span>
                 <strong style={{ fontSize: 16, color: "var(--emerald)" }}>
                   {formatCurrency(totals.hospitalNetShare)}
                 </strong>

@@ -84,8 +84,8 @@ export function AllClaimsPage() {
     },
     {
       key: "amount",
-      header: user?.role === "PHARMACIST" ? "Pharmacy Amount": "Claim Amount",
-      cell: (c) =>{
+      header: user?.role === "PHARMACIST" ? "Pharmacy Amount" : "Claim Amount",
+      cell: (c) => {
         if (user?.role === "PHARMACIST") {
           const pharmacyItem = c.billBreakdown?.find(
             (b) => b.departmentCategory === "PHARMACY"

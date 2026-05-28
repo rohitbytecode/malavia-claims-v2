@@ -313,7 +313,9 @@ export class ClaimService {
       // Broadcast real-time notification (fire-and-forget)
       let performedByName: string | undefined;
       if (performedBy && Types.ObjectId.isValid(performedBy)) {
-        const actor = await UserModel.findById(performedBy, { fullName: 1 }).lean();
+        const actor = await UserModel.findById(performedBy, {
+          fullName: 1,
+        }).lean();
         performedByName = actor?.fullName;
       }
       NotificationService.broadcastClaimStatusChange(

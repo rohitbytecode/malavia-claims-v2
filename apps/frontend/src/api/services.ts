@@ -110,8 +110,11 @@ export const notificationApi = {
       apiClient.get("/notifications", { params })
     ),
   markRead: (notificationId: string) =>
-    unwrap<Notification>(apiClient.patch(`/notifications/${notificationId}/read`)),
-  markAllRead: () => unwrap<{ success: boolean }>(apiClient.patch("/notifications/read-all")),
+    unwrap<Notification>(
+      apiClient.patch(`/notifications/${notificationId}/read`)
+    ),
+  markAllRead: () =>
+    unwrap<{ success: boolean }>(apiClient.patch("/notifications/read-all")),
 };
 
 export const dashboardApi = {

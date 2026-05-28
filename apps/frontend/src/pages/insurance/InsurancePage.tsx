@@ -159,61 +159,69 @@ export function InsurancePage() {
     draft.submissionMethods.includes(method);
 
   const columns: Column<InsuranceCompany>[] = [
-  {
-    key: "name",
-    header: "Company",
-    cell: (c) => <strong>{c.name}</strong>,
-    sortValue: (c) => c.name,
-  },
-  ...(!isPharmacist ? [
     {
-      key: "methods",
-      header: "Submission",
-      cell: (c: InsuranceCompany) => (
-        <div className="chip-cloud">
-          {c.submissionMethods.map((m) => (
-            <StatusBadge key={m} value={m} compact />
-          ))}
-        </div>
-      ),
-      sortValue: (c: InsuranceCompany) => c.submissionMethods.join(","),
+      key: "name",
+      header: "Company",
+      cell: (c) => <strong>{c.name}</strong>,
+      sortValue: (c) => c.name,
+    },
+    ...(!isPharmacist
+      ? [
+          {
+            key: "methods",
+            header: "Submission",
+            cell: (c: InsuranceCompany) => (
+              <div className="chip-cloud">
+                {c.submissionMethods.map((m) => (
+                  <StatusBadge key={m} value={m} compact />
+                ))}
+              </div>
+            ),
+            sortValue: (c: InsuranceCompany) => c.submissionMethods.join(","),
+          },
+          {
+            key: "tat",
+            header: "TAT",
+            cell: (c: InsuranceCompany) => `${c.tatDays ?? 0} days`,
+            sortValue: (c: InsuranceCompany) => c.tatDays ?? 0,
+          },
+          {
+            key: "contact",
+            header: "Contact",
+            cell: (c: InsuranceCompany) =>
+              c.email ?? c.contactPersons?.[0]?.email ?? "—",
+            sortValue: (c: InsuranceCompany) => c.email ?? "",
+          },
+        ]
+      : []),
+    {
+      key: "status",
+      header: "Status",
+      cell: (c) => labelize(c.isActive ? "ACTIVE" : "INACTIVE"),
     },
     {
-      key: "tat",
-      header: "TAT",
-      cell: (c: InsuranceCompany) => `${c.tatDays ?? 0} days`,
-      sortValue: (c: InsuranceCompany) => c.tatDays ?? 0,
+      key: "actions",
+      header: isPharmacist ? "" : "Actions",
+      cell: (c) =>
+        isPharmacist ? null : (
+          <div className="chip-cloud">
+            <Button variant="secondary" onClick={() => openEdit(c)}>
+              Edit
+            </Button>
+            <Button variant="secondary" onClick={() => setSelectedCompany(c)}>
+              Contracts
+            </Button>
+            <Button
+              variant={c.isActive ? "danger" : "success"}
+              onClick={() => toggle.mutate(c)}
+              disabled={toggle.isPending}
+            >
+              {c.isActive ? "Inactivate" : "Activate"}
+            </Button>
+          </div>
+        ),
     },
-    {
-      key: "contact",
-      header: "Contact",
-      cell: (c: InsuranceCompany) => c.email ?? c.contactPersons?.[0]?.email ?? "—",
-      sortValue: (c: InsuranceCompany) => c.email ?? "",
-    },
-  ] : []),
-  {
-    key: "status",
-    header: "Status",
-    cell: (c) => labelize(c.isActive ? "ACTIVE" : "INACTIVE"),
-  },
-  {
-    key: "actions",
-    header: isPharmacist ? "" : "Actions",
-    cell: (c) => isPharmacist ? null : (
-      <div className="chip-cloud">
-        <Button variant="secondary" onClick={() => openEdit(c)}>Edit</Button>
-        <Button variant="secondary" onClick={() => setSelectedCompany(c)}>Contracts</Button>
-        <Button
-          variant={c.isActive ? "danger" : "success"}
-          onClick={() => toggle.mutate(c)}
-          disabled={toggle.isPending}
-        >
-          {c.isActive ? "Inactivate" : "Activate"}
-        </Button>
-      </div>
-    ),
-  },
-];
+  ];
 
   if (query.isLoading) return <Skeleton rows={8} />;
   if (query.isError) return <ErrorPanel error={query.error} />;
@@ -251,177 +259,187 @@ export function InsurancePage() {
         rows={rows}
         columns={columns}
         getRowId={(row) => row._id}
-        actions={!isPharmacist && <Button onClick={openCreate}>New payer</Button>}
-        expandedRow={!isPharmacist ? (row) => (
-          <div className="form-grid-3">
-            <div>
-              <p className="eyebrow">Portal</p>
-              {row.portalUrl ? (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "6px",
-                  }}
-                >
-                  <a
-                    href={row.portalUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                    style={{ wordBreak: "break-all" }}
-                  >
-                    <strong>{row.portalUrl}</strong>
-                  </a>
-                  {row.portalUsername && (
-                    <div
-                      style={{
-                        fontSize: "0.85em",
-                        color: "var(--text-muted, #888)",
-                      }}
-                    >
-                      Username:{" "}
-                      <strong style={{ color: "var(--text-main, #fff)" }}>
-                        {row.portalUsername}
-                      </strong>
-                    </div>
-                  )}
-                  {row.portalPassword && (
-                    <div
-                      style={{
-                        fontSize: "0.85em",
-                        color: "var(--text-muted, #888)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      Password:{" "}
-                      <strong
+        actions={
+          !isPharmacist && <Button onClick={openCreate}>New payer</Button>
+        }
+        expandedRow={
+          !isPharmacist
+            ? (row) => (
+                <div className="form-grid-3">
+                  <div>
+                    <p className="eyebrow">Portal</p>
+                    {row.portalUrl ? (
+                      <div
                         style={{
-                          color: "var(--text-main, #fff)",
-                          fontFamily:
-                            showPasswordId === row._id
-                              ? "monospace"
-                              : "initial",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "6px",
                         }}
                       >
-                        {showPasswordId === row._id
-                          ? row.portalPassword
-                          : "••••••••"}
-                      </strong>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowPasswordId(
-                            showPasswordId === row._id ? null : row._id
-                          )
-                        }
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          padding: "2px",
-                          color: "var(--text-muted, #888)",
-                          display: "inline-flex",
-                          alignItems: "center",
-                        }}
-                        title={
-                          showPasswordId === row._id
-                            ? "Hide password"
-                            : "Show password"
-                        }
-                      >
-                        {showPasswordId === row._id ? (
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-                            <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-                            <line x1="2" y1="2" x2="22" y2="22" />
-                          </svg>
-                        ) : (
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                            <circle cx="12" cy="12" r="3" />
-                          </svg>
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          navigator.clipboard.writeText(
-                            row.portalPassword ?? ""
-                          )
-                        }
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          padding: "2px",
-                          color: "var(--text-muted, #888)",
-                          display: "inline-flex",
-                          alignItems: "center",
-                        }}
-                        title="Copy password"
-                      >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                        <a
+                          href={row.portalUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                          style={{ wordBreak: "break-all" }}
                         >
-                          <rect
-                            x="9"
-                            y="9"
-                            width="13"
-                            height="13"
-                            rx="2"
-                            ry="2"
-                          />
-                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                        </svg>
-                      </button>
-                    </div>
-                  )}
+                          <strong>{row.portalUrl}</strong>
+                        </a>
+                        {row.portalUsername && (
+                          <div
+                            style={{
+                              fontSize: "0.85em",
+                              color: "var(--text-muted, #888)",
+                            }}
+                          >
+                            Username:{" "}
+                            <strong style={{ color: "var(--text-main, #fff)" }}>
+                              {row.portalUsername}
+                            </strong>
+                          </div>
+                        )}
+                        {row.portalPassword && (
+                          <div
+                            style={{
+                              fontSize: "0.85em",
+                              color: "var(--text-muted, #888)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            Password:{" "}
+                            <strong
+                              style={{
+                                color: "var(--text-main, #fff)",
+                                fontFamily:
+                                  showPasswordId === row._id
+                                    ? "monospace"
+                                    : "initial",
+                              }}
+                            >
+                              {showPasswordId === row._id
+                                ? row.portalPassword
+                                : "••••••••"}
+                            </strong>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setShowPasswordId(
+                                  showPasswordId === row._id ? null : row._id
+                                )
+                              }
+                              style={{
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                padding: "2px",
+                                color: "var(--text-muted, #888)",
+                                display: "inline-flex",
+                                alignItems: "center",
+                              }}
+                              title={
+                                showPasswordId === row._id
+                                  ? "Hide password"
+                                  : "Show password"
+                              }
+                            >
+                              {showPasswordId === row._id ? (
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                                  <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                                  <line x1="2" y1="2" x2="22" y2="22" />
+                                </svg>
+                              ) : (
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                  <circle cx="12" cy="12" r="3" />
+                                </svg>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                navigator.clipboard.writeText(
+                                  row.portalPassword ?? ""
+                                )
+                              }
+                              style={{
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                padding: "2px",
+                                color: "var(--text-muted, #888)",
+                                display: "inline-flex",
+                                alignItems: "center",
+                              }}
+                              title="Copy password"
+                            >
+                              <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <rect
+                                  x="9"
+                                  y="9"
+                                  width="13"
+                                  height="13"
+                                  rx="2"
+                                  ry="2"
+                                />
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <strong>Not configured</strong>
+                    )}
+                  </div>
+                  <div>
+                    <p className="eyebrow">Courier</p>
+                    <strong>
+                      {row.courierAddress
+                        ? row.courierAddress
+                        : "Not configured"}
+                    </strong>
+                  </div>
+                  <div>
+                    <p className="eyebrow">Escalations</p>
+                    <strong>
+                      {row.escalationMatrix?.length ?? 0} contacts
+                    </strong>
+                  </div>
                 </div>
-              ) : (
-                <strong>Not configured</strong>
-              )}
-            </div>
-            <div>
-              <p className="eyebrow">Courier</p>
-              <strong>
-                {row.courierAddress ? row.courierAddress : "Not configured"}
-              </strong>
-            </div>
-            <div>
-              <p className="eyebrow">Escalations</p>
-              <strong>{row.escalationMatrix?.length ?? 0} contacts</strong>
-            </div>
-          </div>
-        ): undefined}
+              )
+            : undefined
+        }
       />
 
       <Modal

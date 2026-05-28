@@ -8,7 +8,7 @@ interface WorkflowRailProps {
   claim: Claim;
   isPharmacist?: boolean;
 }
-const PHARMACIST_STATUSES =[
+const PHARMACIST_STATUSES = [
   "PREAUTH_PENDING",
   "PREAUTH_APPROVED",
   "SETTLEMENT_PENDING",
@@ -17,10 +17,10 @@ const PHARMACIST_STATUSES =[
 
 export function WorkflowRail({ claim, isPharmacist }: WorkflowRailProps) {
   const stages = useMemo(() => {
-  const all = getWorkflowStages(claim.type);
-  if (!isPharmacist) return all;
-  return all.filter((s) => PHARMACIST_STATUSES.includes(s.id));
-}, [claim.type, isPharmacist]);
+    const all = getWorkflowStages(claim.type);
+    if (!isPharmacist) return all;
+    return all.filter((s) => PHARMACIST_STATUSES.includes(s.id));
+  }, [claim.type, isPharmacist]);
 
   const currentIndex = stages.findIndex((s) => s.id === claim.status);
   const nextStatuses = allowedTransitions(claim.type, claim.status);
@@ -149,22 +149,22 @@ export function WorkflowRail({ claim, isPharmacist }: WorkflowRailProps) {
 
       {/* Next transitions */}
       {!isPharmacist && (
-      <div className="workflow-rail__next">
-        <span className="workflow-rail__next-label">
-          System-allowed transitions
-        </span>
-        <div className="workflow-rail__next-chips">
-          {nextStatuses.length > 0 ? (
-            nextStatuses.map((s) => <StatusBadge key={s} value={s} compact />)
-          ) : (
-            <span className="workflow-rail__no-transitions">
-              {isClosed
-                ? "Claim is closed — no further transitions"
-                : "No further transitions available"}
-            </span>
-          )}
+        <div className="workflow-rail__next">
+          <span className="workflow-rail__next-label">
+            System-allowed transitions
+          </span>
+          <div className="workflow-rail__next-chips">
+            {nextStatuses.length > 0 ? (
+              nextStatuses.map((s) => <StatusBadge key={s} value={s} compact />)
+            ) : (
+              <span className="workflow-rail__no-transitions">
+                {isClosed
+                  ? "Claim is closed — no further transitions"
+                  : "No further transitions available"}
+              </span>
+            )}
+          </div>
         </div>
-      </div>
       )}
     </section>
   );

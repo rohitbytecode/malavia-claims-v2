@@ -96,13 +96,18 @@ export function DepartmentsPage() {
       sortValue: (d) => d.name,
       searchValue: (d) => d.name,
     },
-    ...(!isPharmacist ? [{
-      key: "description",
-      header: "Description",
-      cell: (d: Department) => isPharmacist ? null : (d.description ?? "—"),
-      sortValue: (d: Department) => d.description ?? "",
-      searchValue: (d: Department) => d.description ?? "",
-    }]:[]),
+    ...(!isPharmacist
+      ? [
+          {
+            key: "description",
+            header: "Description",
+            cell: (d: Department) =>
+              isPharmacist ? null : (d.description ?? "—"),
+            sortValue: (d: Department) => d.description ?? "",
+            searchValue: (d: Department) => d.description ?? "",
+          },
+        ]
+      : []),
     {
       key: "active",
       header: "Active",
@@ -112,30 +117,35 @@ export function DepartmentsPage() {
     {
       key: "actions",
       header: isPharmacist ? "" : "Actions",
-      cell: (d) => isPharmacist ? null :(
-        <div className="chip-cloud">
-          <Button type="button" variant="secondary" onClick={() => openEdit(d)}>
-            Edit
-          </Button>
+      cell: (d) =>
+        isPharmacist ? null : (
+          <div className="chip-cloud">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => openEdit(d)}
+            >
+              Edit
+            </Button>
 
-          <Button
-            type="button"
-            variant={d.isActive ? "danger" : "success"} // Green when inactive
-            className={
-              d.isActive ? "" : "bg-green-600 hover:bg-green-700 text-white"
-            }
-            onClick={() =>
-              toggleStatus.mutate({
-                id: d._id,
-                isActive: !d.isActive,
-              })
-            }
-            disabled={toggleStatus.isPending}
-          >
-            {d.isActive ? "Inactivate" : "Activate"}
-          </Button>
-        </div>
-      ),
+            <Button
+              type="button"
+              variant={d.isActive ? "danger" : "success"} // Green when inactive
+              className={
+                d.isActive ? "" : "bg-green-600 hover:bg-green-700 text-white"
+              }
+              onClick={() =>
+                toggleStatus.mutate({
+                  id: d._id,
+                  isActive: !d.isActive,
+                })
+              }
+              disabled={toggleStatus.isPending}
+            >
+              {d.isActive ? "Inactivate" : "Activate"}
+            </Button>
+          </div>
+        ),
     },
   ];
 

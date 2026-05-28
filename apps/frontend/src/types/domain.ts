@@ -70,7 +70,6 @@ export type AuditModule =
   | "AUTH";
 export type AuditAction = "CREATE" | "UPDATE" | "DELETE" | "STATUS_CHANGE";
 
-
 export type NotificationType = "ALERT" | "REMINDER" | "SYSTEM" | "CLAIM_STATUS";
 
 export interface Notification {

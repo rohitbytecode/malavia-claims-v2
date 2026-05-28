@@ -35,7 +35,7 @@ export function DoctorsPage() {
 
   const user = useAuthStore((s) => s.user);
   const isPharmacist = user?.role === "PHARMACIST";
-  
+
   const doctorsQuery = useQuery({
     queryKey: ["doctors"],
     queryFn: () => doctorApi.list({ limit: 100 }),
@@ -154,24 +154,28 @@ export function DoctorsPage() {
       cell: (d) => (
         <div className="chip-cloud">
           {!isPharmacist && (
-          <Button type="button" variant="secondary" onClick={() => openEdit(d)}>
-            Edit
-          </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => openEdit(d)}
+            >
+              Edit
+            </Button>
           )}
           {!isPharmacist && (
-          <Button
-            type="button"
-            variant={d.isActive ? "danger" : "success"}
-            onClick={() =>
-              toggleStatus.mutate({
-                id: d._id || d.id,
-                isActive: !d.isActive,
-              })
-            }
-            disabled={toggleStatus.isPending}
-          >
-            {d.isActive ? "Deactivate" : "Activate"}
-          </Button>
+            <Button
+              type="button"
+              variant={d.isActive ? "danger" : "success"}
+              onClick={() =>
+                toggleStatus.mutate({
+                  id: d._id || d.id,
+                  isActive: !d.isActive,
+                })
+              }
+              disabled={toggleStatus.isPending}
+            >
+              {d.isActive ? "Deactivate" : "Activate"}
+            </Button>
           )}
         </div>
       ),

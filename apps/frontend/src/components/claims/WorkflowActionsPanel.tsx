@@ -269,15 +269,15 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
 
         {/* Guardrails */}
         {!isPharmacist && (
-        <div className="action-panel__guardrails">
-          <p className="action-panel__section-label">System Guardrails</p>
-          <ul>
-            <li>Invalid transitions are hidden — not blocked</li>
-            <li>Every action requires a minimum 8-character audit reason</li>
-            <li>System workflow validator is the final authority</li>
-            <li>All actions are logged to the immutable audit trail</li>
-          </ul>
-        </div>
+          <div className="action-panel__guardrails">
+            <p className="action-panel__section-label">System Guardrails</p>
+            <ul>
+              <li>Invalid transitions are hidden — not blocked</li>
+              <li>Every action requires a minimum 8-character audit reason</li>
+              <li>System workflow validator is the final authority</li>
+              <li>All actions are logged to the immutable audit trail</li>
+            </ul>
+          </div>
         )}
       </div>
 

@@ -160,7 +160,11 @@ export function PatientsPage() {
       cell: (p) => (
         <div className="chip-cloud">
           {!isPharmacist && (
-            <Button type="button" variant="secondary" onClick={() => openEdit(p)}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => openEdit(p)}
+            >
               Edit
             </Button>
           )}

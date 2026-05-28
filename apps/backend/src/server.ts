@@ -22,20 +22,13 @@ const startServer = async () => {
 
   // SSL Certificate Paths
   const sslOptions = {
-    key: fs.readFileSync(
-      path.join(__dirname, "../cert/key.pem")
-    ),
+    key: fs.readFileSync(path.join(__dirname, "../cert/key.pem")),
 
-    cert: fs.readFileSync(
-      path.join(__dirname, "../cert/cert.pem")
-    ),
+    cert: fs.readFileSync(path.join(__dirname, "../cert/cert.pem")),
   };
 
   // Create HTTPS Server
-  const httpsServer = https.createServer(
-    sslOptions,
-    app
-  );
+  const httpsServer = https.createServer(sslOptions, app);
 
   // Initialize Socket.io on HTTPS server
   initSocketServer(httpsServer);
@@ -47,12 +40,8 @@ const startServer = async () => {
     initCronJobs();
   });
 
-  const gracefulShutdown = async (
-    signal: string
-  ) => {
-    logger.info(
-      `Received ${signal}. Shutting down gracefully...`
-    );
+  const gracefulShutdown = async (signal: string) => {
+    logger.info(`Received ${signal}. Shutting down gracefully...`);
 
     httpsServer.close(async () => {
       logger.info("HTTPS server closed.");
@@ -60,16 +49,11 @@ const startServer = async () => {
       try {
         await mongoose.connection.close();
 
-        logger.info(
-          "MongoDB connection closed."
-        );
+        logger.info("MongoDB connection closed.");
 
         process.exit(0);
       } catch (err) {
-        logger.error(
-          err,
-          "Error during MongoDB disconnect:"
-        );
+        logger.error(err, "Error during MongoDB disconnect:");
 
         process.exit(1);
       }
@@ -85,13 +69,9 @@ const startServer = async () => {
     }, 10000);
   };
 
-  process.on("SIGINT", () =>
-    gracefulShutdown("SIGINT")
-  );
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
-  process.on("SIGTERM", () =>
-    gracefulShutdown("SIGTERM")
-  );
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 };
 
 startServer();

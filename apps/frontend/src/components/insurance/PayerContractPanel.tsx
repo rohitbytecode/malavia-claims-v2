@@ -59,25 +59,25 @@ export function PayerContractPanel({
     mutationFn: () =>
       editing
         ? payerContractApi.update(editing._id, {
-          effectiveFrom: draft.effectiveFrom,
-          effectiveTo: draft.effectiveTo || null,
-          tdsPercent: draft.tdsPercent,
-          defaultHospitalDiscountPercent:
-            draft.defaultHospitalDiscountPercent,
-          remarks: draft.remarks,
-          departmentPolicies: draft.departmentPolicies,
-        })
+            effectiveFrom: draft.effectiveFrom,
+            effectiveTo: draft.effectiveTo || null,
+            tdsPercent: draft.tdsPercent,
+            defaultHospitalDiscountPercent:
+              draft.defaultHospitalDiscountPercent,
+            remarks: draft.remarks,
+            departmentPolicies: draft.departmentPolicies,
+          })
         : payerContractApi.create({
-          insuranceCompanyId,
-          effectiveFrom: draft.effectiveFrom,
-          effectiveTo: draft.effectiveTo || undefined,
-          tdsPercent: draft.tdsPercent,
-          defaultHospitalDiscountPercent:
-            draft.defaultHospitalDiscountPercent,
-          remarks: draft.remarks,
-          departmentPolicies: draft.departmentPolicies,
-          createdBy: user?._id ?? "",
-        }),
+            insuranceCompanyId,
+            effectiveFrom: draft.effectiveFrom,
+            effectiveTo: draft.effectiveTo || undefined,
+            tdsPercent: draft.tdsPercent,
+            defaultHospitalDiscountPercent:
+              draft.defaultHospitalDiscountPercent,
+            remarks: draft.remarks,
+            departmentPolicies: draft.departmentPolicies,
+            createdBy: user?._id ?? "",
+          }),
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: ["payer-contracts", insuranceCompanyId],
