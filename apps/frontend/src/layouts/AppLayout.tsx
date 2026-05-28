@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "../store/auth.store";
 import { useUiStore } from "../store/ui.store";
@@ -14,6 +14,7 @@ import { alertApi, notificationApi } from "../api/services";
 import type { Role, Notification } from "../types/domain";
 import { NotificationBell } from "../components/notifications/NotificationBell";
 import { NotificationToast } from "../components/notifications/NotificationToast";
+import { NotificationPermissionPrompt } from "../components/notifications/NotificationPermissionPrompt";
 import { useNotificationStore } from "../store/notification.store";
 import { disconnectSocket, getSocket } from "../lib/socket";
 import {
@@ -242,6 +243,7 @@ export function AppLayout({ children }: PropsWithChildren) {
   const { theme, toggleTheme, sidebarCollapsed, toggleSidebar } = useUiStore();
   const { setNotifications, prependNotification, enqueueToast } =
     useNotificationStore();
+  const handledRealtimeNotifications = useRef<Set<string>>(new Set());
   const navigate = useNavigate();
   const location = useLocation();
   const activeAlerts = useQuery({
@@ -299,8 +301,16 @@ export function AppLayout({ children }: PropsWithChildren) {
       const createdAt =
         payload.createdAt ?? payload.timestamp ?? new Date().toISOString();
       const entityId = payload.entityId ?? payload.claimId;
+      const notificationId = `${entityId ?? "notification"}-${createdAt}`;
+
+      if (handledRealtimeNotifications.current.has(notificationId)) {
+        return;
+      }
+
+      handledRealtimeNotifications.current.add(notificationId);
+
       const notification: Notification = {
-        _id: `${entityId ?? "notification"}-${createdAt}`,
+        _id: notificationId,
         userId: user._id,
         type: payload.type ?? "CLAIM_STATUS",
         title: payload.title,
@@ -313,17 +323,19 @@ export function AppLayout({ children }: PropsWithChildren) {
 
       prependNotification(notification);
       enqueueToast(notification);
-      showBrowserNotification(notification);
+      void showBrowserNotification(notification);
       playNotificationSound();
       refreshNotifications();
     };
 
     socket.on("notification:new", onRealtimeNotification);
+    socket.on("claim:status-changed", onRealtimeNotification);
 
     return () => {
       mounted = false;
       cleanupPermissionPrompt();
       socket.off("notification:new", onRealtimeNotification);
+      socket.off("claim:status-changed", onRealtimeNotification);
       disconnectSocket();
     };
   }, [enqueueToast, prependNotification, setNotifications, user]);
@@ -469,6 +481,7 @@ export function AppLayout({ children }: PropsWithChildren) {
           </div>
 
           <div className="topbar__right">
+            <NotificationPermissionPrompt />
             <NotificationBell />
             <div className="topbar__system-badge">
               <span className="topbar__live-dot" />

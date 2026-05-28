@@ -2,20 +2,40 @@ import type { Notification as AppNotification } from "../types/domain";
 
 const APP_NOTIFICATION_PERMISSION_KEY =
   "hicms-notification-permission-prompted";
+const NOTIFICATION_SERVICE_WORKER_URL = "/notification-sw.js";
+
+export type BrowserNotificationPermission =
+  | NotificationPermission
+  | "unsupported";
 
 function browserNotificationsSupported() {
   return typeof window !== "undefined" && "Notification" in window;
 }
 
-export function getBrowserNotificationPermission() {
+function serviceWorkerNotificationsSupported() {
+  return (
+    typeof navigator !== "undefined" &&
+    "serviceWorker" in navigator &&
+    typeof navigator.serviceWorker.register === "function"
+  );
+}
+
+export function getBrowserNotificationPermission(): BrowserNotificationPermission {
   if (!browserNotificationsSupported()) return "unsupported";
   return globalThis.Notification.permission;
 }
 
-export function requestBrowserNotificationPermission() {
-  if (!browserNotificationsSupported()) return Promise.resolve("unsupported");
+export function hasPromptedForBrowserNotifications() {
+  if (typeof window === "undefined") return false;
+  return (
+    window.localStorage.getItem(APP_NOTIFICATION_PERMISSION_KEY) === "true"
+  );
+}
+
+export async function requestBrowserNotificationPermission() {
+  if (!browserNotificationsSupported()) return "unsupported" as const;
   if (globalThis.Notification.permission !== "default") {
-    return Promise.resolve(globalThis.Notification.permission);
+    return globalThis.Notification.permission;
   }
 
   window.localStorage.setItem(APP_NOTIFICATION_PERMISSION_KEY, "true");
@@ -25,8 +45,6 @@ export function requestBrowserNotificationPermission() {
 export function requestPermissionAfterLoginInteraction() {
   if (!browserNotificationsSupported()) return () => undefined;
   if (globalThis.Notification.permission !== "default") return () => undefined;
-
-  const prompted = window.localStorage.getItem(APP_NOTIFICATION_PERMISSION_KEY);
 
   const request = () => {
     requestBrowserNotificationPermission();
@@ -38,17 +56,27 @@ export function requestPermissionAfterLoginInteraction() {
     window.removeEventListener("keydown", request);
   };
 
-  if (!prompted) {
-    requestBrowserNotificationPermission();
-  }
-
   window.addEventListener("pointerdown", request, { once: true });
   window.addEventListener("keydown", request, { once: true });
 
   return cleanup;
 }
 
-export function showBrowserNotification(notification: AppNotification) {
+async function getNotificationServiceWorkerRegistration() {
+  if (!serviceWorkerNotificationsSupported()) return null;
+
+  const existingRegistration = await navigator.serviceWorker.getRegistration(
+    NOTIFICATION_SERVICE_WORKER_URL
+  );
+
+  if (existingRegistration) return existingRegistration;
+
+  return navigator.serviceWorker.register(NOTIFICATION_SERVICE_WORKER_URL, {
+    scope: "/",
+  });
+}
+
+export async function showBrowserNotification(notification: AppNotification) {
   if (!browserNotificationsSupported()) return;
   if (globalThis.Notification.permission !== "granted") return;
 
@@ -60,6 +88,15 @@ export function showBrowserNotification(notification: AppNotification) {
     badge: "/favicon.svg",
     data: { entityId: notification.entityId },
   };
+
+  const registration = await getNotificationServiceWorkerRegistration().catch(
+    () => null
+  );
+
+  if (registration) {
+    await registration.showNotification(notification.title, options);
+    return;
+  }
 
   const browserNotification = new globalThis.Notification(
     notification.title,

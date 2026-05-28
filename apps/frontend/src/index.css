@@ -5096,3 +5096,106 @@ select.input {
     transform: translate3d(0, 0, 0) scale(1);
   }
 }
+
+.notification-permission {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 340px;
+  min-height: 38px;
+  padding: 7px 9px 7px 11px;
+  border: 1px solid var(--amber-border);
+  border-radius: var(--r-full);
+  background:
+    linear-gradient(135deg, var(--amber-bg), transparent 62%), var(--surface-0);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-xs);
+}
+
+.notification-permission--denied {
+  border-color: var(--red-border);
+  background:
+    linear-gradient(135deg, var(--red-bg), transparent 62%), var(--surface-0);
+}
+
+.notification-permission__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 8px;
+  background: var(--amber);
+  box-shadow: 0 0 0 4px var(--amber-bg);
+}
+
+.notification-permission--denied .notification-permission__dot {
+  background: var(--red);
+  box-shadow: 0 0 0 4px var(--red-bg);
+}
+
+.notification-permission__copy {
+  display: grid;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.notification-permission__copy strong {
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.notification-permission__copy span {
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notification-permission button {
+  border: 1px solid var(--border-accent);
+  border-radius: var(--r-full);
+  background: var(--accent-primary);
+  color: var(--text-inverse);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 6px 10px;
+  transition:
+    background var(--dur-fast),
+    transform var(--dur-fast);
+}
+
+.notification-permission button:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.notification-permission button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.notification-permission .notification-permission__dismiss {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-color: var(--border);
+  background: var(--surface-0);
+  color: var(--text-tertiary);
+  display: grid;
+  place-items: center;
+}
+
+@media (max-width: 1120px) {
+  .notification-permission__copy span {
+    display: none;
+  }
+}
+
+@media (max-width: 920px) {
+  .notification-permission {
+    display: none;
+  }
+}
