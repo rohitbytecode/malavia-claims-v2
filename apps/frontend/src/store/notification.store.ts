@@ -23,14 +23,24 @@ export const useNotificationStore = create<NotificationState>((set) => ({
       unreadCount: notifications.filter((item) => !item.isRead).length,
     }),
   prependNotification: (notification) =>
-    set((state) => ({
-      notifications: [notification, ...state.notifications],
-      unreadCount: notification.isRead ? state.unreadCount : state.unreadCount + 1,
-    })),
+    set((state) => {
+      if (state.notifications.some((item) => item._id === notification._id)) {
+        return state;
+      }
+
+      return {
+        notifications: [notification, ...state.notifications],
+        unreadCount: notification.isRead
+          ? state.unreadCount
+          : state.unreadCount + 1,
+      };
+    }),
   markRead: (notificationId) =>
     set((state) => {
       const notifications = state.notifications.map((item) =>
-        item._id === notificationId ? { ...item, isRead: true, readAt: new Date().toISOString() } : item
+        item._id === notificationId
+          ? { ...item, isRead: true, readAt: new Date().toISOString() }
+          : item
       );
       return {
         notifications,

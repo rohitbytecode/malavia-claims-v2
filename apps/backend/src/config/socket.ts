@@ -37,7 +37,20 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
   });
 
   io.on("connection", (socket) => {
-    logger.info(`Socket connected: ${socket.id}`);
+    const user = socket.data.user as { id?: string; role?: string } | undefined;
+
+    if (user?.id) {
+      socket.join(`user:${user.id}`);
+    }
+
+    if (user?.role) {
+      socket.join(`role:${user.role}`);
+    }
+
+    logger.info(
+      { socketId: socket.id, userId: user?.id, role: user?.role },
+      "Socket connected"
+    );
 
     socket.on("disconnect", (reason) => {
       logger.info(`Socket disconnected: ${socket.id} (${reason})`);
@@ -50,7 +63,9 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
 
 export function getIO(): SocketServer {
   if (!io) {
-    throw new Error("Socket.io has not been initialized. Call initSocketServer first.");
+    throw new Error(
+      "Socket.io has not been initialized. Call initSocketServer first."
+    );
   }
   return io;
 }

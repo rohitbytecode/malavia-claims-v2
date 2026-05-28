@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "../store/auth.store";
 import { useUiStore } from "../store/ui.store";
@@ -14,8 +14,14 @@ import { alertApi, notificationApi } from "../api/services";
 import type { Role, Notification } from "../types/domain";
 import { NotificationBell } from "../components/notifications/NotificationBell";
 import { NotificationToast } from "../components/notifications/NotificationToast";
+import { NotificationPermissionPrompt } from "../components/notifications/NotificationPermissionPrompt";
 import { useNotificationStore } from "../store/notification.store";
 import { disconnectSocket, getSocket } from "../lib/socket";
+import {
+  playNotificationSound,
+  requestPermissionAfterLoginInteraction,
+  showBrowserNotification,
+} from "../lib/browserNotifications";
 
 type NavIconName =
   | "dashboard"
@@ -235,7 +241,9 @@ const ROLE_META: Record<Role, { label: string; color: string; abbr: string }> =
 export function AppLayout({ children }: PropsWithChildren) {
   const { user, logout, hasRole } = useAuthStore();
   const { theme, toggleTheme, sidebarCollapsed, toggleSidebar } = useUiStore();
-  const { setNotifications, enqueueToast } = useNotificationStore();
+  const { setNotifications, prependNotification, enqueueToast } =
+    useNotificationStore();
+  const handledRealtimeNotifications = useRef<Set<string>>(new Set());
   const navigate = useNavigate();
   const location = useLocation();
   const activeAlerts = useQuery({
@@ -268,6 +276,7 @@ export function AppLayout({ children }: PropsWithChildren) {
     if (!user) return;
 
     let mounted = true;
+    const cleanupPermissionPrompt = requestPermissionAfterLoginInteraction();
 
     const refreshNotifications = () =>
       notificationApi.list({ limit: 30 }).then((res) => {
@@ -279,35 +288,57 @@ export function AppLayout({ children }: PropsWithChildren) {
     const socket = getSocket();
     socket.connect();
 
-    const onClaimStatusChanged = (payload: {
-      claimId: string;
+    const onRealtimeNotification = (payload: {
+      claimId?: string;
+      entityId?: string;
       title: string;
       message: string;
-      timestamp: string;
+      timestamp?: string;
+      createdAt?: string;
+      updatedAt?: string;
+      type?: Notification["type"];
     }) => {
+      const createdAt =
+        payload.createdAt ?? payload.timestamp ?? new Date().toISOString();
+      const entityId = payload.entityId ?? payload.claimId;
+      const notificationId = `${entityId ?? "notification"}-${createdAt}`;
+
+      if (handledRealtimeNotifications.current.has(notificationId)) {
+        return;
+      }
+
+      handledRealtimeNotifications.current.add(notificationId);
+
       const notification: Notification = {
-        _id: `${payload.claimId}-${payload.timestamp}`,
+        _id: notificationId,
         userId: user._id,
-        type: "CLAIM_STATUS",
+        type: payload.type ?? "CLAIM_STATUS",
         title: payload.title,
         message: payload.message,
-        entityId: payload.claimId,
+        entityId,
         isRead: false,
-        createdAt: payload.timestamp,
-        updatedAt: payload.timestamp,
+        createdAt,
+        updatedAt: payload.updatedAt ?? createdAt,
       };
+
+      prependNotification(notification);
       enqueueToast(notification);
+      void showBrowserNotification(notification);
+      playNotificationSound();
       refreshNotifications();
     };
 
-    socket.on("claim:status-changed", onClaimStatusChanged);
+    socket.on("notification:new", onRealtimeNotification);
+    socket.on("claim:status-changed", onRealtimeNotification);
 
     return () => {
       mounted = false;
-      socket.off("claim:status-changed", onClaimStatusChanged);
+      cleanupPermissionPrompt();
+      socket.off("notification:new", onRealtimeNotification);
+      socket.off("claim:status-changed", onRealtimeNotification);
       disconnectSocket();
     };
-  }, [enqueueToast, setNotifications, user]);
+  }, [enqueueToast, prependNotification, setNotifications, user]);
 
   return (
     <div className="app-shell">
@@ -450,6 +481,7 @@ export function AppLayout({ children }: PropsWithChildren) {
           </div>
 
           <div className="topbar__right">
+            <NotificationPermissionPrompt />
             <NotificationBell />
             <div className="topbar__system-badge">
               <span className="topbar__live-dot" />
