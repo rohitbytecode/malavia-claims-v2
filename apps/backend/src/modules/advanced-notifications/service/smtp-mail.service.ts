@@ -122,8 +122,8 @@ class SmtpClient {
 
   private buildMessage(from: string, message: MailMessage) {
     const headers = [
-      `From: ${escapeHeader(from)}`,
-      `To: ${escapeHeader(message.to)}`,
+      `From: ${formatAddress(escapeHeader(from))}`,
+`To: ${formatAddress(escapeHeader(message.to))}`,
       `Subject: ${escapeHeader(message.subject)}`,
       "MIME-Version: 1.0",
       message.html
