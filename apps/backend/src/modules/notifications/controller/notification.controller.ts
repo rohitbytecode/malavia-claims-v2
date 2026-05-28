@@ -3,7 +3,6 @@ import { NotificationService } from "../service/notification.service.js";
 
 export class NotificationController {
   static async getUserNotifications(req: Request, res: Response) {
-    // Assuming req.user is set by auth middleware
     const userId = (req as any).user?.userId;
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
