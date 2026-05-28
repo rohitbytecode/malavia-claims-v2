@@ -1,19 +1,30 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
+import { existsSync, readFileSync } from "node:fs";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import basicSsl from "@vitejs/plugin-basic-ssl";
+
+const backendSslKey = new URL("../backend/cert/key.pem", import.meta.url);
+const backendSslCert = new URL("../backend/cert/cert.pem", import.meta.url);
+
+function resolveHttpsOptions() {
+  if (!existsSync(backendSslKey) || !existsSync(backendSslCert)) {
+    return undefined;
+  }
+
+  return {
+    key: readFileSync(backendSslKey),
+    cert: readFileSync(backendSslCert),
+  };
+}
 
 export default defineConfig({
-  plugins: [
-    react(),
-    basicSsl(),
-  ],
+  plugins: [react()],
 
   server: {
     host: "0.0.0.0",
 
-    https: {},
+    https: resolveHttpsOptions(),
 
     proxy: {
       "/api": {
@@ -27,10 +38,7 @@ export default defineConfig({
 
         configure: (proxy) => {
           proxy.on("error", (err) => {
-            console.log(
-              "API Proxy Error:",
-              err
-            );
+            console.log("API Proxy Error:", err);
           });
         },
       },
@@ -46,10 +54,7 @@ export default defineConfig({
 
         configure: (proxy) => {
           proxy.on("error", (err) => {
-            console.log(
-              "Socket Proxy Error:",
-              err
-            );
+            console.log("Socket Proxy Error:", err);
           });
         },
       },

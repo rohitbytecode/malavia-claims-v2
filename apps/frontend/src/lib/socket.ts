@@ -10,8 +10,12 @@ function resolveSocketUrl() {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   if (apiBaseUrl?.startsWith("http")) return new URL(apiBaseUrl).origin;
 
-  const socketPort = import.meta.env.VITE_SOCKET_PORT ?? "5000";
-  return `${window.location.protocol}//${window.location.hostname}:${socketPort}`;
+  const explicitSocketPort = import.meta.env.VITE_SOCKET_PORT;
+  if (explicitSocketPort) {
+    return `${window.location.protocol}//${window.location.hostname}:${explicitSocketPort}`;
+  }
+
+  return window.location.origin;
 }
 
 export function getSocket(): Socket {
