@@ -3,6 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { notificationApi } from "../../api/services";
 import { useNotificationStore } from "../../store/notification.store";
 
+function formatNotificationTime(value: string) {
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
@@ -19,37 +28,99 @@ export function NotificationBell() {
     markAllRead();
   };
 
+  const openClaim = async (id: string, entityId?: string) => {
+    if (!entityId) return;
+
+    try {
+      await onRead(id);
+    } finally {
+      setOpen(false);
+      navigate(`/claims/${entityId}`);
+    }
+  };
+
   return (
-    <div style={{ position: "relative" }}>
-      <button type="button" className="sidebar__icon-btn" onClick={() => setOpen((v) => !v)}>
-        🔔 {unreadCount > 0 ? `(${unreadCount})` : ""}
+    <div className="notification-center">
+      <button
+        type="button"
+        className="notification-bell"
+        onClick={() => setOpen((value) => !value)}
+        aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ""}`}
+        aria-expanded={open}
+      >
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M18 9a6 6 0 1 0-12 0c0 7-3 7-3 7h18s-3 0-3-7" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        {unreadCount > 0 ? (
+          <span className="notification-bell__badge">{unreadCount}</span>
+        ) : null}
       </button>
-      {open && (
-        <div style={{ position: "absolute", right: 0, top: 36, width: 360, maxHeight: 420, overflow: "auto", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 8, padding: 12, zIndex: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <strong>Notifications</strong>
-            <button type="button" onClick={onReadAll}>Mark all read</button>
-          </div>
-          {notifications.length === 0 && <div>No notifications yet.</div>}
-          {notifications.slice(0, 20).map((item) => (
-            <div key={item._id} style={{ padding: 8, marginBottom: 8, borderRadius: 6, background: item.isRead ? "transparent" : "rgba(0,180,120,0.15)" }}>
-              <div style={{ fontWeight: 600 }}>{item.title}</div>
-              <div>{item.message}</div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
-                <small>{new Date(item.createdAt).toLocaleString()}</small>
-                <div>
-                  {!item.isRead && <button type="button" onClick={() => onRead(item._id)}>Read</button>}
-                  {item.entityId && (
-                    <button type="button" onClick={() => navigate(`/claims/${item.entityId}`)}>
-                      Open
-                    </button>
-                  )}
-                </div>
-              </div>
+
+      {open ? (
+        <section className="notification-panel">
+          <header className="notification-panel__header">
+            <div>
+              <p className="notification-panel__eyebrow">Live event stream</p>
+              <h2>Notifications</h2>
             </div>
-          ))}
-        </div>
-      )}
+            <button
+              className="notification-panel__mark-all"
+              type="button"
+              onClick={onReadAll}
+              disabled={unreadCount === 0}
+            >
+              Mark all read
+            </button>
+          </header>
+
+          <div className="notification-panel__list">
+            {notifications.length === 0 ? (
+              <div className="notification-empty">
+                <span>✓</span>
+                <strong>No notifications yet</strong>
+                <p>Claim status changes will appear here instantly.</p>
+              </div>
+            ) : (
+              notifications.slice(0, 20).map((item) => (
+                <article
+                  className={`notification-item${item.isRead ? "" : " notification-item--unread"}`}
+                  key={item._id}
+                >
+                  <div
+                    className="notification-item__status"
+                    aria-hidden="true"
+                  />
+                  <div className="notification-item__body">
+                    <div className="notification-item__topline">
+                      <h3>{item.title}</h3>
+                      <time dateTime={item.createdAt}>
+                        {formatNotificationTime(item.createdAt)}
+                      </time>
+                    </div>
+                    <p>{item.message}</p>
+                    <div className="notification-item__actions">
+                      {!item.isRead ? (
+                        <button type="button" onClick={() => onRead(item._id)}>
+                          Mark read
+                        </button>
+                      ) : null}
+                      {item.entityId ? (
+                        <button
+                          type="button"
+                          onClick={() => openClaim(item._id, item.entityId)}
+                        >
+                          Open claim
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

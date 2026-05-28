@@ -16,6 +16,11 @@ import { NotificationBell } from "../components/notifications/NotificationBell";
 import { NotificationToast } from "../components/notifications/NotificationToast";
 import { useNotificationStore } from "../store/notification.store";
 import { disconnectSocket, getSocket } from "../lib/socket";
+import {
+  playNotificationSound,
+  requestPermissionAfterLoginInteraction,
+  showBrowserNotification,
+} from "../lib/browserNotifications";
 
 type NavIconName =
   | "dashboard"
@@ -235,7 +240,8 @@ const ROLE_META: Record<Role, { label: string; color: string; abbr: string }> =
 export function AppLayout({ children }: PropsWithChildren) {
   const { user, logout, hasRole } = useAuthStore();
   const { theme, toggleTheme, sidebarCollapsed, toggleSidebar } = useUiStore();
-  const { setNotifications, enqueueToast } = useNotificationStore();
+  const { setNotifications, prependNotification, enqueueToast } =
+    useNotificationStore();
   const navigate = useNavigate();
   const location = useLocation();
   const activeAlerts = useQuery({
@@ -268,6 +274,7 @@ export function AppLayout({ children }: PropsWithChildren) {
     if (!user) return;
 
     let mounted = true;
+    const cleanupPermissionPrompt = requestPermissionAfterLoginInteraction();
 
     const refreshNotifications = () =>
       notificationApi.list({ limit: 30 }).then((res) => {
@@ -279,35 +286,47 @@ export function AppLayout({ children }: PropsWithChildren) {
     const socket = getSocket();
     socket.connect();
 
-    const onClaimStatusChanged = (payload: {
-      claimId: string;
+    const onRealtimeNotification = (payload: {
+      claimId?: string;
+      entityId?: string;
       title: string;
       message: string;
-      timestamp: string;
+      timestamp?: string;
+      createdAt?: string;
+      updatedAt?: string;
+      type?: Notification["type"];
     }) => {
+      const createdAt =
+        payload.createdAt ?? payload.timestamp ?? new Date().toISOString();
+      const entityId = payload.entityId ?? payload.claimId;
       const notification: Notification = {
-        _id: `${payload.claimId}-${payload.timestamp}`,
+        _id: `${entityId ?? "notification"}-${createdAt}`,
         userId: user._id,
-        type: "CLAIM_STATUS",
+        type: payload.type ?? "CLAIM_STATUS",
         title: payload.title,
         message: payload.message,
-        entityId: payload.claimId,
+        entityId,
         isRead: false,
-        createdAt: payload.timestamp,
-        updatedAt: payload.timestamp,
+        createdAt,
+        updatedAt: payload.updatedAt ?? createdAt,
       };
+
+      prependNotification(notification);
       enqueueToast(notification);
+      showBrowserNotification(notification);
+      playNotificationSound();
       refreshNotifications();
     };
 
-    socket.on("claim:status-changed", onClaimStatusChanged);
+    socket.on("notification:new", onRealtimeNotification);
 
     return () => {
       mounted = false;
-      socket.off("claim:status-changed", onClaimStatusChanged);
+      cleanupPermissionPrompt();
+      socket.off("notification:new", onRealtimeNotification);
       disconnectSocket();
     };
-  }, [enqueueToast, setNotifications, user]);
+  }, [enqueueToast, prependNotification, setNotifications, user]);
 
   return (
     <div className="app-shell">

@@ -4,6 +4,7 @@ import { AppError } from "@/core/errors/AppError.js";
 import { UserModel } from "@/modules/users/schema/user.schema.js";
 import { getIO } from "@/config/socket.js";
 import { logger } from "@/config/logger.js";
+import { Roles } from "@/core/enums/roles.enum.js";
 
 interface CreateNotificationParams {
   userId: string;
@@ -59,8 +60,8 @@ export class NotificationService {
   }
 
   /**
-   * Broadcast a claim-status-change notification to all active users and
-   * push the event over Socket.io so connected clients update in real time.
+   * Broadcast a claim-status-change notification to pharmacists and push the
+   * event over Socket.io so connected clients update in real time.
    */
   static async broadcastClaimStatusChange(
     claimId: string,
@@ -69,12 +70,15 @@ export class NotificationService {
     performedByName?: string
   ) {
     try {
+      const displayClaim = claimNumber ?? claimId;
       const title = "Claim Status Updated";
-      const message = `Claim status changed to ${toStatus}`;
+      const message = performedByName
+        ? `${performedByName} moved claim ${displayClaim} to ${toStatus}`
+        : `Claim ${displayClaim} moved to ${toStatus}`;
 
-      // 1. Persist notification for every active user
+      // 1. Persist pharmacist notifications so the bell/history stays accurate.
       const users = await UserModel.find(
-        { isActive: true },
+        { isActive: true, role: Roles.PHARMACIST },
         { _id: 1 }
       ).lean();
 
@@ -86,22 +90,31 @@ export class NotificationService {
         entityId: claimId,
       }));
 
-      if (docs.length) await NotificationRepository.createManyNotifications(docs);
+      if (docs.length) {
+        await NotificationRepository.createManyNotifications(docs);
+      }
 
-      // 2. Push real-time event via Socket.io
-      const io = getIO();
-      io.emit("claim:status-changed", {
+      // 2. Push real-time event only to connected pharmacist browsers.
+      const timestamp = new Date().toISOString();
+      const payload = {
         claimId,
+        entityId: claimId,
         claimNumber: claimNumber ?? null,
         toStatus,
+        type: NotificationType.CLAIM_STATUS,
         performedByName: performedByName ?? null,
         title,
         message,
-        timestamp: new Date().toISOString(),
-      });
+        timestamp,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      };
+      const io = getIO();
+      io.to(`role:${Roles.PHARMACIST}`).emit("notification:new", payload);
+      io.to(`role:${Roles.PHARMACIST}`).emit("claim:status-changed", payload);
 
       logger.info(
-        `Broadcasted claim status change: ${claimNumber ?? claimId} → ${toStatus} to ${docs.length} users`
+        `Broadcasted claim status change: ${displayClaim} → ${toStatus} to ${docs.length} pharmacists`
       );
     } catch (err) {
       // Notification failures should never block the main flow

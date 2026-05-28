@@ -8,30 +8,49 @@ export function NotificationToast() {
 
   useEffect(() => {
     const timers = toasts.map((toast) =>
-      window.setTimeout(() => dismissToast(toast._id), 5000)
+      window.setTimeout(() => dismissToast(toast._id), 7000)
     );
     return () => timers.forEach((id) => window.clearTimeout(id));
   }, [dismissToast, toasts]);
 
   return (
-    <div style={{ position: "fixed", right: 16, top: 16, zIndex: 50, display: "grid", gap: 8 }}>
+    <div
+      className="notification-toast-stack"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       {toasts.map((toast) => (
-        <div key={toast._id} style={{ width: 320, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 8, padding: 10 }}>
-          <strong>{toast.title}</strong>
-          <p style={{ margin: "4px 0" }}>{toast.message}</p>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            {toast.entityId ? (
-              <button type="button" onClick={() => navigate(`/claims/${toast.entityId}`)}>
-                View claim
-              </button>
-            ) : (
-              <span />
-            )}
-            <button type="button" onClick={() => dismissToast(toast._id)}>
-              Close
-            </button>
+        <article className="notification-toast" key={toast._id}>
+          <div className="notification-toast__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 3 5 6v5c0 4.5 2.8 8 7 10 4.2-2 7-5.5 7-10V6l-7-3Z" />
+              <path d="m9 12 2 2 4-5" />
+            </svg>
           </div>
-        </div>
+          <div className="notification-toast__content">
+            <div className="notification-toast__eyebrow">Real-time update</div>
+            <h3>{toast.title}</h3>
+            <p>{toast.message}</p>
+            <div className="notification-toast__actions">
+              {toast.entityId ? (
+                <button
+                  className="notification-action notification-action--primary"
+                  type="button"
+                  onClick={() => navigate(`/claims/${toast.entityId}`)}
+                >
+                  View claim
+                </button>
+              ) : null}
+              <button
+                className="notification-action notification-action--ghost"
+                type="button"
+                onClick={() => dismissToast(toast._id)}
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </article>
       ))}
     </div>
   );
