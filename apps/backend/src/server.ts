@@ -1,5 +1,11 @@
 import app from "./app.js";
-import { createServer } from "node:http";
+
+import fs from "node:fs";
+import path from "node:path";
+import https from "node:https";
+
+import { fileURLToPath } from "node:url";
+
 import { env } from "./config/env.js";
 import { logger } from "./config/logger.js";
 import { connectDatabase } from "./config/db.js";
@@ -8,45 +14,84 @@ import { initSocketServer } from "./config/socket.js";
 
 import mongoose from "mongoose";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const startServer = async () => {
   await connectDatabase();
 
-  const httpServer = createServer(app);
+  // SSL Certificate Paths
+  const sslOptions = {
+    key: fs.readFileSync(
+      path.join(__dirname, "../cert/key.pem")
+    ),
 
-  // Initialize Socket.io on the same HTTP server
-  initSocketServer(httpServer);
+    cert: fs.readFileSync(
+      path.join(__dirname, "../cert/cert.pem")
+    ),
+  };
 
-  httpServer.listen(env.PORT, () => {
-    logger.info(`Server running on port ${env.PORT}`);
+  // Create HTTPS Server
+  const httpsServer = https.createServer(
+    sslOptions,
+    app
+  );
+
+  // Initialize Socket.io on HTTPS server
+  initSocketServer(httpsServer);
+
+  const PORT = parseInt(env.PORT, 10);
+
+  httpsServer.listen(PORT, "0.0.0.0", () => {
+    logger.info(`HTTPS Server running on port ${PORT}`);
     initCronJobs();
   });
 
-  const gracefulShutdown = async (signal: string) => {
-    logger.info(`Received ${signal}. Shutting down gracefully...`);
+  const gracefulShutdown = async (
+    signal: string
+  ) => {
+    logger.info(
+      `Received ${signal}. Shutting down gracefully...`
+    );
 
-    httpServer.close(async () => {
-      logger.info("HTTP server closed.");
+    httpsServer.close(async () => {
+      logger.info("HTTPS server closed.");
+
       try {
         await mongoose.connection.close();
-        logger.info("MongoDB connection closed.");
+
+        logger.info(
+          "MongoDB connection closed."
+        );
+
         process.exit(0);
       } catch (err) {
-        logger.error(err, "Error during MongoDB disconnect:");
+        logger.error(
+          err,
+          "Error during MongoDB disconnect:"
+        );
+
         process.exit(1);
       }
     });
 
-    // Force close after 10 seconds
+    // Force shutdown after 10s
     setTimeout(() => {
       logger.error(
         "Could not close connections in time, forcefully shutting down"
       );
+
       process.exit(1);
     }, 10000);
   };
 
-  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+  process.on("SIGINT", () =>
+    gracefulShutdown("SIGINT")
+  );
+
+  process.on("SIGTERM", () =>
+    gracefulShutdown("SIGTERM")
+  );
 };
 
 startServer();
