@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema<UserDocument>(
     refreshTokenHash: {
       type: String,
     },
+    refreshTokenHashes: {
+      type: [String],
+      default: [],
+      select: false,
+    },
   },
   {
     timestamps: true,

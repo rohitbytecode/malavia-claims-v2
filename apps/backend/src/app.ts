@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import type { Request, Response } from "express";
 
 import { env } from "./config/env.js";
+import { resolveCorsOrigin } from "./config/cors.js";
 import { logger } from "./config/logger.js";
 
 import { errorMiddleware } from "./middleware/error.middleware.js";
@@ -114,7 +115,7 @@ app.use(
 
 app.use(
   cors({
-    origin: env.CORS_ORIGIN,
+    origin: resolveCorsOrigin,
     credentials: true,
   })
 );

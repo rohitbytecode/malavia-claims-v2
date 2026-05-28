@@ -235,7 +235,7 @@ const ROLE_META: Record<Role, { label: string; color: string; abbr: string }> =
 export function AppLayout({ children }: PropsWithChildren) {
   const { user, logout, hasRole } = useAuthStore();
   const { theme, toggleTheme, sidebarCollapsed, toggleSidebar } = useUiStore();
-  const { setNotifications, prependNotification, enqueueToast } = useNotificationStore();
+  const { setNotifications, enqueueToast } = useNotificationStore();
   const navigate = useNavigate();
   const location = useLocation();
   const activeAlerts = useQuery({
@@ -267,12 +267,16 @@ export function AppLayout({ children }: PropsWithChildren) {
   useEffect(() => {
     if (!user) return;
 
-    notificationApi.list({ limit: 30 }).then((res) => {
-      setNotifications(res.notifications);
-    });
+    let mounted = true;
+
+    const refreshNotifications = () =>
+      notificationApi.list({ limit: 30 }).then((res) => {
+        if (mounted) setNotifications(res.notifications);
+      });
+
+    refreshNotifications();
 
     const socket = getSocket();
-    socket.auth = { token: useAuthStore.getState().accessToken };
     socket.connect();
 
     const onClaimStatusChanged = (payload: {
@@ -292,17 +296,18 @@ export function AppLayout({ children }: PropsWithChildren) {
         createdAt: payload.timestamp,
         updatedAt: payload.timestamp,
       };
-      prependNotification(notification);
       enqueueToast(notification);
+      refreshNotifications();
     };
 
     socket.on("claim:status-changed", onClaimStatusChanged);
 
     return () => {
+      mounted = false;
       socket.off("claim:status-changed", onClaimStatusChanged);
       disconnectSocket();
     };
-  }, [enqueueToast, prependNotification, setNotifications, user]);
+  }, [enqueueToast, setNotifications, user]);
 
   return (
     <div className="app-shell">

@@ -3,20 +3,26 @@ import { useAuthStore } from "../store/auth.store";
 
 let socket: Socket | null = null;
 
+function resolveSocketUrl() {
+  const explicitSocketUrl = import.meta.env.VITE_SOCKET_URL;
+  if (explicitSocketUrl) return explicitSocketUrl;
+
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  if (apiBaseUrl?.startsWith("http")) return new URL(apiBaseUrl).origin;
+
+  const socketPort = import.meta.env.VITE_SOCKET_PORT ?? "5000";
+  return `${window.location.protocol}//${window.location.hostname}:${socketPort}`;
+}
+
 export function getSocket(): Socket {
   if (socket) return socket;
 
-  const baseURL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
-  const origin = baseURL.startsWith("http")
-    ? new URL(baseURL).origin
-    : window.location.origin;
-
-  socket = io(origin, {
+  socket = io(resolveSocketUrl(), {
     autoConnect: false,
     transports: ["websocket", "polling"],
     withCredentials: true,
-    auth: {
-      token: useAuthStore.getState().accessToken,
+    auth: (callback) => {
+      callback({ token: useAuthStore.getState().accessToken });
     },
   });
 

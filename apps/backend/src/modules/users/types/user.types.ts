@@ -8,6 +8,7 @@ export interface UserBase {
   role: Roles;
   isActive: boolean;
   refreshTokenHash?: string;
+  refreshTokenHashes?: string[];
 }
 
 export interface UserDocument extends UserBase, Document {

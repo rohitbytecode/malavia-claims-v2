@@ -1,15 +1,15 @@
 import { Server as HttpServer } from "node:http";
 import { Server as SocketServer } from "socket.io";
-import { env } from "./env.js";
 import { logger } from "./logger.js";
 import { verifyAccessToken } from "@/modules/auth/utils/jwt.util.js";
+import { resolveCorsOrigin } from "./cors.js";
 
 let io: SocketServer | null = null;
 
 export function initSocketServer(httpServer: HttpServer): SocketServer {
   io = new SocketServer(httpServer, {
     cors: {
-      origin: env.CORS_ORIGIN === "*" ? true : env.CORS_ORIGIN,
+      origin: resolveCorsOrigin,
       credentials: true,
     },
     transports: ["websocket", "polling"],

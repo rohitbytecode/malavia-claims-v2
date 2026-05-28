@@ -7,7 +7,7 @@ export class AuthRepository {
   }
 
   static async findUserById(userId: string) {
-    return UserRepository.findById(userId);
+    return UserRepository.findByIdWithAuthSecrets(userId);
   }
 
   static async saveRefreshTokenHash(userId: string, refreshTokenHash: string) {

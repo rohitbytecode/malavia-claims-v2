@@ -30,6 +30,14 @@ export class UserRepository {
     return UserModel.findById(userId);
   }
 
+  static async findByIdWithAuthSecrets(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) {
+      return null;
+    }
+
+    return UserModel.findById(userId).select("+refreshTokenHashes");
+  }
+
   static async findByUsername(username: string) {
     return UserModel.findOne({ username: username.toLowerCase().trim() });
   }
@@ -79,9 +87,25 @@ export class UserRepository {
       return null;
     }
 
+    if (!refreshTokenHash) {
+      return UserModel.findByIdAndUpdate(
+        userId,
+        { refreshTokenHash: undefined, refreshTokenHashes: [] },
+        { new: true }
+      );
+    }
+
     return UserModel.findByIdAndUpdate(
       userId,
-      { refreshTokenHash },
+      {
+        refreshTokenHash,
+        $push: {
+          refreshTokenHashes: {
+            $each: [refreshTokenHash],
+            $slice: -10,
+          },
+        },
+      },
       { new: true }
     );
   }

@@ -27,6 +27,16 @@ const buildTokenPayload = (userId: string, role: Roles) => ({
   role,
 });
 
+const refreshTokenMatchesAnyHash = async (
+  refreshToken: string,
+  hashes: string[]
+) => {
+  for (const hash of hashes) {
+    if (await comparePassword(refreshToken, hash)) return true;
+  }
+  return false;
+};
+
 export class AuthService {
   static async login(payload: LoginPayload) {
     const user = await AuthRepository.findUserByUsername(payload.username);
@@ -75,13 +85,18 @@ export class AuthService {
     const payload = verifyRefreshToken(refreshToken);
     const user = await AuthRepository.findUserById(payload.userId);
 
-    if (!user || !user.refreshTokenHash) {
+    if (!user) {
       throw new AppError("Invalid refresh token", 403);
     }
 
-    const refreshTokenMatches = await comparePassword(
+    const refreshTokenHashes = [
+      ...(user.refreshTokenHashes ?? []),
+      ...(user.refreshTokenHash ? [user.refreshTokenHash] : []),
+    ];
+
+    const refreshTokenMatches = await refreshTokenMatchesAnyHash(
       refreshToken,
-      user.refreshTokenHash
+      refreshTokenHashes
     );
 
     if (!refreshTokenMatches) {
