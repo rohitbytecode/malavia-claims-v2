@@ -10,9 +10,11 @@ export const toInsuranceCompanyResponse = (
     submissionMethods: company.submissionMethods,
     portalUrl: company.portalUrl,
     portalUsername: company.portalUsername,
-    portalPassword: company.portalPasswordEncrypted
-      ? decryptPortalPassword(company.portalPasswordEncrypted)
-      : undefined,
+    portalPassword: (() => {
+      if (!company.portalPasswordEncrypted) return undefined;
+      const decrypted = decryptPortalPassword(company.portalPasswordEncrypted);
+      return decrypted ? decrypted : undefined;
+    })(),
     email: company.email,
     courierAddress: company.courierAddress,
     tatDays: company.tatDays,

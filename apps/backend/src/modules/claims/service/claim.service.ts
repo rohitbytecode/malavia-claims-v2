@@ -260,6 +260,11 @@ export class ClaimService {
         refundAmount
       );
 
+      console.log(
+        "DEBUG patientId:",
+        JSON.stringify((updatedClaim as any).patientId)
+      );
+
       if (!updatedClaim) {
         throw new AppError("Unable to update claim status", 500);
       }
@@ -311,8 +316,22 @@ export class ClaimService {
         effectiveAt: new Date(),
       });
 
-      // Broadcast real-time notification (fire-and-forget)
       let performedByName: string | undefined;
+      const patientName =
+        await import("@/modules/patients/schema/patient.schema.js")
+          .then(({ PatientModel }) =>
+            PatientModel.findOne(
+              { patientId: (updatedClaim as any).patientId },
+              { name: 1 }
+            ).lean()
+          )
+          .then((p) => {
+            console.log("DEBUG patient lookup result:", JSON.stringify(p));
+            return p?.name;
+          });
+      const companyName = (updatedClaim as any).insuranceCompanyId?.name as
+        | string
+        | undefined;
       if (performedBy && Types.ObjectId.isValid(performedBy)) {
         const actor = await UserModel.findById(performedBy, {
           fullName: 1,
@@ -331,6 +350,8 @@ export class ClaimService {
         toStatus,
         performedByName,
         remarks,
+        patientName,
+        companyName,
       });
 
       return toClaimResponse(updatedClaim);

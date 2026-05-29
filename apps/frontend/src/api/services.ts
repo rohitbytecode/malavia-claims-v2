@@ -110,8 +110,12 @@ export const advancedNotificationApi = {
     unwrap<AdvancedNotificationSettings | null>(
       apiClient.get("/advanced-notifications")
     ),
+
   save: (body: {
-    notificationEmail: string;
+    notificationEmails: {
+      email: string;
+      isActive: boolean;
+    }[];
     isEnabled?: boolean;
     updatedBy?: string;
   }) =>
@@ -218,6 +222,7 @@ export const timelineApi = {
   claim: (claimId: string) =>
     unwrap<TimelineEvent[]>(apiClient.get(`/timelines/claim/${claimId}`)),
 };
+
 export const communicationApi = {
   list: (claimId: string) =>
     unwrap<Paginated<Communication> | Communication[]>(

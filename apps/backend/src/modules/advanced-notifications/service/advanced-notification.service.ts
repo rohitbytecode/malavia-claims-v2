@@ -5,14 +5,24 @@ import { AdvancedNotificationResponse } from "../types/advanced-notification.typ
 import { SmtpMailService } from "./smtp-mail.service.js";
 
 interface SaveSettingsPayload {
-  notificationEmail: string;
+  notificationEmails: {
+    email: string;
+    isActive: boolean;
+  }[];
   isEnabled?: boolean;
   updatedBy?: string;
+}
+
+export interface NotificationEmail {
+  email: string;
+  isActive: boolean;
 }
 
 interface ClaimTransitionMailPayload {
   claimId: string;
   claimNumber?: string;
+  patientName?: string;
+  companyName?: string;
   toStatus: ClaimStatus;
   performedByName?: string;
   remarks?: string;
@@ -49,7 +59,7 @@ function toResponse(settings: any): AdvancedNotificationResponse | null {
 
   return {
     id: settings._id.toString(),
-    notificationEmail: settings.notificationEmail,
+    notificationEmails: settings.notificationEmails ?? [],
     isEnabled: settings.isEnabled,
     updatedBy: settings.updatedBy?.toString() ?? null,
     createdAt: settings.createdAt,
@@ -69,6 +79,12 @@ function escapeHtml(value: string) {
 function buildClaimTransitionEmail(payload: ClaimTransitionMailPayload) {
   const displayClaim = payload.claimNumber ?? payload.claimId;
   const statusLabel = STATUS_LABEL[payload.toStatus] ?? payload.toStatus;
+  const safePatientName = payload.patientName
+    ? escapeHtml(payload.patientName)
+    : "";
+  const safeCompanyName = payload.companyName
+    ? escapeHtml(payload.companyName)
+    : "";
   const safeDisplayClaim = escapeHtml(displayClaim);
   const safeStatusLabel = escapeHtml(statusLabel);
   const safePerformedByName = escapeHtml(payload.performedByName ?? "System");
@@ -82,6 +98,8 @@ function buildClaimTransitionEmail(payload: ClaimTransitionMailPayload) {
     "Malavia Claims advanced notification",
     "",
     `Claim: ${displayClaim}`,
+    payload.patientName ? `Patient: ${payload.patientName}` : "",
+    payload.companyName ? `Company: ${payload.companyName}` : "",
     `Status: ${statusLabel}`,
     actorLine,
     remarksLine,
@@ -92,15 +110,17 @@ function buildClaimTransitionEmail(payload: ClaimTransitionMailPayload) {
 
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111827">
-      <h2 style="margin:0 0 12px">Claim ${safeDisplayClaim} is ${safeStatusLabel}</h2>
-      <p>The claim has reached one of the advanced notification milestones.</p>
-      <table style="border-collapse:collapse;margin-top:12px">
-        <tr><td style="padding:6px 12px;border:1px solid #e5e7eb"><strong>Claim</strong></td><td style="padding:6px 12px;border:1px solid #e5e7eb">${safeDisplayClaim}</td></tr>
-        <tr><td style="padding:6px 12px;border:1px solid #e5e7eb"><strong>Status</strong></td><td style="padding:6px 12px;border:1px solid #e5e7eb">${safeStatusLabel}</td></tr>
-        <tr><td style="padding:6px 12px;border:1px solid #e5e7eb"><strong>Updated by</strong></td><td style="padding:6px 12px;border:1px solid #e5e7eb">${safePerformedByName}</td></tr>
-        ${safeRemarks ? `<tr><td style="padding:6px 12px;border:1px solid #e5e7eb"><strong>Remarks</strong></td><td style="padding:6px 12px;border:1px solid #e5e7eb">${safeRemarks}</td></tr>` : ""}
-      </table>
-    </div>`;
+  <h2 style="margin:0 0 12px">Claim ${safeDisplayClaim} is ${safeStatusLabel}</h2>
+  <p>The claim has reached one of the advanced notification milestones.</p>
+  <table style="border-collapse:collapse;margin-top:12px">
+    <tr><td style="padding:6px 12px;border:1px solid #e5e7eb"><strong>Claim</strong></td><td style="padding:6px 12px;border:1px solid #e5e7eb">${safeDisplayClaim}</td></tr>
+    ${safePatientName ? `<tr><td style="padding:6px 12px;border:1px solid #e5e7eb"><strong>Patient</strong></td><td style="padding:6px 12px;border:1px solid #e5e7eb">${safePatientName}</td></tr>` : ""}
+    ${safeCompanyName ? `<tr><td style="padding:6px 12px;border:1px solid #e5e7eb"><strong>Company</strong></td><td style="padding:6px 12px;border:1px solid #e5e7eb">${safeCompanyName}</td></tr>` : ""}
+    <tr><td style="padding:6px 12px;border:1px solid #e5e7eb"><strong>Status</strong></td><td style="padding:6px 12px;border:1px solid #e5e7eb">${safeStatusLabel}</td></tr>
+    <tr><td style="padding:6px 12px;border:1px solid #e5e7eb"><strong>Updated by</strong></td><td style="padding:6px 12px;border:1px solid #e5e7eb">${safePerformedByName}</td></tr>
+    ${safeRemarks ? `<tr><td style="padding:6px 12px;border:1px solid #e5e7eb"><strong>Remarks</strong></td><td style="padding:6px 12px;border:1px solid #e5e7eb">${safeRemarks}</td></tr>` : ""}
+  </table>
+</div>`;
 
   return { subject, text, html };
 }
@@ -116,7 +136,10 @@ export class AdvancedNotificationService {
 
   static async saveSettings(payload: SaveSettingsPayload) {
     const settings = await AdvancedNotificationRepository.upsertSettings({
-      notificationEmail: payload.notificationEmail.trim().toLowerCase(),
+      notificationEmails: payload.notificationEmails.map((item) => ({
+        email: item.email.trim().toLowerCase(),
+        isActive: item.isActive,
+      })),
       isEnabled: payload.isEnabled ?? true,
       updatedBy: payload.updatedBy,
     });
@@ -129,15 +152,27 @@ export class AdvancedNotificationService {
       if (!this.shouldNotifyStatus(payload.toStatus)) return;
 
       const settings = await AdvancedNotificationRepository.getSettings();
-      if (!settings?.isEnabled || !settings.notificationEmail) return;
+      if (!settings?.isEnabled) return;
+
+      const activeEmails =
+        settings.notificationEmails?.filter(
+          (emailConfig: NotificationEmail) => emailConfig.isActive
+        ) ?? [];
+
+      if (activeEmails.length === 0) return;
 
       const message = buildClaimTransitionEmail(payload);
-      await SmtpMailService.send({
-        to: settings.notificationEmail,
-        subject: message.subject,
-        text: message.text,
-        html: message.html,
-      });
+
+      await Promise.all(
+        activeEmails.map(({ email }: NotificationEmail) =>
+          SmtpMailService.send({
+            to: email,
+            subject: message.subject,
+            text: message.text,
+            html: message.html,
+          })
+        )
+      );
     } catch (error) {
       logger.error(error, "Failed to send advanced notification email");
     }

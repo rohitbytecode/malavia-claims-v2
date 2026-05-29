@@ -4,17 +4,27 @@ import { AdvancedNotificationDocument } from "../types/advanced-notification.typ
 const advancedNotificationSchema =
   new mongoose.Schema<AdvancedNotificationDocument>(
     {
-      notificationEmail: {
-        type: String,
-        required: true,
-        trim: true,
-        lowercase: true,
-      },
+      notificationEmails: [
+        {
+          email: {
+            type: String,
+            required: true,
+            trim: true,
+            lowercase: true,
+          },
+          isActive: {
+            type: Boolean,
+            default: true,
+          },
+        },
+      ],
+
       isEnabled: {
         type: Boolean,
         default: true,
         index: true,
       },
+
       updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

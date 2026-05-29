@@ -1,7 +1,12 @@
 import { Document, Types } from "mongoose";
 
+export interface NotificationEmail {
+  email: string;
+  isActive: boolean;
+}
+
 export interface AdvancedNotificationDocument extends Document {
-  notificationEmail: string;
+  notificationEmails: NotificationEmail[];
   isEnabled: boolean;
   updatedBy?: Types.ObjectId;
   createdAt: Date;
@@ -10,7 +15,7 @@ export interface AdvancedNotificationDocument extends Document {
 
 export interface AdvancedNotificationResponse {
   id: string;
-  notificationEmail: string;
+  notificationEmails: NotificationEmail[];
   isEnabled: boolean;
   updatedBy?: string | null;
   createdAt?: Date;

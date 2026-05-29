@@ -20,18 +20,32 @@ export const encryptPortalPassword = (password: string) => {
 };
 
 export const decryptPortalPassword = (encrypted: string) => {
-  const [ivHex, encryptedText] = encrypted.split(":");
+  try {
+    if (!encrypted) return "";
 
-  if (!ivHex || !encryptedText) {
+    const parts = encrypted.split(":");
+    if (parts.length !== 2) return "";
+
+    const [ivHex, encryptedHex] = parts;
+    if (!ivHex || !encryptedHex) return "";
+
+    // Basic hex validation (avoid Buffer.from accepting partial/invalid hex)
+    if (!/^[0-9a-fA-F]+$/.test(ivHex) || !/^[0-9a-fA-F]+$/.test(encryptedHex)) {
+      return "";
+    }
+
+    const iv = Buffer.from(ivHex, "hex");
+    if (iv.length !== IV_LENGTH) return "";
+
+    const encryptedBuffer = Buffer.from(encryptedHex, "hex");
+    const decipher = crypto.createDecipheriv(ALGORITHM, KEY, iv);
+
+    return Buffer.concat([
+      decipher.update(encryptedBuffer),
+      decipher.final(),
+    ]).toString("utf8");
+  } catch (e) {
+    // Most common cause: PORTAL_PASSWORD_SECRET changed (ERR_OSSL_BAD_DECRYPT)
     return "";
   }
-
-  const iv = Buffer.from(ivHex, "hex");
-  const encryptedBuffer = Buffer.from(encryptedText, "hex");
-  const decipher = crypto.createDecipheriv(ALGORITHM, KEY, iv);
-
-  return Buffer.concat([
-    decipher.update(encryptedBuffer),
-    decipher.final(),
-  ]).toString("utf8");
 };

@@ -15,7 +15,7 @@ export const authenticate = (
       : "";
 
   if (!token) {
-    throw new AppError("Authorization token missing", 401);
+    return next(new AppError("Authorization token missing", 401));
   }
 
   try {
@@ -26,6 +26,6 @@ export const authenticate = (
     };
     next();
   } catch (error) {
-    throw new AppError("Invalid or expired access token", 401);
+    return next(new AppError("Invalid or expired access token", 401));
   }
 };

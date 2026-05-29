@@ -19,42 +19,82 @@ export function AdvancedNotificationsPage() {
 
   return (
     <AdvancedNotificationsForm
-      initialEmail={query.data?.notificationEmail ?? ""}
+      initialEmails={query.data?.notificationEmails ?? []}
       initialEnabled={query.data?.isEnabled ?? true}
     />
   );
 }
 
+type NotificationEmail = {
+  email: string;
+  isActive: boolean;
+};
+
 function AdvancedNotificationsForm({
-  initialEmail,
+  initialEmails,
   initialEnabled,
 }: {
-  initialEmail: string;
+  initialEmails: NotificationEmail[];
   initialEnabled: boolean;
 }) {
   const currentUser = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
-  const [notificationEmail, setNotificationEmail] = useState(initialEmail);
+  const [notificationEmails, setNotificationEmails] = useState<
+    NotificationEmail[]
+  >(initialEmails.length ? initialEmails : [{ email: "", isActive: true }]);
   const [isEnabled, setIsEnabled] = useState(initialEnabled);
   const [message, setMessage] = useState<string | null>(null);
 
   const save = useMutation({
     mutationFn: () =>
       advancedNotificationApi.save({
-        notificationEmail,
+        notificationEmails,
         isEnabled,
         updatedBy: currentUser?._id,
       }),
+
     onSuccess: (settings) => {
       setMessage("Advanced notification settings saved successfully.");
-      setNotificationEmail(settings.notificationEmail);
+      setNotificationEmails(settings.notificationEmails);
       setIsEnabled(settings.isEnabled);
       queryClient.setQueryData(["advanced-notifications"], settings);
     },
+
     onError: () => {
       setMessage(null);
     },
   });
+
+  const addEmail = () => {
+    setNotificationEmails((prev) => [
+      ...prev,
+      {
+        email: "",
+        isActive: true,
+      },
+    ]);
+  };
+
+  const removeEmail = (index: number) => {
+    setNotificationEmails((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateEmail = (
+    index: number,
+    field: "email" | "isActive",
+    value: string | boolean
+  ) => {
+    setNotificationEmails((prev) =>
+      prev.map((item, i) =>
+        i === index
+          ? {
+              ...item,
+              [field]: value,
+            }
+          : item
+      )
+    );
+  };
 
   return (
     <div className="page-stack">
@@ -105,14 +145,66 @@ function AdvancedNotificationsForm({
 
             {save.isError && <ErrorPanel error={save.error} />}
 
-            <Field label="Notification email">
-              <TextInput
-                required
-                type="email"
-                placeholder="superadmin@example.com"
-                value={notificationEmail}
-                onChange={(event) => setNotificationEmail(event.target.value)}
-              />
+            <Field label="Notification Emails">
+              <div
+                style={{
+                  display: "grid",
+                  gap: "12px",
+                }}
+              >
+                {notificationEmails.map((item, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr auto auto",
+                      gap: "12px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <TextInput
+                      required
+                      type="email"
+                      placeholder="superadmin@example.com"
+                      value={item.email}
+                      onChange={(event) =>
+                        updateEmail(index, "email", event.target.value)
+                      }
+                    />
+
+                    <label
+                      style={{
+                        display: "flex",
+                        gap: "6px",
+                        alignItems: "center",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={item.isActive}
+                        onChange={(event) =>
+                          updateEmail(index, "isActive", event.target.checked)
+                        }
+                      />
+                      Active
+                    </label>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => removeEmail(index)}
+                      disabled={notificationEmails.length === 1}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+
+                <Button type="button" variant="secondary" onClick={addEmail}>
+                  Add Email
+                </Button>
+              </div>
             </Field>
 
             <label
@@ -133,7 +225,7 @@ function AdvancedNotificationsForm({
 
             <div className="chip-cloud">
               <Button disabled={save.isPending}>
-                {save.isPending ? "Saving..." : "Save notification email"}
+                {save.isPending ? "Saving..." : "Save notification emails"}
               </Button>
             </div>
           </form>
@@ -160,8 +252,8 @@ function AdvancedNotificationsForm({
               </div>
             ))}
             <p style={{ margin: 0, color: "var(--text-muted)" }}>
-              The configured email is used exactly as entered in this Super
-              Admin panel whenever one of these statuses is recorded.
+              All active emails will receive notifications whenever one of these
+              claim milestones is reached.
             </p>
           </div>
         </Card>

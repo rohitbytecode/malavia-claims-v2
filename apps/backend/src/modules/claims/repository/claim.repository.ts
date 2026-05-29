@@ -103,6 +103,7 @@ export class ClaimRepository {
       new: true,
     })
       .populate("insuranceCompanyId")
+      .populate("patientId")
       .populate("departmentId")
       .populate("doctorId")
       .populate("createdBy")
