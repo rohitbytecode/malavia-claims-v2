@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { connectDatabase } from "@/config/db.js";
 import { logger } from "@/config/logger.js";
 import { UserModel } from "@/modules/users/schema/user.schema.js";

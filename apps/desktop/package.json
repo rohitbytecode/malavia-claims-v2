@@ -31,12 +31,37 @@
     ],
     "extraResources": [
       {
-        "from": "../backend/dist",
-        "to": "apps/backend/dist"
+        "from": "../backend/dist/server.bundle.js",
+        "to": "apps/backend/dist/server.bundle.js"
+      },
+      {
+        "from": "../backend/.env",
+        "to": "apps/backend/.env"
       },
       {
         "from": "../frontend/dist",
         "to": "apps/frontend/dist"
+      },
+      {
+        "from": "../backend/node_modules",
+        "to": "apps/backend/node_modules",
+        "filter": [
+          "!**/backend/**",
+          "!**/@types/**",
+          "!**/mongodb-memory-server/**",
+          "!**/vitest/**",
+          "!**/eslint/**",
+          "!**/@vitest/**",
+          "!**/typescript/**",
+          "!**/esbuild/**",
+          "!**/tsx/**",
+          "!**/nodemon/**",
+          "!**/prettier/**",
+          "!**/supertest/**",
+          "!**/tsc-alias/**",
+          "!**/typescript-eslint/**",
+          "!**/pm2/**"
+        ]
       }
     ],
     "asar": true,

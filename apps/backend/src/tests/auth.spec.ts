@@ -1,7 +1,7 @@
 import request from "supertest";
 import app from "@/app.js";
 import { UserModel } from "@/modules/users/schema/user.schema.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { Roles } from "@/core/enums/roles.enum.js";
 
 describe("Auth Endpoints", () => {

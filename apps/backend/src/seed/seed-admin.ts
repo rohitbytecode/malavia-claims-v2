@@ -3,7 +3,7 @@ import { UserModel } from "../modules/users/schema/user.schema.js";
 import { Roles } from "../core/enums/roles.enum.js";
 import { logger } from "../config/logger.js";
 import { connectDatabase } from "../config/db.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 const seedAdmin = async () => {
   try {
