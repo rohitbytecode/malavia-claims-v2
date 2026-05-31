@@ -31,8 +31,12 @@
     ],
     "extraResources": [
       {
-        "from": "../backend/dist/server.bundle.js",
-        "to": "apps/backend/dist/server.bundle.js"
+        "from": "../backend/dist/server.bundle.cjs",
+        "to": "apps/backend/dist/server.bundle.cjs"
+      },
+      {
+        "from": "../backend/cert",
+        "to": "apps/backend/cert"
       },
       {
         "from": "../backend/.env",

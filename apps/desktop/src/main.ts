@@ -4,6 +4,28 @@ import fs from "node:fs";
 import http from "node:http";
 import { spawn, type ChildProcess } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import net from "node:net";
+import { execSync } from "node:child_process";
+
+app.on(
+  "certificate-error",
+  (event, _webContents, _url, _error, _cert, callback) => {
+    event.preventDefault();
+    callback(true);
+  }
+);
+
+function getNodePath(): string {
+  try {
+    const nodePath = execSync("where node", { encoding: "utf-8" })
+      .trim()
+      .split("\n")[0]
+      .trim();
+    return nodePath;
+  } catch {
+    return "node";
+  }
+}
 
 const gotLock = app.requestSingleInstanceLock();
 
@@ -37,7 +59,7 @@ function getBackendEntry(): string {
     "apps",
     "backend",
     "dist",
-    "server.bundle.js"
+    "server.bundle.cjs"
   );
 }
 
@@ -126,9 +148,10 @@ async function startBackendIfNeeded(): Promise<void> {
 
   const backendDir = path.join(getProjectRoot(), "apps", "backend");
   const dotenvPath = path.join(backendDir, ".env");
+  const logPath = path.join(app.getPath("userData"), "backend.log");
 
   fs.appendFileSync(
-    path.join(app.getPath("userData"), "backend.log"),
+    logPath,
     `\nbackendDir: ${backendDir}\ndotenvPath: ${dotenvPath}\nexists: ${fs.existsSync(dotenvPath)}\nbackendEntry: ${backendEntry}\n`
   );
 
@@ -153,61 +176,61 @@ async function startBackendIfNeeded(): Promise<void> {
     MONGO_URI: dotenv.MONGO_URI ?? "mongodb://localhost:27017/hicms-prod",
   };
 
-  backendProc = spawn(process.execPath, [backendEntry], {
+  // Kill any existing process on port 3443
+  try {
+    const { execFileSync } = await import("node:child_process");
+    const result = execFileSync("netstat", ["-ano"]).toString();
+    const lines = result
+      .split("\n")
+      .filter((l) => l.includes(":3443") && l.includes("LISTENING"));
+    for (const line of lines) {
+      const pid = line.trim().split(/\s+/).pop();
+      if (pid && pid !== "0") {
+        execFileSync("taskkill", ["/PID", pid, "/F"]);
+        fs.appendFileSync(logPath, `\nKilled PID ${pid} on port 3443\n`);
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  backendProc = spawn(getNodePath(), [backendEntry], {
     cwd: path.join(getProjectRoot(), "apps", "backend"),
     env,
     stdio: ["ignore", "pipe", "pipe"],
   });
 
-  const logPath = path.join(app.getPath("userData"), "backend.log");
-  const logSteam = fs.createWriteStream(logPath, { flags: "a" });
+  const logStream = fs.createWriteStream(logPath, { flags: "a" });
 
-  backendProc.stdout?.pipe(logSteam);
-  backendProc.stderr?.pipe(logSteam);
+  backendProc.stdout?.pipe(logStream);
+  backendProc.stderr?.pipe(logStream);
 
   backendProc.on("exit", (code) => {
     fs.appendFileSync(logPath, `\nBackend exited with code: ${code}\n`);
   });
 
-  const backendPort = parseInt(process.env.PORT ?? "3443", 10);
-
-  const https = await import("node:https");
+  const backendPort = 3443;
 
   const requestOnce = (): Promise<boolean> => {
     return new Promise((resolve) => {
-      const req = https.request(
-        {
-          method: "GET",
-          hostname: "127.0.0.1",
-          port: backendPort,
-          path: "/health",
-          rejectUnauthorized: false,
-          timeout: 2000,
-        },
-        (res) => {
-          const ok =
-            typeof res.statusCode === "number" &&
-            res.statusCode >= 200 &&
-            res.statusCode < 400;
-          resolve(ok);
-          res.resume();
-        }
-      );
-
-      req.on("error", () => resolve(false));
-      req.on("timeout", () => {
-        req.destroy();
+      const socket = new net.Socket();
+      socket.setTimeout(2000);
+      socket.on("connect", () => {
+        socket.destroy();
+        resolve(true);
+      });
+      socket.on("error", () => resolve(false));
+      socket.on("timeout", () => {
+        socket.destroy();
         resolve(false);
       });
-
-      req.end();
+      socket.connect(backendPort, "127.0.0.1");
     });
   };
 
   const timeoutMs = 60_000;
   const start = Date.now();
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const ok = await requestOnce();
     if (ok) return;
@@ -230,11 +253,6 @@ function createWindow(port: number) {
   const win = new BrowserWindow({
     width: 1400,
     height: 900,
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
   });
 
   mainWindow = win;

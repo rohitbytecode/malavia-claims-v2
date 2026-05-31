@@ -5,18 +5,15 @@ await esbuild.build({
   bundle: true,
   platform: "node",
   target: "node22",
-  outfile: "dist/server.bundle.js",
-  format: "esm",
+  outfile: "dist/server.bundle.cjs",
+  format: "cjs",
   external: ["bcryptjs", "pino", "pino-http", "pino-pretty", "thread-stream"],
   banner: {
-    js: `
-      import { createRequire } from 'module';
-      import { fileURLToPath } from 'url';
-      import { dirname } from 'path';
-      const require = createRequire(import.meta.url);
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = dirname(__filename);
-    `,
+    js: `const __importMetaUrl = require('url').pathToFileURL(__filename).href;`,
+  },
+  define: {
+    "import.meta.url": "__importMetaUrl",
+    "import_meta.url": "__importMetaUrl",
   },
 });
 
