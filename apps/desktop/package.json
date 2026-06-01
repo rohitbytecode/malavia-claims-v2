@@ -22,13 +22,26 @@
   "build": {
     "appId": "com.claimmanagement.desktop",
     "productName": "Claim Management",
+    "icon": "assets/icon.ico",
     "directories": {
       "output": "dist"
     },
     "files": [
       "dist/**/*",
-      "package.json"
+      "package.json",
+      "assets/**/*"
     ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
     "extraResources": [
       {
         "from": "../backend/dist/server.bundle.cjs",

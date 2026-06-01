@@ -5,7 +5,7 @@ import http from "node:http";
 import { spawn, type ChildProcess } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import net from "node:net";
-import { execSync } from "node:child_process";
+//import { execSync } from "node:child_process";
 
 app.on(
   "certificate-error",
@@ -15,17 +15,17 @@ app.on(
   }
 );
 
-function getNodePath(): string {
-  try {
-    const nodePath = execSync("where node", { encoding: "utf-8" })
-      .trim()
-      .split("\n")[0]
-      .trim();
-    return nodePath;
-  } catch {
-    return "node";
-  }
-}
+// function getNodePath(): string {
+//   try {
+//     const nodePath = execSync("where node", { encoding: "utf-8" })
+//       .trim()
+//       .split("\n")[0]
+//       .trim();
+//     return nodePath;
+//   } catch {
+//     return "node";
+//   }
+// }
 
 const gotLock = app.requestSingleInstanceLock();
 
@@ -194,9 +194,12 @@ async function startBackendIfNeeded(): Promise<void> {
     // ignore
   }
 
-  backendProc = spawn(getNodePath(), [backendEntry], {
+  backendProc = spawn(process.execPath, [backendEntry], {
     cwd: path.join(getProjectRoot(), "apps", "backend"),
-    env,
+    env: {
+      ...env,
+      ELECTRON_RUN_AS_NODE: "1",
+    },
     stdio: ["ignore", "pipe", "pipe"],
   });
 
@@ -253,6 +256,11 @@ function createWindow(port: number) {
   const win = new BrowserWindow({
     width: 1400,
     height: 900,
+    icon: path.join(__dirname, "..", "assets", "icon.ico"),
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,   
+    },
   });
 
   mainWindow = win;
