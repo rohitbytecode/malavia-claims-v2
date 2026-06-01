@@ -6,7 +6,7 @@
   "main": "dist/main.js",
   "scripts": {
     "dev": "electron .",
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node -e \"require('fs').cpSync('assets', 'dist/assets', {recursive: true})\"",
     "package": "pnpm build && electron-builder --win --x64",
     "lint": "echo \"(todo)\""
   },
@@ -22,15 +22,31 @@
   "build": {
     "appId": "com.claimmanagement.desktop",
     "productName": "Claim Management",
-    "icon": "assets/icon.ico",
+    "icon": "assets/logo.ico",
+    "asar": true,
+    "asarUnpack": [
+      "assets/**/*"
+    ],
     "directories": {
-      "output": "dist"
+      "output": "release",
+      "buildResources": "assets"
     },
     "files": [
       "dist/**/*",
       "package.json",
       "assets/**/*"
     ],
+    "win": {
+      "icon": "assets/logo.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
     "extraResources": [
       {
         "from": "../backend/dist/server.bundle.cjs",
@@ -69,16 +85,6 @@
           "!**/pm2/**"
         ]
       }
-    ],
-    "asar": true,
-    "win": {
-      "icon": "assets/icon.ico",
-      "target": [
-        {
-          "target": "nsis",
-          "arch": ["x64"]
-        }
-      ]
-    }
+    ]
   }
 }

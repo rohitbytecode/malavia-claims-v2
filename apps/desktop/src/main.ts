@@ -5,6 +5,8 @@ import http from "node:http";
 import { spawn, type ChildProcess } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import net from "node:net";
+import os from "node:os";
+
 //import { execSync } from "node:child_process";
 
 app.on(
@@ -14,6 +16,18 @@ app.on(
     callback(true);
   }
 );
+
+function getIconPath(): string {
+  if (app.isPackaged) {
+    return path.join(
+      process.resourcesPath,
+      "app.asar.unpacked",
+      "assets",
+      "logo.ico"
+    );
+  }
+  return path.join(__dirname, "..", "assets", "logo.ico");
+}
 
 // function getNodePath(): string {
 //   try {
@@ -73,6 +87,30 @@ function ensureFileExists(filePath: string, label: string) {
   }
 }
 
+function getLanIp(): string {
+  const interfaces = os.networkInterfaces();
+  for (const iface of Object.values(interfaces)) {
+    if (!iface) continue;
+    for (const addr of iface) {
+      if (addr.family === "IPv4" && !addr.internal) {
+        return addr.address;
+      }
+    }
+  }
+  return "127.0.0.1";
+}
+
+function writeRuntimeConfig(distDir: string, ip: string) {
+  const config = {
+    apiBaseUrl: `https://${ip}:3443/api/v1`,
+    socketUrl: `https://${ip}:3443`,
+  };
+  fs.writeFileSync(
+    path.join(distDir, "config.json"),
+    JSON.stringify(config, null, 2)
+  );
+}
+
 function startFrontendServer(distDir: string, port: number): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
@@ -124,7 +162,7 @@ function startFrontendServer(distDir: string, port: number): Promise<number> {
     });
 
     // Replace with:
-    server.listen(port, "127.0.0.1", () => {
+    server.listen(port, "0.0.0.0", () => {
       frontendServer = server;
       resolve(port);
     });
@@ -256,10 +294,10 @@ function createWindow(port: number) {
   const win = new BrowserWindow({
     width: 1400,
     height: 900,
-    icon: path.join(__dirname, "..", "assets", "icon.ico"),
+    icon: getIconPath(),
     webPreferences: {
       contextIsolation: true,
-      nodeIntegration: false,   
+      nodeIntegration: false,
     },
   });
 
@@ -280,6 +318,9 @@ app.whenReady().then(async () => {
       path.join(distDir, "index.html"),
       "Frontend dist/index.html"
     );
+
+    const lanIp = getLanIp();
+    writeRuntimeConfig(distDir, lanIp);
 
     const actualPort = await startFrontendServer(distDir, 49200);
     currentPort = actualPort;
