@@ -180,32 +180,85 @@ function startFrontendServer(distDir: string, port: number): Promise<number> {
   });
 }
 
-async function startBackendIfNeeded(): Promise<void> {
+function detectConfig(dotenv: Record<string, string>): { isClient: boolean; remoteHost: string | null } {
+  let isClient = false;
+  let remoteHost: string | null = null;
+
+  // 1. Check environment variables
+  if (process.env.IS_CLIENT === "true" || process.env.REMOTE_HOST || process.env.HOST_IP) {
+    isClient = true;
+    remoteHost = process.env.REMOTE_HOST || process.env.HOST_IP || null;
+  }
+
+  // 2. Check backend's .env file
+  if (dotenv.IS_CLIENT === "true" || dotenv.REMOTE_HOST || dotenv.HOST_IP) {
+    isClient = true;
+    if (!remoteHost) {
+      remoteHost = dotenv.REMOTE_HOST || dotenv.HOST_IP || null;
+    }
+  }
+
+  // 3. Check desktop-config.json in AppData / userData directory
+  try {
+    const userDataPath = path.join(app.getPath("userData"), "desktop-config.json");
+    if (fs.existsSync(userDataPath)) {
+      const config = JSON.parse(fs.readFileSync(userDataPath, "utf-8"));
+      if (config.isClient === true || config.isClient === "true") {
+        isClient = true;
+      }
+      if (config.remoteHost || config.hostIp) {
+        remoteHost = config.remoteHost || config.hostIp;
+        isClient = true;
+      }
+    }
+  } catch (err) {
+    // ignore
+  }
+
+  // 4. Check desktop-config.json in the executable directory
+  try {
+    const exeDir = path.dirname(app.getPath("exe"));
+    const exeConfigPath = path.join(exeDir, "desktop-config.json");
+    if (fs.existsSync(exeConfigPath)) {
+      const config = JSON.parse(fs.readFileSync(exeConfigPath, "utf-8"));
+      if (config.isClient === true || config.isClient === "true") {
+        isClient = true;
+      }
+      if (config.remoteHost || config.hostIp) {
+        remoteHost = config.remoteHost || config.hostIp;
+        isClient = true;
+      }
+    }
+  } catch (err) {
+    // ignore
+  }
+
+  return { isClient, remoteHost };
+}
+
+async function startBackendIfNeeded(
+  isClient: boolean,
+  logPath: string,
+  dotenv: Record<string, string>,
+  dotenvPath: string
+): Promise<void> {
+  if (isClient) {
+    fs.appendFileSync(
+      logPath,
+      `\n[Backend] Skipping local backend startup (Client Mode active)\n`
+    );
+    return;
+  }
+
   const backendEntry = getBackendEntry();
   ensureFileExists(backendEntry, "Backend dist/server.js");
 
   const backendDir = path.join(getProjectRoot(), "apps", "backend");
-  const dotenvPath = path.join(backendDir, ".env");
-  const logPath = path.join(app.getPath("userData"), "backend.log");
 
   fs.appendFileSync(
     logPath,
     `\nbackendDir: ${backendDir}\ndotenvPath: ${dotenvPath}\nexists: ${fs.existsSync(dotenvPath)}\nbackendEntry: ${backendEntry}\n`
   );
-
-  const dotenv: Record<string, string> = {};
-  if (fs.existsSync(dotenvPath)) {
-    const lines = fs.readFileSync(dotenvPath, "utf-8").split("\n");
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith("#")) continue;
-      const eq = trimmed.indexOf("=");
-      if (eq === -1) continue;
-      const key = trimmed.slice(0, eq).trim();
-      const val = trimmed.slice(eq + 1).trim();
-      dotenv[key] = val;
-    }
-  }
 
   const env = {
     ...dotenv,
@@ -319,12 +372,55 @@ app.whenReady().then(async () => {
       "Frontend dist/index.html"
     );
 
-    const lanIp = getLanIp();
-    writeRuntimeConfig(distDir, lanIp);
+    const backendDir = path.join(getProjectRoot(), "apps", "backend");
+    const dotenvPath = path.join(backendDir, ".env");
+    const logPath = path.join(app.getPath("userData"), "backend.log");
+
+    const dotenv: Record<string, string> = {};
+    if (fs.existsSync(dotenvPath)) {
+      const lines = fs.readFileSync(dotenvPath, "utf-8").split("\n");
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eq = trimmed.indexOf("=");
+        if (eq === -1) continue;
+        const key = trimmed.slice(0, eq).trim();
+        const val = trimmed.slice(eq + 1).trim();
+        dotenv[key] = val;
+      }
+    }
+
+    const config = detectConfig(dotenv);
+
+    fs.appendFileSync(
+      logPath,
+      `\n[Startup] Detected configuration: isClient=${config.isClient}, remoteHost=${config.remoteHost}\n`
+    );
+
+    let targetHost: string;
+    if (config.isClient) {
+      if (!config.remoteHost) {
+        throw new Error(
+          "Client mode is enabled, but no 'remoteHost' or 'hostIp' was configured.\n\n" +
+          "Please create a 'desktop-config.json' file in the application directory (next to the .exe) or in your UserData folder:\n" +
+          `${app.getPath("userData")}\n\n` +
+          "With the following content:\n" +
+          "{\n" +
+          '  "isClient": true,\n' +
+          '  "remoteHost": "192.168.1.X" (replace with the Host PC\'s IP address)\n' +
+          "}"
+        );
+      }
+      targetHost = config.remoteHost;
+    } else {
+      targetHost = getLanIp();
+    }
+
+    writeRuntimeConfig(distDir, targetHost);
 
     const actualPort = await startFrontendServer(distDir, 49200);
     currentPort = actualPort;
-    await startBackendIfNeeded();
+    await startBackendIfNeeded(config.isClient, logPath, dotenv, dotenvPath);
     createWindow(actualPort);
   } catch (err) {
     console.error(err);

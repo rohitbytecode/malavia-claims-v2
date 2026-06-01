@@ -1,14 +1,26 @@
 import axios, { AxiosError, type AxiosRequestConfig } from "axios";
 import { useAuthStore } from "../store/auth.store";
 import type { ApiResponse, AuthTokens } from "../types/domain";
+import { getRuntimeConfig } from "../lib/config";
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? "/api/v1",
+  baseURL: (() => {
+    try {
+      return getRuntimeConfig().apiBaseUrl;
+    } catch {
+      return import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
+    }
+  })(),
   headers: { "Content-Type": "application/json" },
   timeout: 20_000,
 });
 
 apiClient.interceptors.request.use((config) => {
+  try {
+    config.baseURL = getRuntimeConfig().apiBaseUrl;
+  } catch {
+    // Ignore and use default
+  }
   const token = useAuthStore.getState().accessToken;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
@@ -53,9 +65,16 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
     original._retry = true;
+    const baseURL = (() => {
+      try {
+        return getRuntimeConfig().apiBaseUrl;
+      } catch {
+        return apiClient.defaults.baseURL ?? "/api/v1";
+      }
+    })();
     refreshRequest ??= axios
       .post<ApiResponse<AuthTokens>>(
-        `${apiClient.defaults.baseURL}/auth/refresh`,
+        `${baseURL}/auth/refresh`,
         { refreshToken }
       )
       .then((res) => res.data.data)
