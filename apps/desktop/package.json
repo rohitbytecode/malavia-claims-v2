@@ -31,17 +31,6 @@
       "package.json",
       "assets/**/*"
     ],
-    "win": {
-      "icon": "assets/icon.ico",
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
-    },
     "extraResources": [
       {
         "from": "../backend/dist/server.bundle.cjs",
@@ -83,12 +72,11 @@
     ],
     "asar": true,
     "win": {
+      "icon": "assets/icon.ico",
       "target": [
         {
           "target": "nsis",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
         }
       ]
     }
