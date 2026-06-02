@@ -6,7 +6,7 @@ release/
 dist
 build
 coverage
-
+release*/
 # env
 .env
 .env.local
