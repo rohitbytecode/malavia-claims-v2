@@ -2,12 +2,12 @@ import { app, BrowserWindow, dialog } from "electron";
 import path from "node:path";
 import fs from "node:fs";
 import http from "node:http";
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn, execSync, type ChildProcess } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import net from "node:net";
 import os from "node:os";
 
-//import { execSync } from "node:child_process";
+
 
 app.on(
   "certificate-error",
@@ -29,17 +29,6 @@ function getIconPath(): string {
   return path.join(__dirname, "..", "assets", "logo.ico");
 }
 
-// function getNodePath(): string {
-//   try {
-//     const nodePath = execSync("where node", { encoding: "utf-8" })
-//       .trim()
-//       .split("\n")[0]
-//       .trim();
-//     return nodePath;
-//   } catch {
-//     return "node";
-//   }
-// }
 
 const gotLock = app.requestSingleInstanceLock();
 
@@ -161,7 +150,6 @@ function startFrontendServer(distDir: string, port: number): Promise<number> {
       });
     });
 
-    // Replace with:
     server.listen(port, "0.0.0.0", () => {
       frontendServer = server;
       resolve(port);
@@ -180,17 +168,52 @@ function startFrontendServer(distDir: string, port: number): Promise<number> {
   });
 }
 
+function resolveExeUncPath(): string | null {
+  const exePath = app.getPath("exe");
+
+  if (exePath.startsWith("\\\\")) {
+    return exePath;
+  }
+
+  const driveLetter = exePath.slice(0, 2);
+  try {
+    const output = execSync(`net use ${driveLetter}`, { encoding: "utf-8" });
+    const match = output.match(/Remote name\s+(\\\\[^\s]+)/i);
+    if (match) {
+      const uncRoot = match[1];
+      const relativePath = exePath.slice(2);
+      return uncRoot + relativePath;
+    }
+  } catch {
+  }
+
+  return null;
+}
+
+function extractHostnameFromUnc(uncPath: string): string | null {
+  const match = uncPath.match(/^\\\\([^\\]+)/);
+  return match ? match[1] : null;
+}
+
 function detectConfig(dotenv: Record<string, string>): { isClient: boolean; remoteHost: string | null } {
   let isClient = false;
   let remoteHost: string | null = null;
 
-  // 1. Check environment variables
+  const uncPath = resolveExeUncPath();
+  if (uncPath) {
+    const hostFromPath = extractHostnameFromUnc(uncPath);
+    if (hostFromPath) {
+      isClient = true;
+      remoteHost = hostFromPath;
+      return { isClient, remoteHost };
+    }
+  }
+
   if (process.env.IS_CLIENT === "true" || process.env.REMOTE_HOST || process.env.HOST_IP) {
     isClient = true;
     remoteHost = process.env.REMOTE_HOST || process.env.HOST_IP || null;
   }
 
-  // 2. Check backend's .env file
   if (dotenv.IS_CLIENT === "true" || dotenv.REMOTE_HOST || dotenv.HOST_IP) {
     isClient = true;
     if (!remoteHost) {
@@ -198,7 +221,6 @@ function detectConfig(dotenv: Record<string, string>): { isClient: boolean; remo
     }
   }
 
-  // 3. Check desktop-config.json in AppData / userData directory
   try {
     const userDataPath = path.join(app.getPath("userData"), "desktop-config.json");
     if (fs.existsSync(userDataPath)) {
@@ -212,10 +234,8 @@ function detectConfig(dotenv: Record<string, string>): { isClient: boolean; remo
       }
     }
   } catch (err) {
-    // ignore
   }
 
-  // 4. Check desktop-config.json in the executable directory
   try {
     const exeDir = path.dirname(app.getPath("exe"));
     const exeConfigPath = path.join(exeDir, "desktop-config.json");
@@ -230,7 +250,6 @@ function detectConfig(dotenv: Record<string, string>): { isClient: boolean; remo
       }
     }
   } catch (err) {
-    // ignore
   }
 
   return { isClient, remoteHost };
@@ -267,7 +286,6 @@ async function startBackendIfNeeded(
     MONGO_URI: dotenv.MONGO_URI ?? "mongodb://localhost:27017/hicms-prod",
   };
 
-  // Kill any existing process on port 3443
   try {
     const { execFileSync } = await import("node:child_process");
     const result = execFileSync("netstat", ["-ano"]).toString();
@@ -392,28 +410,29 @@ app.whenReady().then(async () => {
 
     const config = detectConfig(dotenv);
 
+    const uncPath = resolveExeUncPath();
     fs.appendFileSync(
       logPath,
-      `\n[Startup] Detected configuration: isClient=${config.isClient}, remoteHost=${config.remoteHost}\n`
+      `\n[Startup] Detected configuration: isClient=${config.isClient}, remoteHost=${config.remoteHost}, hostname=${os.hostname()}, lanIp=${getLanIp()}, exePath=${app.getPath("exe")}, uncPath=${uncPath ?? "(local)"}\n`
     );
 
     let targetHost: string;
     if (config.isClient) {
       if (!config.remoteHost) {
         throw new Error(
-          "Client mode is enabled, but no 'remoteHost' or 'hostIp' was configured.\n\n" +
-          "Please create a 'desktop-config.json' file in the application directory (next to the .exe) or in your UserData folder:\n" +
-          `${app.getPath("userData")}\n\n` +
-          "With the following content:\n" +
+          "Client mode is detected, but could not determine the host.\n\n" +
+          "This can happen if the app is not running from a network shared folder.\n" +
+          "Please ensure the app is accessed via a network path (e.g. \\\\HOSTNAME\\share).\n\n" +
+          "Alternatively, create a 'desktop-config.json' next to the .exe with:\n" +
           "{\n" +
           '  "isClient": true,\n' +
-          '  "remoteHost": "192.168.1.X" (replace with the Host PC\'s IP address)\n' +
+          '  "remoteHost": "HOSTNAME"\n' +
           "}"
         );
       }
       targetHost = config.remoteHost;
     } else {
-      targetHost = getLanIp();
+      targetHost = os.hostname();
     }
 
     writeRuntimeConfig(distDir, targetHost);
