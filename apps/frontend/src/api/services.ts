@@ -477,3 +477,33 @@ export const payerContractApi = {
   remove: (id: string) =>
     unwrap<void>(apiClient.delete(`/payer-contracts/${id}`)),
 };
+
+export const pastRecordsApi = {
+  import: (body: {
+    patientId: string;
+    patientName: string;
+    insurerId?: string;
+    insuranceCompanyName?: string;
+    claimNumber: string;
+    claimType: string;
+    claimStatus: string;
+    claimDate?: string;
+    departmentName?: string;
+    doctorName?: string;
+    totalClaimAmount: number;
+    tdsAmount?: number;
+    deductions?: number;
+    hospitalDiscount?: number;
+    depositAmount?: number;
+    refundAmount?: number;
+    remarks?: string;
+
+    settlementMethod?: string;
+    settlementDate?: string;
+    totalCompanyDiscount?: number;
+    totalVendorPayout?: number;
+    hospitalNetShare?: number;
+    refundStatus?: string;
+    departmentBreakdown?: any[];
+  }) => unwrap<Claim>(apiClient.post("/past-records", body)),
+};

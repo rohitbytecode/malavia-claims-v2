@@ -9,10 +9,27 @@ export class ReportService {
     return ClaimModel.aggregate([
       { $match: matchStage },
       {
+        $lookup: {
+          from: "settlements",
+          localField: "_id",
+          foreignField: "claimId",
+          as: "settlement",
+        },
+      },
+      { $unwind: { path: "$settlement", preserveNullAndEmptyArrays: true } },
+      {
         $group: {
           _id: "$status",
           count: { $sum: 1 },
-          totalAmount: { $sum: "$totalClaimAmount" },
+          totalAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", "SETTLED"] },
+                { $ifNull: ["$settlement.netPayable", "$totalClaimAmount"] },
+                "$totalClaimAmount",
+              ],
+            },
+          },
         },
       },
     ]);
@@ -33,7 +50,15 @@ export class ReportService {
         $group: {
           _id: "$insuranceCompanyId",
           totalClaims: { $sum: 1 },
-          totalClaimAmount: { $sum: "$totalClaimAmount" },
+          totalClaimAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", "SETTLED"] },
+                { $ifNull: [{ $arrayElemAt: ["$settlement.netPayable", 0] }, "$totalClaimAmount"] },
+                "$totalClaimAmount",
+              ],
+            },
+          },
           settledClaims: {
             $sum: {
               $cond: [
@@ -97,10 +122,27 @@ export class ReportService {
     const summary = await ClaimModel.aggregate([
       { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
       {
+        $lookup: {
+          from: "settlements",
+          localField: "_id",
+          foreignField: "claimId",
+          as: "settlement",
+        },
+      },
+      { $unwind: { path: "$settlement", preserveNullAndEmptyArrays: true } },
+      {
         $group: {
           _id: "$status",
           count: { $sum: 1 },
-          totalAmount: { $sum: "$totalClaimAmount" },
+          totalAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", "SETTLED"] },
+                { $ifNull: ["$settlement.netPayable", "$totalClaimAmount"] },
+                "$totalClaimAmount",
+              ],
+            },
+          },
         },
       },
     ]);
@@ -117,6 +159,16 @@ export class ReportService {
         },
       },
       { $unwind: { path: "$patient", preserveNullAndEmptyArrays: true } },
+
+      {
+        $lookup: {
+          from: "settlements",
+          localField: "_id",
+          foreignField: "claimId",
+          as: "settlement",
+        },
+      },
+      { $unwind: { path: "$settlement", preserveNullAndEmptyArrays: true } },
 
       {
         $project: {
@@ -151,7 +203,7 @@ export class ReportService {
           totalClaimAmount: { $ifNull: ["$totalClaimAmount", 0] },
           depositAmount: "$depositAmount",
           approvedAmount: "$approvedAmount",
-          settledAmount: "$settledAmount",
+          settledAmount: { $ifNull: ["$settlement.netPayable", null] },
           tdsAmount: "$tdsAmount",
           hospitalDiscount: "$hospitalDiscount",
           billBreakdown: { $ifNull: ["$billBreakdown", []] },
@@ -169,7 +221,7 @@ export class ReportService {
       detailedClaims,
       totalClaims: detailedClaims.length,
       totalAmount: detailedClaims.reduce(
-        (sum, c) => sum + (c.totalClaimAmount || 0),
+        (sum, c) => sum + (c.status === "SETTLED" && c.settledAmount !== null ? c.settledAmount : (c.totalClaimAmount || 0)),
         0
       ),
     };

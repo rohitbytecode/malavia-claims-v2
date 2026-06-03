@@ -11,6 +11,7 @@
     "seed": "tsx -r tsconfig-paths/register src/seed/seed.ts",
     "seed:alerts": "tsx -r tsconfig-paths/register src/seed/seed-test-alerts.ts",
     "seed:admin": "tsx -r tsconfig-paths/register src/seed/seed-admin.ts",
+    "seed:past-records": "tsx -r tsconfig-paths/register src/seed/seed-past-records.ts",
     "test": "vitest run",
     "lint": "eslint ."
   },

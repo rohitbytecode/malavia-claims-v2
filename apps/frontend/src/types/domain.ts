@@ -162,6 +162,7 @@ export interface Claim {
   doctorId?: string;
   doctor?: Doctor | string | null;
   totalClaimAmount: number;
+  settledAmount?: number | null;
   tdsAmount?: number;
   deductions?: number;
   hospitalDiscount?: number;

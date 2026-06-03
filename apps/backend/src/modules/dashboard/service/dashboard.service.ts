@@ -69,7 +69,19 @@ export class DashboardService {
 
     const totalSettledResult = await SettlementModel.aggregate([
       { $match: { settlementDate: { $gte: startOfYear, $lte: endOfYear } } },
-      { $group: { _id: null, total: { $sum: "$approvedAmount" } } },
+      {
+        $group: {
+          _id: null,
+          total: {
+            $sum: {
+              $add: [
+                { $ifNull: ["$netPayable", 0] },
+                { $ifNull: ["$tds", 0] },
+              ],
+            },
+          },
+        },
+      },
     ]);
     const totalSettledAmount =
       totalSettledResult.length > 0 ? totalSettledResult[0].total : 0;

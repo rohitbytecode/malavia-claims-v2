@@ -14,6 +14,7 @@ import { RefundStatus } from "@/modules/deposits/constant/refund-status.enum.js"
 import { NotificationService } from "@/modules/notifications/service/notification.service.js";
 import { AdvancedNotificationService } from "@/modules/advanced-notifications/service/advanced-notification.service.js";
 import { UserModel } from "@/modules/users/schema/user.schema.js";
+import { SettlementModel } from "@/modules/settlements/schema/settlement.schema.js";
 
 interface CreateClaimPayload {
   type: ClaimType;
@@ -89,6 +90,13 @@ export class ClaimService {
       throw new AppError("Claim not found", 404);
     }
 
+    if (claim.status === ClaimStatus.SETTLED) {
+      const settlement = await SettlementModel.findOne({ claimId: claim._id }).lean();
+      if (settlement) {
+        (claim as any).settledAmount = settlement.netPayable;
+      }
+    }
+
     return toClaimResponse(claim);
   }
 
@@ -107,6 +115,31 @@ export class ClaimService {
       ClaimRepository.findClaims(filter, page, limit),
       ClaimRepository.countClaims(filter),
     ]);
+
+    // Attach settledAmount if status is SETTLED
+    const settledClaimIds = claims
+      .filter((c) => c.status === ClaimStatus.SETTLED)
+      .map((c) => c._id);
+
+    if (settledClaimIds.length > 0) {
+      const settlements = await SettlementModel.find({
+        claimId: { $in: settledClaimIds },
+      }).lean();
+
+      const settlementMap = new Map<string, number>();
+      for (const s of settlements) {
+        settlementMap.set(s.claimId.toString(), s.netPayable);
+      }
+
+      for (const claim of claims) {
+        if (claim.status === ClaimStatus.SETTLED) {
+          const settledAmt = settlementMap.get(claim._id.toString());
+          if (settledAmt !== undefined) {
+            (claim as any).settledAmount = settledAmt;
+          }
+        }
+      }
+    }
 
     return {
       items: claims.map(toClaimResponse),
@@ -354,6 +387,13 @@ export class ClaimService {
         companyName,
       });
 
+      if (updatedClaim.status === ClaimStatus.SETTLED) {
+        const settlement = await SettlementModel.findOne({ claimId: updatedClaim._id }).lean();
+        if (settlement) {
+          (updatedClaim as any).settledAmount = settlement.netPayable;
+        }
+      }
+
       return toClaimResponse(updatedClaim);
     } catch (error) {
       console.error("TRANSITION ERROR:", error);
@@ -392,6 +432,13 @@ export class ClaimService {
 
     if (!updatedClaim) {
       throw new AppError("Unable to update bill breakdown", 500);
+    }
+
+    if (updatedClaim.status === ClaimStatus.SETTLED) {
+      const settlement = await SettlementModel.findOne({ claimId: updatedClaim._id }).lean();
+      if (settlement) {
+        (updatedClaim as any).settledAmount = settlement.netPayable;
+      }
     }
 
     return toClaimResponse(updatedClaim);

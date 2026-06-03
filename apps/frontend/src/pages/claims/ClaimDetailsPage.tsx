@@ -133,7 +133,13 @@ export function ClaimDetailsPage() {
                 );
               })()
             ) : (
-              <strong>{formatCurrency(data.totalClaimAmount)}</strong>
+              <strong>
+                {formatCurrency(
+                  data.status === "SETTLED" && data.settledAmount !== null && data.settledAmount !== undefined
+                    ? data.settledAmount
+                    : data.totalClaimAmount
+                )}
+              </strong>
             )}
           </div>
         </section>

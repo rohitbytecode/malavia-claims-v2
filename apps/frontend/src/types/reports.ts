@@ -15,6 +15,7 @@ export interface DetailedClaim {
   type: string;
   status: string;
   totalClaimAmount: number;
+  settledAmount?: number | null;
   depositAmount: number;
   doctor?: { name: string };
   department?: { name: string };
@@ -31,6 +32,7 @@ export interface DetailedClaim {
   type: string;
   status: string;
   totalClaimAmount: number;
+  settledAmount?: number | null;
   depositAmount: number;
   doctor?: {
     name: string;

@@ -14,6 +14,7 @@ import { PatientsPage } from "../pages/patients/PatientsPage";
 import { DoctorsPage } from "../pages/doctors/DoctorsPage";
 import { SettingsPage } from "../pages/settings/SettingsPage";
 import { AdvancedNotificationsPage } from "../pages/advanced-notifications/AdvancedNotificationsPage";
+import { PastRecordsPage } from "../pages/past-records/PastRecordsPage";
 import { AppLayout } from "../layouts/AppLayout";
 import { ProtectedRoute } from "./ProtectedRoute";
 import {
@@ -153,6 +154,16 @@ export function AppRoutes() {
           <ProtectedRoute roles={["SUPER_ADMIN"]}>
             <AppLayout>
               <AdvancedNotificationsPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/past-records"
+        element={
+          <ProtectedRoute roles={["SUPER_ADMIN"]}>
+            <AppLayout>
+              <PastRecordsPage />
             </AppLayout>
           </ProtectedRoute>
         }

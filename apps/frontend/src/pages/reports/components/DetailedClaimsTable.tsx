@@ -34,7 +34,11 @@ export const DetailedClaimsTable: React.FC<DetailedClaimsTableProps> = ({
     return {
       claimAmount: detailedClaims.reduce(
         (sum, c) =>
-          sum + (pharmacyAmountMap?.get(c.claimId) ?? c.totalClaimAmount ?? 0),
+          sum +
+          (pharmacyAmountMap?.get(c.claimId) ??
+            ((c.status === "SETTLED" && c.settledAmount !== null && c.settledAmount !== undefined)
+              ? c.settledAmount
+              : (c.totalClaimAmount ?? 0))),
         0
       ),
       deposit: detailedClaims.reduce(
@@ -211,7 +215,9 @@ export const DetailedClaimsTable: React.FC<DetailedClaimsTableProps> = ({
                     <td style={{ fontWeight: 600, textAlign: "right" }}>
                       {formatCurrency(
                         pharmacyAmountMap?.get(claim.claimId) ??
-                          claim.totalClaimAmount
+                          ((claim.status === "SETTLED" && claim.settledAmount !== null && claim.settledAmount !== undefined)
+                            ? claim.settledAmount
+                            : claim.totalClaimAmount)
                       )}
                     </td>
                   )}

@@ -208,6 +208,13 @@ const NAV_ITEMS: {
     group: "administration",
   },
   {
+    to: "/past-records",
+    label: "Past Records",
+    icon: "claims",
+    roles: ["SUPER_ADMIN"],
+    group: "administration",
+  },
+  {
     to: "/advanced-notifications",
     label: "Advanced Notifications",
     icon: "alerts",
