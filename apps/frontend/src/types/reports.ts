@@ -80,6 +80,12 @@ export interface SettlementRow {
     discountPercent: number;
     discountAmount: number;
     netAmount: number;
+    companyDiscountPercent?: number;
+    companyDiscountAmount?: number;
+    vendorDiscountPercent?: number;
+    vendorDiscountAmount?: number;
+    vendorPayout?: number;
+    hospitalShare?: number;
   }>;
 }
 

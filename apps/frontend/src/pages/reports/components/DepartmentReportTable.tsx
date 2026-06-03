@@ -5,14 +5,15 @@ interface DepartmentReportRow {
   claimNumber: string;
   patientId: string;
   patientName: string;
-  approvedAmount: number;
+  receivedAmount: number;
   deductions: number;
   tds: number;
   pharmacy: number;
   lab: number;
   radiology: number;
   others: number;
-  netPayable: number;
+  hospitalShareBeforeTds: number;
+  hospitalShareAfterTds: number;
 }
 
 interface DepartmentGroup {
@@ -20,28 +21,30 @@ interface DepartmentGroup {
   departmentName: string;
   rows: DepartmentReportRow[];
   totals: {
-    approvedAmount: number;
+    receivedAmount: number;
     deductions: number;
     tds: number;
     pharmacy: number;
     lab: number;
     radiology: number;
     others: number;
-    netPayable: number;
+    hospitalShareBeforeTds: number;
+    hospitalShareAfterTds: number;
   };
 }
 
 interface DepartmentReportTableProps {
   groups: DepartmentGroup[];
   grandTotals: {
-    approvedAmount: number;
+    receivedAmount: number;
     deductions: number;
     tds: number;
     pharmacy: number;
     lab: number;
     radiology: number;
     others: number;
-    netPayable: number;
+    hospitalShareBeforeTds: number;
+    hospitalShareAfterTds: number;
   };
   isLoading: boolean;
   formatCurrency: (val: number) => string;
@@ -78,6 +81,10 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
       </div>
     );
   }
+
+  // Determine if radiology is available in at least one row to dynamically hide the column
+  const hasRadiology = groups.some((g) => g.rows.some((r) => r.radiology > 0));
+  const visibleCols = hasRadiology ? 11 : 10;
 
   return (
     <div style={{ marginBottom: 40 }}>
@@ -116,21 +123,21 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
           <div className="report-table-wrapper" style={{ overflowX: "auto" }}>
             <table
               className="report-table"
-              style={{ "--visible-cols": 11 } as React.CSSProperties}
+              style={{ "--visible-cols": visibleCols } as React.CSSProperties}
             >
               <thead>
                 <tr>
                   <th>Patient Name &amp; ID</th>
                   <th>Claim No.</th>
-                  <th style={{ textAlign: "right" }}>Approved</th>
+                  <th style={{ textAlign: "right" }}>Received Amount</th>
                   <th style={{ textAlign: "right" }}>Deductions</th>
                   <th style={{ textAlign: "right" }}>TDS</th>
                   <th style={{ textAlign: "right" }}>Pharmacy</th>
                   <th style={{ textAlign: "right" }}>Laboratory</th>
-                  <th style={{ textAlign: "right" }}>Radiology</th>
+                  {hasRadiology && <th style={{ textAlign: "right" }}>Radiology</th>}
                   <th style={{ textAlign: "right" }}>Others</th>
-                  <th style={{ textAlign: "right" }}>Net (Before TDS)</th>
-                  <th style={{ textAlign: "right" }}>Net (After TDS)</th>
+                  <th style={{ textAlign: "right" }}>Hospital Share (Before TDS)</th>
+                  <th style={{ textAlign: "right" }}>Hospital Share (After TDS)</th>
                 </tr>
               </thead>
               <tbody>
@@ -148,7 +155,7 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
                       <strong>{row.claimNumber || "—"}</strong>
                     </td>
                     <td style={{ textAlign: "right" }}>
-                      {formatCurrency(row.approvedAmount)}
+                      {formatCurrency(row.receivedAmount)}
                     </td>
                     <td
                       style={{
@@ -182,14 +189,16 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
                     >
                       {formatCurrency(row.lab)}
                     </td>
-                    <td
-                      style={{
-                        textAlign: "right",
-                        color: "var(--text-secondary)",
-                      }}
-                    >
-                      {formatCurrency(row.radiology)}
-                    </td>
+                    {hasRadiology && (
+                      <td
+                        style={{
+                          textAlign: "right",
+                          color: "var(--text-secondary)",
+                        }}
+                      >
+                        {formatCurrency(row.radiology)}
+                      </td>
+                    )}
                     <td
                       style={{
                         textAlign: "right",
@@ -205,7 +214,7 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
                         color: "#059669",
                       }}
                     >
-                      {formatCurrency(row.netPayable + row.tds)}
+                      {formatCurrency(row.hospitalShareBeforeTds)}
                     </td>
                     <td
                       style={{
@@ -214,7 +223,7 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
                         color: "#059669",
                       }}
                     >
-                      {formatCurrency(row.netPayable)}
+                      {formatCurrency(row.hospitalShareAfterTds)}
                     </td>
                   </tr>
                 ))}
@@ -230,7 +239,7 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
                     {group.departmentName} Total
                   </td>
                   <td style={{ textAlign: "right" }}>
-                    {formatCurrency(group.totals.approvedAmount)}
+                    {formatCurrency(group.totals.receivedAmount)}
                   </td>
                   <td style={{ textAlign: "right", color: "#dc2626" }}>
                     {formatCurrency(group.totals.deductions)}
@@ -244,17 +253,19 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
                   <td style={{ textAlign: "right" }}>
                     {formatCurrency(group.totals.lab)}
                   </td>
-                  <td style={{ textAlign: "right" }}>
-                    {formatCurrency(group.totals.radiology)}
-                  </td>
+                  {hasRadiology && (
+                    <td style={{ textAlign: "right" }}>
+                      {formatCurrency(group.totals.radiology)}
+                    </td>
+                  )}
                   <td style={{ textAlign: "right" }}>
                     {formatCurrency(group.totals.others)}
                   </td>
                   <td style={{ textAlign: "right", color: "#059669" }}>
-                    {formatCurrency(group.totals.netPayable + group.totals.tds)}
+                    {formatCurrency(group.totals.hospitalShareBeforeTds)}
                   </td>
                   <td style={{ textAlign: "right", color: "#059669" }}>
-                    {formatCurrency(group.totals.netPayable)}
+                    {formatCurrency(group.totals.hospitalShareAfterTds)}
                   </td>
                 </tr>
               </tbody>
@@ -292,9 +303,9 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
           }}
         >
           <div className="report-summary-cell">
-            <span>Grand Approved</span>
+            <span>Grand Received</span>
             <strong style={{ fontSize: 15 }}>
-              {formatCurrency(grandTotals.approvedAmount)}
+              {formatCurrency(grandTotals.receivedAmount)}
             </strong>
           </div>
           <div className="report-summary-cell">
@@ -321,12 +332,14 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
               {formatCurrency(grandTotals.lab)}
             </strong>
           </div>
-          <div className="report-summary-cell">
-            <span>Grand Radiology</span>
-            <strong style={{ fontSize: 15 }}>
-              {formatCurrency(grandTotals.radiology)}
-            </strong>
-          </div>
+          {hasRadiology && (
+            <div className="report-summary-cell">
+              <span>Grand Radiology</span>
+              <strong style={{ fontSize: 15 }}>
+                {formatCurrency(grandTotals.radiology)}
+              </strong>
+            </div>
+          )}
           <div className="report-summary-cell">
             <span>Grand Others</span>
             <strong style={{ fontSize: 15 }}>
@@ -334,15 +347,15 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
             </strong>
           </div>
           <div className="report-summary-cell">
-            <span>Grand Net (Before TDS)</span>
+            <span>Grand Hospital Share (Before TDS)</span>
             <strong style={{ fontSize: 15, color: "#059669" }}>
-              {formatCurrency(grandTotals.netPayable + grandTotals.tds)}
+              {formatCurrency(grandTotals.hospitalShareBeforeTds)}
             </strong>
           </div>
           <div className="report-summary-cell">
-            <span>Grand Net (After TDS)</span>
+            <span>Grand Hospital Share (After TDS)</span>
             <strong style={{ fontSize: 15, color: "#059669" }}>
-              {formatCurrency(grandTotals.netPayable)}
+              {formatCurrency(grandTotals.hospitalShareAfterTds)}
             </strong>
           </div>
         </div>

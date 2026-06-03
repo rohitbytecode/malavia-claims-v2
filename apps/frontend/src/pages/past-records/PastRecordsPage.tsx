@@ -120,9 +120,11 @@ export function PastRecordsPage() {
     (d) => d._id === draft.doctorId
   )?.name;
 
-  const needsSettlement =
+  const needsBreakdown =
     draft.claimStatus === "SETTLED" ||
     draft.claimStatus === "SETTLEMENT_PENDING";
+
+  const isSettled = draft.claimStatus === "SETTLED";
 
   // Compute live calculations
   const computedTotals = useMemo(() => {
@@ -133,9 +135,9 @@ export function PastRecordsPage() {
     const totalVendorPayout = deptLines.reduce((s, l) => s + l.vendorPayout, 0);
     const totalHospitalShare = deptLines.reduce((s, l) => s + l.hospitalShare, 0);
 
-    const activeApproved = needsSettlement && deptLines.length > 0 ? totalApproved : draft.totalClaimAmount;
-    const activeCompanyDiscount = needsSettlement && deptLines.length > 0 ? totalCompanyDiscount : draft.hospitalDiscount;
-    const activeDeductions = needsSettlement && deptLines.length > 0 ? totalDeductions : draft.deductions;
+    const activeApproved = isSettled && deptLines.length > 0 ? totalApproved : draft.totalClaimAmount;
+    const activeCompanyDiscount = isSettled && deptLines.length > 0 ? totalCompanyDiscount : draft.hospitalDiscount;
+    const activeDeductions = isSettled && deptLines.length > 0 ? totalDeductions : draft.deductions;
     const activeNet = Math.max(0, activeApproved - activeCompanyDiscount);
 
     const extraRefund = Math.max(0, draft.refundAmount - draft.depositAmount);
@@ -155,7 +157,7 @@ export function PastRecordsPage() {
     };
   }, [
     deptLines,
-    needsSettlement,
+    isSettled,
     draft.totalClaimAmount,
     draft.hospitalDiscount,
     draft.deductions,
@@ -166,15 +168,22 @@ export function PastRecordsPage() {
 
   // Sync basic claim fields to matching totals when using department breakdown
   useEffect(() => {
-    if (needsSettlement && deptLines.length > 0) {
-      setDraft((d) => ({
-        ...d,
-        totalClaimAmount: computedTotals.totalClaimed,
-        deductions: computedTotals.totalDeductions,
-        hospitalDiscount: computedTotals.totalCompanyDiscount,
-      }));
+    if (needsBreakdown && deptLines.length > 0) {
+      if (isSettled) {
+        setDraft((d) => ({
+          ...d,
+          totalClaimAmount: computedTotals.totalClaimed,
+          deductions: computedTotals.totalDeductions,
+          hospitalDiscount: computedTotals.totalCompanyDiscount,
+        }));
+      } else {
+        setDraft((d) => ({
+          ...d,
+          totalClaimAmount: computedTotals.totalClaimed,
+        }));
+      }
     }
-  }, [computedTotals.totalClaimed, computedTotals.totalDeductions, computedTotals.totalCompanyDiscount, needsSettlement, deptLines.length]);
+  }, [computedTotals.totalClaimed, computedTotals.totalDeductions, computedTotals.totalCompanyDiscount, needsBreakdown, isSettled, deptLines.length]);
 
   const importMutation = useMutation({
     mutationFn: () =>
@@ -189,26 +198,22 @@ export function PastRecordsPage() {
         claimDate: draft.claimDate || undefined,
         departmentName: selectedDepartmentName || undefined,
         doctorName: selectedDoctorName || undefined,
-        totalClaimAmount: computedTotals.totalApproved, // Approved is claim's total claim amount when settled
-        tdsAmount: draft.tdsAmount || undefined,
-        deductions: computedTotals.totalDeductions || undefined,
-        hospitalDiscount: computedTotals.totalCompanyDiscount || undefined,
+        totalClaimAmount: isSettled ? computedTotals.totalApproved : computedTotals.totalClaimed,
+        tdsAmount: isSettled ? (draft.tdsAmount || undefined) : undefined,
+        deductions: isSettled ? (computedTotals.totalDeductions || undefined) : undefined,
+        hospitalDiscount: isSettled ? (computedTotals.totalCompanyDiscount || undefined) : undefined,
         depositAmount: draft.depositAmount || undefined,
         refundAmount: draft.refundAmount || undefined,
         remarks: draft.remarks || undefined,
 
         // Advanced settlement fields
-        settlementMethod: draft.settlementMethod || undefined,
-        settlementDate: draft.settlementDate || undefined,
-        totalCompanyDiscount: computedTotals.totalCompanyDiscount,
-        totalVendorPayout: computedTotals.totalVendorPayout,
-        hospitalNetShare: computedTotals.hospitalNetShare,
+        settlementMethod: isSettled ? (draft.settlementMethod || undefined) : undefined,
+        settlementDate: isSettled ? (draft.settlementDate || undefined) : undefined,
+        totalCompanyDiscount: isSettled ? computedTotals.totalCompanyDiscount : undefined,
+        totalVendorPayout: isSettled ? computedTotals.totalVendorPayout : undefined,
+        hospitalNetShare: isSettled ? computedTotals.hospitalNetShare : undefined,
         refundStatus: draft.refundStatus || undefined,
-        departmentBreakdown:
-          draft.claimStatus === "SETTLED" ||
-          draft.claimStatus === "SETTLEMENT_PENDING"
-            ? deptLines
-            : undefined,
+        departmentBreakdown: needsBreakdown ? deptLines : undefined,
       }),
     onSuccess: () => {
       setSuccessMessage(
@@ -512,7 +517,7 @@ export function PastRecordsPage() {
         </fieldset>
 
         {/* Dynamic Department Settlement Breakdown Section */}
-        {needsSettlement && (
+        {needsBreakdown && (
           <fieldset className="card" style={{ marginBottom: "20px", minWidth: 0 }}>
             <legend
               style={{
@@ -972,7 +977,7 @@ export function PastRecordsPage() {
               </SelectInput>
             </Field>
 
-            {needsSettlement && (
+            {isSettled && (
               <>
                 <Field label="Settlement Method">
                   <SelectInput

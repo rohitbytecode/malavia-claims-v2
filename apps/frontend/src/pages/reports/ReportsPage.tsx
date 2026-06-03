@@ -483,14 +483,15 @@ export function ReportsPage() {
         departmentName: string;
         rows: any[];
         totals: {
-          approvedAmount: number;
+          receivedAmount: number;
           deductions: number;
           tds: number;
           pharmacy: number;
           lab: number;
           radiology: number;
           others: number;
-          netPayable: number;
+          hospitalShareBeforeTds: number;
+          hospitalShareAfterTds: number;
         };
       }
     >();
@@ -503,18 +504,30 @@ export function ReportsPage() {
       let lab = 0;
       let radiology = 0;
       let others = 0;
+      let totalVendorPayout = 0;
 
       for (const item of s.departmentBreakdown || []) {
+        const payoutVal =
+          item.vendorPayout !== undefined
+            ? item.vendorPayout
+            : (item.netAmount ?? 0);
+
+        totalVendorPayout += payoutVal;
+
         if (item.departmentCategory === "PHARMACY") {
-          pharmacy = item.netAmount ?? 0;
+          pharmacy = payoutVal;
         } else if (item.departmentCategory === "LABORATORY") {
-          lab = item.netAmount ?? 0;
+          lab = payoutVal;
         } else if (item.departmentCategory === "RADIOLOGY") {
-          radiology = item.netAmount ?? 0;
+          radiology = payoutVal;
         } else {
-          others += item.netAmount ?? 0;
+          others += payoutVal;
         }
       }
+
+      const receivedAmount = (s.netPayable || 0) + (s.tds || 0);
+      const hospitalShareAfterTds = Math.max(0, (s.netPayable || 0) - totalVendorPayout);
+      const hospitalShareBeforeTds = hospitalShareAfterTds + (s.tds || 0);
 
       let group = groupsMap.get(deptId);
       if (!group) {
@@ -523,14 +536,15 @@ export function ReportsPage() {
           departmentName: deptName,
           rows: [],
           totals: {
-            approvedAmount: 0,
+            receivedAmount: 0,
             deductions: 0,
             tds: 0,
             pharmacy: 0,
             lab: 0,
             radiology: 0,
             others: 0,
-            netPayable: 0,
+            hospitalShareBeforeTds: 0,
+            hospitalShareAfterTds: 0,
           },
         };
         groupsMap.set(deptId, group);
@@ -541,24 +555,26 @@ export function ReportsPage() {
         claimNumber: s.claimNumber,
         patientId: s.patientId,
         patientName: patientMap.get(s.patientId) || "Unknown",
-        approvedAmount: s.approvedAmount || 0,
+        receivedAmount,
         deductions: s.deductions || 0,
         tds: s.tds || 0,
         pharmacy,
         lab,
         radiology,
         others,
-        netPayable: s.netPayable || 0,
+        hospitalShareBeforeTds,
+        hospitalShareAfterTds,
       });
 
-      group.totals.approvedAmount += s.approvedAmount || 0;
+      group.totals.receivedAmount += receivedAmount;
       group.totals.deductions += s.deductions || 0;
       group.totals.tds += s.tds || 0;
       group.totals.pharmacy += pharmacy;
       group.totals.lab += lab;
       group.totals.radiology += radiology;
       group.totals.others += others;
-      group.totals.netPayable += s.netPayable || 0;
+      group.totals.hospitalShareBeforeTds += hospitalShareBeforeTds;
+      group.totals.hospitalShareAfterTds += hospitalShareAfterTds;
     }
 
     const groups = Array.from(groupsMap.values()).sort((a, b) =>
@@ -567,25 +583,27 @@ export function ReportsPage() {
 
     const grandTotals = groups.reduce(
       (acc: any, g: any) => {
-        acc.approvedAmount += g.totals.approvedAmount;
+        acc.receivedAmount += g.totals.receivedAmount;
         acc.deductions += g.totals.deductions;
         acc.tds += g.totals.tds;
         acc.pharmacy += g.totals.pharmacy;
         acc.lab += g.totals.lab;
         acc.radiology += g.totals.radiology;
         acc.others += g.totals.others;
-        acc.netPayable += g.totals.netPayable;
+        acc.hospitalShareBeforeTds += g.totals.hospitalShareBeforeTds;
+        acc.hospitalShareAfterTds += g.totals.hospitalShareAfterTds;
         return acc;
       },
       {
-        approvedAmount: 0,
+        receivedAmount: 0,
         deductions: 0,
         tds: 0,
         pharmacy: 0,
         lab: 0,
         radiology: 0,
         others: 0,
-        netPayable: 0,
+        hospitalShareBeforeTds: 0,
+        hospitalShareAfterTds: 0,
       }
     );
 

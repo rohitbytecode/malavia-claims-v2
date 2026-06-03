@@ -287,31 +287,79 @@ export const exportReportToCSV = ({
     sections.push(`"DEPARTMENT-WISE FINANCIAL REPORT"`);
     sections.push("");
 
+    const hasRadiology = departmentReportData.groups.some((g) =>
+      g.rows.some((r) => r.radiology > 0)
+    );
+
     departmentReportData.groups.forEach((group) => {
       sections.push(`"DEPARTMENT: ${group.departmentName.toUpperCase()}"`);
-      sections.push(
-        `"Patient ID / Name","Claim No.","Approved Amount","Deductions","TDS","Pharmacy","Laboratory","Radiology","Others","Net (Before TDS)","Net (After TDS)"`
-      );
+      const headers = [
+        "Patient ID / Name",
+        "Claim No.",
+        "Received Amount",
+        "Deductions",
+        "TDS",
+        "Pharmacy",
+        "Laboratory",
+        ...(hasRadiology ? ["Radiology"] : []),
+        "Others",
+        "Hospital Share (Before TDS)",
+        "Hospital Share (After TDS)",
+      ]
+        .map((h) => `"${h}"`)
+        .join(",");
+      sections.push(headers);
+
       group.rows.forEach((row) => {
-        const netBeforeTds = (row.netPayable ?? 0) + (row.tds ?? 0);
-        sections.push(
-          `"${row.patientName} (${row.patientId})","${row.claimNumber || "—"}","${row.approvedAmount}","${row.deductions}","${row.tds}","${row.pharmacy}","${row.lab}","${row.radiology}","${row.others}","${netBeforeTds}","${row.netPayable}"`
-        );
+        const rowData = [
+          `"${row.patientName} (${row.patientId})"`,
+          `"${row.claimNumber || "—"}"`,
+          row.receivedAmount,
+          row.deductions,
+          row.tds,
+          row.pharmacy,
+          row.lab,
+          ...(hasRadiology ? [row.radiology] : []),
+          row.others,
+          row.hospitalShareBeforeTds,
+          row.hospitalShareAfterTds,
+        ].join(",");
+        sections.push(rowData);
       });
-      const groupNetBeforeTds =
-        (group.totals.netPayable ?? 0) + (group.totals.tds ?? 0);
-      sections.push(
-        `"DEPARTMENT TOTAL","","${group.totals.approvedAmount}","${group.totals.deductions}","${group.totals.tds}","${group.totals.pharmacy}","${group.totals.lab}","${group.totals.radiology}","${group.totals.others}","${groupNetBeforeTds}","${group.totals.netPayable}"`
-      );
+
+      const totalData = [
+        `"DEPARTMENT TOTAL"`,
+        `""`,
+        group.totals.receivedAmount,
+        group.totals.deductions,
+        group.totals.tds,
+        group.totals.pharmacy,
+        group.totals.lab,
+        ...(hasRadiology ? [group.totals.radiology] : []),
+        group.totals.others,
+        group.totals.hospitalShareBeforeTds,
+        group.totals.hospitalShareAfterTds,
+      ].join(",");
+      sections.push(totalData);
       sections.push(""); // spacer
     });
 
     const gt = departmentReportData.grandTotals;
     if (gt) {
-      const grandNetBeforeTds = (gt.netPayable ?? 0) + (gt.tds ?? 0);
-      sections.push(
-        `"GRAND TOTALS","","${gt.approvedAmount}","${gt.deductions}","${gt.tds}","${gt.pharmacy}","${gt.lab}","${gt.radiology}","${gt.others}","${grandNetBeforeTds}","${gt.netPayable}"`
-      );
+      const grandData = [
+        `"GRAND TOTALS"`,
+        `""`,
+        gt.receivedAmount,
+        gt.deductions,
+        gt.tds,
+        gt.pharmacy,
+        gt.lab,
+        ...(hasRadiology ? [gt.radiology] : []),
+        gt.others,
+        gt.hospitalShareBeforeTds,
+        gt.hospitalShareAfterTds,
+      ].join(",");
+      sections.push(grandData);
     }
     sections.push(""); // spacer
   }

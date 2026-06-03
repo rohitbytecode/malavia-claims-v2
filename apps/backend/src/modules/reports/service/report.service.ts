@@ -25,7 +25,18 @@ export class ReportService {
             $sum: {
               $cond: [
                 { $eq: ["$status", "SETTLED"] },
-                { $ifNull: ["$settlement.netPayable", "$totalClaimAmount"] },
+                {
+                  $cond: [
+                    { $gt: ["$settlement", null] },
+                    {
+                      $add: [
+                        { $ifNull: ["$settlement.netPayable", 0] },
+                        { $ifNull: ["$settlement.tds", 0] }
+                      ]
+                    },
+                    "$totalClaimAmount"
+                  ]
+                },
                 "$totalClaimAmount",
               ],
             },
@@ -54,7 +65,18 @@ export class ReportService {
             $sum: {
               $cond: [
                 { $eq: ["$status", "SETTLED"] },
-                { $ifNull: [{ $arrayElemAt: ["$settlement.netPayable", 0] }, "$totalClaimAmount"] },
+                {
+                  $cond: [
+                    { $gt: [{ $size: "$settlement" }, 0] },
+                    {
+                      $add: [
+                        { $ifNull: [{ $arrayElemAt: ["$settlement.netPayable", 0] }, 0] },
+                        { $ifNull: [{ $arrayElemAt: ["$settlement.tds", 0] }, 0] }
+                      ]
+                    },
+                    "$totalClaimAmount"
+                  ]
+                },
                 "$totalClaimAmount",
               ],
             },
@@ -138,7 +160,18 @@ export class ReportService {
             $sum: {
               $cond: [
                 { $eq: ["$status", "SETTLED"] },
-                { $ifNull: ["$settlement.netPayable", "$totalClaimAmount"] },
+                {
+                  $cond: [
+                    { $gt: ["$settlement", null] },
+                    {
+                      $add: [
+                        { $ifNull: ["$settlement.netPayable", 0] },
+                        { $ifNull: ["$settlement.tds", 0] }
+                      ]
+                    },
+                    "$totalClaimAmount"
+                  ]
+                },
                 "$totalClaimAmount",
               ],
             },
@@ -203,7 +236,18 @@ export class ReportService {
           totalClaimAmount: { $ifNull: ["$totalClaimAmount", 0] },
           depositAmount: "$depositAmount",
           approvedAmount: "$approvedAmount",
-          settledAmount: { $ifNull: ["$settlement.netPayable", null] },
+          settledAmount: {
+            $cond: [
+              { $gt: ["$settlement", null] },
+              {
+                $add: [
+                  { $ifNull: ["$settlement.netPayable", 0] },
+                  { $ifNull: ["$settlement.tds", 0] }
+                ]
+              },
+              null
+            ]
+          },
           tdsAmount: "$tdsAmount",
           hospitalDiscount: "$hospitalDiscount",
           billBreakdown: { $ifNull: ["$billBreakdown", []] },
@@ -334,6 +378,15 @@ export class ReportService {
       { $unwind: { path: "$claim", preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
+          from: "patients",
+          localField: "claim.patientId",
+          foreignField: "patientId",
+          as: "patient",
+        },
+      },
+      { $unwind: { path: "$patient", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
           from: "insurancecompanies",
           localField: "claim.insuranceCompanyId",
           foreignField: "_id",
@@ -347,6 +400,7 @@ export class ReportService {
         $project: {
           claimNumber: "$claim.claimNumber",
           claimId: "$claimId",
+          patientName: "$patient.name",
           insuranceCompany: "$insurance.name",
           approvedAmount: { $ifNull: ["$approvedAmount", 0] },
           netPayable: { $ifNull: ["$netPayable", 0] },
@@ -362,6 +416,7 @@ export class ReportService {
 
     const rows = settlements.map((s) => {
       let pharmacyShare = 0;
+      let pharmacyClaimed = 0;
       let labShare = 0;
       let radiologyShare = 0;
 
@@ -372,6 +427,7 @@ export class ReportService {
             : (item.netAmount ?? 0);
         if (item.departmentCategory === "PHARMACY") {
           pharmacyShare = payoutVal;
+          pharmacyClaimed = item.claimedAmount ?? 0;
         } else if (item.departmentCategory === "LABORATORY") {
           labShare = payoutVal;
         } else if (item.departmentCategory === "RADIOLOGY") {
@@ -393,12 +449,14 @@ export class ReportService {
         _id: s._id,
         claimNumber: s.claimNumber,
         claimId: s.claimId,
+        patientName: s.patientName || "—",
         insuranceCompany: s.insuranceCompany,
         settlementDate: s.settlementDate,
         approvedAmount: s.approvedAmount,
         netPayable: s.netPayable,
         tds: s.tds || 0,
         pharmacyShare,
+        pharmacyClaimed,
         labShare,
         radiologyShare,
         vendorPayout,
@@ -412,6 +470,7 @@ export class ReportService {
         acc.totalNetPayable += r.netPayable;
         acc.totalTds += r.tds;
         acc.totalPharmacyShare += r.pharmacyShare;
+        acc.totalPharmacyClaimed += r.pharmacyClaimed;
         acc.totalLabShare += r.labShare;
         acc.totalRadiologyShare += r.radiologyShare;
         acc.totalVendorPayout += r.vendorPayout;
@@ -423,6 +482,7 @@ export class ReportService {
         totalNetPayable: 0,
         totalTds: 0,
         totalPharmacyShare: 0,
+        totalPharmacyClaimed: 0,
         totalLabShare: 0,
         totalRadiologyShare: 0,
         totalVendorPayout: 0,
