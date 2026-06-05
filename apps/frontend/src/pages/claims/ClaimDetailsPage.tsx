@@ -9,6 +9,7 @@ import {
   depositApi,
   settlementApi,
   timelineApi,
+  patientApi,
 } from "../../api/services";
 import { AlertPlaybookPanel } from "../../components/alerts/AlertPlaybookPanel";
 import { FinancialControlDeck } from "../../components/claims/FinancialControlDeck";
@@ -63,6 +64,17 @@ export function ClaimDetailsPage() {
     queryKey: ["audit", claimId],
     queryFn: () => auditApi.entity(claimId),
   });
+  const patientsQuery = useQuery({
+    queryKey: ["patients"],
+    queryFn: () => patientApi.list({ limit: 100 }),
+  });
+  const patientMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of patientsQuery.data?.data ?? []) {
+      if (p.patientId) map.set(p.patientId, p.name);
+    }
+    return map;
+  }, [patientsQuery.data]);
   const settlement = useQuery({
     queryKey: ["settlement", claimId],
     queryFn: () => settlementApi.getByClaim(claimId),
@@ -100,8 +112,9 @@ export function ClaimDetailsPage() {
 
   const data = claim.data;
   const locked = data.status === "CLOSED";
-  const ageing = ageInDays(data.createdAt);
-  const criticalAgeing = ageing >= 60;
+  const isSettlementPending = data.status === "SETTLEMENT_PENDING";
+  const ageing = isSettlementPending ? ageInDays(data.createdAt) : null;
+  const criticalAgeing = ageing !== null && ageing >= 60;
 
   return (
     <div className="claim-cockpit immersive-cockpit">
@@ -111,7 +124,7 @@ export function ClaimDetailsPage() {
             <p className="eyebrow">Claim Operational Cockpit</p>
             <h1>{data.claimNumber ?? data._id}</h1>
             <span>
-              {data.type} workflow · {ageing} days ageing · Updated{" "}
+              {data.type} workflow{ageing !== null ? ` · ${ageing} days ageing` : ""} · Updated{" "}
               {formatDateTime(data.updatedAt)}
             </span>
           </div>
@@ -434,7 +447,10 @@ export function ClaimDetailsPage() {
                 />
                 <dl className="detail-list">
                   <dt>Patient ID</dt>
-                  <dd>{data.patientId}</dd>
+                  <dd>
+                    {data.patientId}
+                    {patientMap.has(data.patientId) && ` (${patientMap.get(data.patientId)})`}
+                  </dd>
                   <dt>Insurance company</dt>
                   <dd>
                     {nameOf(

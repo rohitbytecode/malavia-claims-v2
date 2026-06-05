@@ -108,12 +108,19 @@ export function AllClaimsPage() {
     {
       key: "age",
       header: "Ageing",
-      cell: (c) => (
-        <span className={ageInDays(c.createdAt) > 60 ? "danger-text" : ""}>
-          {ageInDays(c.createdAt)} days
-        </span>
-      ),
-      sortValue: (c) => ageInDays(c.createdAt),
+      cell: (c) => {
+        const isSettlementPending = c.status === "SETTLEMENT_PENDING";
+        if (!isSettlementPending) return <span>—</span>;
+        return (
+          <span className={ageInDays(c.createdAt) > 60 ? "danger-text" : ""}>
+            {ageInDays(c.createdAt)} days
+          </span>
+        );
+      },
+      sortValue: (c) => {
+        const isSettlementPending = c.status === "SETTLEMENT_PENDING";
+        return isSettlementPending ? ageInDays(c.createdAt) : -1;
+      },
     },
     {
       key: "department",

@@ -113,15 +113,19 @@ export class DashboardService {
 
     const ageingSummary = {
       under30Days: await ClaimModel.countDocuments({
+        status: ClaimStatus.SETTLEMENT_PENDING,
         createdAt: { $gt: days30Ago },
       }),
       between30And60Days: await ClaimModel.countDocuments({
+        status: ClaimStatus.SETTLEMENT_PENDING,
         createdAt: { $lte: days30Ago, $gt: days60Ago },
       }),
       between60And90Days: await ClaimModel.countDocuments({
+        status: ClaimStatus.SETTLEMENT_PENDING,
         createdAt: { $lte: days60Ago, $gt: days90Ago },
       }),
       over90Days: await ClaimModel.countDocuments({
+        status: ClaimStatus.SETTLEMENT_PENDING,
         createdAt: { $lte: days90Ago },
       }),
     };
