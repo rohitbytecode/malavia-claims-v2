@@ -48,6 +48,7 @@ const seedTestAlertsData = async () => {
 
     // Define dates for backdating
     const now = new Date();
+    const date35DaysAgo = new Date(now.getTime() - 35 * 24 * 60 * 60 * 1000);
     const date50DaysAgo = new Date(now.getTime() - 50 * 24 * 60 * 60 * 1000);
     const date65DaysAgo = new Date(now.getTime() - 65 * 24 * 60 * 60 * 1000);
 
@@ -137,6 +138,19 @@ const seedTestAlertsData = async () => {
       doctorId: doctor._id,
       totalClaimAmount: 180000,
       createdBy: adminUser._id,
+    });
+    // Set createdAt backdated field bypassing Mongoose timestamps
+    await mongoose.connection
+      .db!.collection("claims")
+      .updateOne({ _id: claimSettle._id }, { $set: { createdAt: date35DaysAgo } });
+
+    // Create transition history entry backdated to 35 days ago
+    await ClaimStatusHistoryModel.create({
+      claimId: claimSettle._id,
+      fromStatus: ClaimStatus.FINAL_APPROVED,
+      toStatus: ClaimStatus.SETTLEMENT_PENDING,
+      effectiveAt: date35DaysAgo,
+      createdAt: date35DaysAgo,
     });
     logger.info("Created Settlement Pending claim (TEST-CLM-SETTLE).");
 

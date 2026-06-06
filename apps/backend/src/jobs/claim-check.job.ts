@@ -116,24 +116,56 @@ export const checkPendingSettlements = async () => {
   }).lean();
 
   const pendingClaimIds = pendingClaims.map((c) => c._id);
+  const activeClaimsToAlertIds: any[] = [];
+  const activeClaimsNotToAlertIds: any[] = [];
 
-  // Resolve any active SETTLEMENT_PENDING alerts for claims no longer in SETTLEMENT_PENDING
+  for (const claim of pendingClaims) {
+    // Find when the claim transitioned to SETTLEMENT_PENDING
+    const history = await ClaimStatusHistoryModel.findOne({
+      claimId: claim._id,
+      toStatus: ClaimStatus.SETTLEMENT_PENDING,
+    })
+      .sort({ effectiveAt: -1 })
+      .lean();
+
+    const transitionDate = history
+      ? new Date(history.effectiveAt || history.createdAt)
+      : new Date(claim.createdAt);
+
+    const diffMs = now.getTime() - transitionDate.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+    if (diffDays >= 30) {
+      activeClaimsToAlertIds.push(claim._id);
+    } else {
+      activeClaimsNotToAlertIds.push(claim._id);
+    }
+  }
+
+  // Resolve any active SETTLEMENT_PENDING alerts for claims:
+  // - That are no longer in SETTLEMENT_PENDING stage
+  // - Or that have less than 30 days ageing in SETTLEMENT_PENDING
   await AlertModel.updateMany(
     {
       type: AlertType.SETTLEMENT_PENDING,
       resolved: false,
-      claimId: { $nin: pendingClaimIds },
+      $or: [
+        { claimId: { $nin: pendingClaimIds } },
+        { claimId: { $in: activeClaimsNotToAlertIds } },
+      ],
     },
     {
       $set: {
         resolved: true,
         resolvedAt: now,
-        message: "Resolved automatically: Claim is no longer in Settlement Pending.",
+        message: "Resolved automatically: Claim is no longer pending settlement or ageing is less than 30 days.",
       },
     }
   );
 
-  for (const claim of pendingClaims) {
+  for (const claimId of activeClaimsToAlertIds) {
+    const claim = pendingClaims.find((c) => c._id.toString() === claimId.toString())!;
+
     // Check if an active SETTLEMENT_PENDING alert already exists
     const existingAlert = await AlertModel.findOne({
       claimId: claim._id,
