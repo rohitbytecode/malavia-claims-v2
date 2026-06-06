@@ -46,6 +46,8 @@ import advancedNotificationsRouter from "./modules/advanced-notifications/index.
 import pastRecordsRouter from "./modules/past-records/index.js";
 
 import { setupSwagger } from "./config/swagger.js";
+import { register } from "./config/prometheus.js";
+import { prometheusMiddleware } from "./middleware/prometheus.middleware.js";
 
 const app = express();
 // disable cache for easier debugging
@@ -61,6 +63,8 @@ const pinoHttp =
     : pinoHttpImport.default;
 
 setupSecurityMiddleware(app);
+
+app.use(prometheusMiddleware);
 
 app.use(
   pinoHttp({
@@ -155,6 +159,16 @@ app.get("/ready", (_, res) => {
   }
 
   return res.status(503).send("Database not connected");
+});
+
+app.get("/metrics", async (_, res) => {
+  try {
+    res.set("Content-Type", register.contentType);
+    res.end(await register.metrics());
+  } catch (err) {
+    logger.error({ err }, "Failed to collect Prometheus metrics");
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 app.use("/api/v1/auth", authRouter);
