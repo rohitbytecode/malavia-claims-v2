@@ -1,3 +1,4 @@
+import "./tracing.js";
 import app from "./app.js";
 
 import fs from "node:fs";
