@@ -30,8 +30,47 @@ export class AuditLogRepository {
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .populate("performedBy", "firstName lastName email")
+      .populate("performedBy", "username fullName")
       .lean();
+  }
+
+  static async getAllLogs(
+    filters: {
+      module?: AuditModule;
+      action?: AuditAction;
+      performedBy?: string;
+      search?: string;
+    },
+    page: number,
+    limit: number
+  ) {
+    const query: Record<string, any> = {};
+
+    if (filters.module) query.module = filters.module;
+    if (filters.action) query.action = filters.action;
+    if (filters.performedBy && Types.ObjectId.isValid(filters.performedBy)) {
+      query.performedBy = new Types.ObjectId(filters.performedBy);
+    }
+    if (filters.search) {
+      query.entityId = Types.ObjectId.isValid(filters.search)
+        ? new Types.ObjectId(filters.search)
+        : undefined;
+    }
+
+    const [items, total] = await Promise.all([
+      AuditLogModel.find(query)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate("performedBy", "username fullName")
+        .lean(),
+      AuditLogModel.countDocuments(query),
+    ]);
+
+    return {
+      items,
+      pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+    };
   }
 
   static async getLogsByModule(

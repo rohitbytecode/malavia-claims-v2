@@ -5,6 +5,7 @@ import { useAuthStore } from "../../store/auth.store";
 import type { DocumentType } from "../../types/domain";
 import { formatDateTime } from "../../utils/format";
 import { Button } from "../ui/Button";
+import { DocumentPreviewModal } from "./DocumentPreviewModal";
 import { ErrorPanel } from "../ui/ErrorPanel";
 import { StatusBadge } from "../ui/StatusBadge";
 const maxSize = 10 * 1024 * 1024;
@@ -30,14 +31,31 @@ export function DocumentManager({
     queryKey: ["documents", claimId],
     queryFn: () => documentApi.list(claimId),
   });
-  const handlePreview = async (filename: string, mimeType: string) => {
+  const [previewDoc, setPreviewDoc] = useState<{
+    url: string;
+    mimeType: string;
+    originalName: string;
+  } | null>(null);
+
+  const handlePreview = async (
+    filename: string,
+    mimeType: string,
+    originalName: string
+  ) => {
     try {
       const blob = await documentApi.download(filename);
       const url = URL.createObjectURL(new Blob([blob], { type: mimeType }));
-      window.open(url, "_blank");
+      setPreviewDoc({ url, mimeType, originalName });
     } catch (err) {
       console.error(err);
       alert("Failed to preview document");
+    }
+  };
+
+  const closePreview = () => {
+    if (previewDoc) {
+      URL.revokeObjectURL(previewDoc.url);
+      setPreviewDoc(null);
     }
   };
   const upload = useMutation({
@@ -143,13 +161,21 @@ export function DocumentManager({
             <button
               className="link-button"
               type="button"
-              onClick={() => handlePreview(doc.fileName, doc.mimeType)}
+              onClick={() => handlePreview(doc.fileName, doc.mimeType, doc.originalName)}
             >
               Preview
             </button>
           </div>
         ))}
       </div>
+      {previewDoc && (
+        <DocumentPreviewModal
+          url={previewDoc.url}
+          mimeType={previewDoc.mimeType}
+          title={previewDoc.originalName}
+          onClose={closePreview}
+        />
+      )}
     </div>
   );
 }

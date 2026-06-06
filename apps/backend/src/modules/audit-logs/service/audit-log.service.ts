@@ -47,4 +47,17 @@ export class AuditLogService {
     const logs = await AuditLogRepository.getLogsByModule(module, page, limit);
     return logs;
   }
+
+  static async fetchAllLogs(
+    filters: {
+      module?: AuditModule;
+      action?: AuditAction;
+      performedBy?: string;
+      search?: string;
+    },
+    page: number = 1,
+    limit: number = 20
+  ) {
+    return AuditLogRepository.getAllLogs(filters, page, limit);
+  }
 }

@@ -10,6 +10,7 @@ import { AlertsPage } from "../pages/alerts/AlertsPage";
 import { InsurancePage } from "../pages/insurance/InsurancePage";
 import { DepartmentsPage } from "../pages/departments/DepartmentsPage";
 import { UsersPage } from "../pages/users/UsersPage";
+import { AuditLogsPage } from "../pages/audit-logs/AuditLogsPage";
 import { PatientsPage } from "../pages/patients/PatientsPage";
 import { DoctorsPage } from "../pages/doctors/DoctorsPage";
 import { SettingsPage } from "../pages/settings/SettingsPage";
@@ -144,6 +145,16 @@ export function AppRoutes() {
           <ProtectedRoute roles={adminRoles}>
             <AppLayout>
               <UsersPage />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/audit-logs"
+        element={
+          <ProtectedRoute roles={adminRoles}>
+            <AppLayout>
+              <AuditLogsPage />
             </AppLayout>
           </ProtectedRoute>
         }

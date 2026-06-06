@@ -208,6 +208,13 @@ const NAV_ITEMS: {
     group: "administration",
   },
   {
+    to: "/audit-logs",
+    label: "Audit Logs",
+    icon: "reports",
+    roles: adminRoles,
+    group: "administration",
+  },
+  {
     to: "/past-records",
     label: "Past Records",
     icon: "claims",

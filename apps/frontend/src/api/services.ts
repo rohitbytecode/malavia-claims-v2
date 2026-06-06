@@ -246,6 +246,10 @@ export const auditApi = {
     unwrap<Paginated<AuditLog> | AuditLog[]>(
       apiClient.get(`/audit-logs/module/${module}`)
     ).then(normalized),
+  list: (params: Record<string, any>) =>
+    unwrap<Paginated<AuditLog>>(apiClient.get("/audit-logs", { params })).then(
+      normalized
+    ),
 };
 export const reportApi = {
   monthly: (year: number, month: number, endYear?: number, endMonth?: number) =>
