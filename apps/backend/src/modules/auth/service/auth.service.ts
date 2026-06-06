@@ -22,9 +22,16 @@ interface TokenResult {
   refreshToken: string;
 }
 
-const buildTokenPayload = (userId: string, role: Roles) => ({
+const buildTokenPayload = (
+  userId: string,
+  role: Roles,
+  username: string,
+  fullName: string
+) => ({
   userId,
   role,
+  username,
+  fullName,
 });
 
 const refreshTokenMatchesAnyHash = async (
@@ -62,10 +69,20 @@ export class AuthService {
     }
 
     const accessToken = signAccessToken(
-      buildTokenPayload(user._id.toString(), user.role)
+      buildTokenPayload(
+        user._id.toString(),
+        user.role,
+        user.username,
+        user.fullName
+      )
     );
     const refreshToken = signRefreshToken(
-      buildTokenPayload(user._id.toString(), user.role)
+      buildTokenPayload(
+        user._id.toString(),
+        user.role,
+        user.username,
+        user.fullName
+      )
     );
     const refreshTokenHash = await hashPassword(refreshToken);
 
@@ -111,10 +128,20 @@ export class AuthService {
     }
 
     const accessToken = signAccessToken(
-      buildTokenPayload(user._id.toString(), user.role)
+      buildTokenPayload(
+        user._id.toString(),
+        user.role,
+        user.username,
+        user.fullName
+      )
     );
     const newRefreshToken = signRefreshToken(
-      buildTokenPayload(user._id.toString(), user.role)
+      buildTokenPayload(
+        user._id.toString(),
+        user.role,
+        user.username,
+        user.fullName
+      )
     );
     const newRefreshTokenHash = await hashPassword(newRefreshToken);
 

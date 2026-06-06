@@ -6,7 +6,7 @@
   "main": "dist/main.js",
   "scripts": {
     "dev": "electron .",
-    "build": "tsc -p tsconfig.json && node -e \"require('fs').cpSync('assets', 'dist/assets', {recursive: true})\"",
+    "build": "tsc -p tsconfig.json && node -e \"require('fs').cpSync('assets', 'dist/assets', {recursive: true})\" && node -e \"require('fs').copyFileSync('preload.cjs', 'dist/preload.cjs')\"",
     "package": "pnpm build && electron-builder --win --x64",
     "lint": "echo \"(todo)\""
   },
@@ -25,7 +25,8 @@
     "icon": "assets/logo.ico",
     "asar": true,
     "asarUnpack": [
-      "assets/**/*"
+      "assets/**/*",
+      "preload.cjs"
     ],
     "directories": {
       "output": "release",
@@ -34,7 +35,8 @@
     "files": [
       "dist/**/*",
       "package.json",
-      "assets/**/*"
+      "assets/**/*",
+      "preload.cjs"
     ],
     "win": {
       "icon": "assets/logo.ico",

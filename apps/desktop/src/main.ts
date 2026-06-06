@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import path from "node:path";
 import fs from "node:fs";
 import http from "node:http";
@@ -518,6 +518,9 @@ function createWindow(port: number) {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: isUncPath ? false : undefined,
+      preload: app.isPackaged
+        ? path.join(process.resourcesPath, "app.asar.unpacked", "preload.cjs")
+        : path.join(__dirname, "preload.cjs"),
     },
   });
 
@@ -643,6 +646,7 @@ app.whenReady().then(async () => {
     );
 
     await startBackendIfNeeded(config.isClient, logPath, dotenv, dotenvPath);
+    ipcMain.handle("get-hostname", () => os.hostname());
     createWindow(actualPort);
   } catch (err) {
     console.error(err);

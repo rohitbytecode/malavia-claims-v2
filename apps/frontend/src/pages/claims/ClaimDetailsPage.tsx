@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { getSocket } from "../../lib/socket";
+import { getDeviceName } from "../../utils/device-name";
 import {
   alertApi,
   auditApi,
@@ -43,6 +45,42 @@ export function ClaimDetailsPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "finance">(
     "overview"
   );
+
+  const [lockBlocked, setLockBlocked] = useState(false);
+  const [lockMessage, setLockMessage] = useState("");
+  const lockAcquired = useRef(false);
+
+  useEffect(() => {
+    if (!claimId || user?.role === "PHARMACIST") return;
+
+    const socket = getSocket();
+    if (!socket.connected) socket.connect();
+
+    getDeviceName().then((deviceName) => {
+      socket.emit(
+        "claim:lock:acquire",
+        { claimId, deviceName },
+        (response: { success: boolean; message?: string }) => {
+          if (response.success) {
+            lockAcquired.current = true;
+          } else {
+            setLockBlocked(true);
+            setLockMessage(
+              response.message ??
+                "This claim is currently being edited by another user."
+            );
+          }
+        }
+      );
+    });
+
+    return () => {
+      if (lockAcquired.current) {
+        socket.emit("claim:lock:release", { claimId });
+        lockAcquired.current = false;
+      }
+    };
+  }, [claimId, user?.role]);
 
   const claim = useQuery({
     queryKey: ["claim", claimId],
@@ -109,7 +147,30 @@ export function ClaimDetailsPage() {
 
   if (claim.isLoading) return <Skeleton rows={10} />;
   if (claim.isError || !claim.data) return <ErrorPanel error={claim.error} />;
-
+  if (lockBlocked) {
+    return (
+      <div
+        className="claim-cockpit immersive-cockpit"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "60vh",
+        }}
+      >
+        <div
+          className="premium-panel"
+          style={{ padding: 40, textAlign: "center", maxWidth: 400 }}
+        >
+          <div style={{ fontSize: 40, marginBottom: 16 }}>🔒</div>
+          <h2 style={{ marginBottom: 8 }}>Claim In Use</h2>
+          <p style={{ color: "var(--text-secondary)", fontSize: 14 }}>
+            {lockMessage}
+          </p>
+        </div>
+      </div>
+    );
+  }
   const data = claim.data;
   const locked = data.status === "CLOSED";
   const isSettlementPending = data.status === "SETTLEMENT_PENDING";
@@ -124,7 +185,8 @@ export function ClaimDetailsPage() {
             <p className="eyebrow">Claim Operational Cockpit</p>
             <h1>{data.claimNumber ?? data._id}</h1>
             <span>
-              {data.type} workflow{ageing !== null ? ` · ${ageing} days ageing` : ""} · Updated{" "}
+              {data.type} workflow
+              {ageing !== null ? ` · ${ageing} days ageing` : ""} · Updated{" "}
               {formatDateTime(data.updatedAt)}
             </span>
           </div>
@@ -148,7 +210,9 @@ export function ClaimDetailsPage() {
             ) : (
               <strong>
                 {formatCurrency(
-                  data.status === "SETTLED" && data.settledAmount !== null && data.settledAmount !== undefined
+                  data.status === "SETTLED" &&
+                    data.settledAmount !== null &&
+                    data.settledAmount !== undefined
                     ? data.settledAmount
                     : data.totalClaimAmount
                 )}
@@ -449,7 +513,8 @@ export function ClaimDetailsPage() {
                   <dt>Patient ID</dt>
                   <dd>
                     {data.patientId}
-                    {patientMap.has(data.patientId) && ` (${patientMap.get(data.patientId)})`}
+                    {patientMap.has(data.patientId) &&
+                      ` (${patientMap.get(data.patientId)})`}
                   </dd>
                   <dt>Insurance company</dt>
                   <dd>

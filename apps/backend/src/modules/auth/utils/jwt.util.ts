@@ -5,6 +5,8 @@ import { Roles } from "@/core/enums/roles.enum.js";
 export interface TokenPayload {
   userId: string;
   role: Roles;
+  username: string;
+  fullName: string;
 }
 
 export const signAccessToken = (payload: TokenPayload) => {
