@@ -436,22 +436,22 @@ k6 run --env TOKEN=<jwt_token> load-test/stress-test.js
 
 ## Priority Matrix
 
-| Priority | Task | Area | Impact | Effort |
-|---|---|---|---|---|
-| **P0** 🔴 | MongoDB indexes + connection pool | Database | 🔥 Critical | Low |
-| **P0** 🔴 | Redis adapter for Socket.io | Concurrency | 🔥 Critical | Medium |
-| **P0** 🔴 | Redis-backed lock manager | Concurrency | 🔥 Critical | Medium |
-| **P1** 🟠 | Bulk notification inserts + TTL | Notifications | High | Low |
-| **P1** 🟠 | Response compression | API | High | Low |
-| **P1** 🟠 | Request timeout middleware | API | High | Low |
-| **P1** 🟠 | `.lean()` on read queries | Database | High | Medium |
-| **P2** 🟡 | DB reconnection retry | Crash Prev. | Medium | Low |
-| **P2** 🟡 | Enhanced health check | Crash Prev. | Medium | Low |
-| **P2** 🟡 | Keep-alive tuning | API | Medium | Low |
-| **P2** 🟡 | Job queue (BullMQ) | Notifications | Medium | High |
-| **P3** 🟢 | Load test scripts (k6) | Validation | Medium | Medium |
-| **P3** 🟢 | Circuit breaker | Crash Prev. | Low | Medium |
-| **P3** 🟢 | Cursor-based pagination | Database | Low | High |
+| Priority | Task | Area | Impact | Effort | isDone?
+|---|---|---|---|---|---|
+| **P0** 🔴 | MongoDB indexes + connection pool | Database | 🔥 Critical | Low | Yes
+| **P0** 🔴 | Redis adapter for Socket.io | Concurrency | 🔥 Critical | Medium | Pending
+| **P0** 🔴 | Redis-backed lock manager | Concurrency | 🔥 Critical | Medium | Pending
+| **P1** 🟠 | Bulk notification inserts + TTL | Notifications | High | Low | Pending
+| **P1** 🟠 | Response compression | API | High | Low | Pending
+| **P1** 🟠 | Request timeout middleware | API | High | Low | Pending
+| **P1** 🟠 | `.lean()` on read queries | Database | High | Medium | Pending
+| **P2** 🟡 | DB reconnection retry | Crash Prev. | Medium | Low | Pending
+| **P2** 🟡 | Enhanced health check | Crash Prev. | Medium | Low | Pending
+| **P2** 🟡 | Keep-alive tuning | API | Medium | Low | Pending
+| **P2** 🟡 | Job queue (BullMQ) | Notifications | Medium | High | Pending
+| **P3** 🟢 | Load test scripts (k6) | Validation | Medium | Medium | Pending
+| **P3** 🟢 | Circuit breaker | Crash Prev. | Low | Medium | Pending
+| **P3** 🟢 | Cursor-based pagination | Database | Low | High | Pending
 
 ---
 
