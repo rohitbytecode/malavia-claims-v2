@@ -4,10 +4,10 @@
 
 | Metric | Target |
 |---|---|
-| Total Claims | 50,000 |
-| Concurrent Users | 100 |
-| Notifications | 500,000 |
-| API Requests | 2,000,000 |
+| Total Claims | 500,000+ |
+| Concurrent Users | 1000 |
+| Notifications | 5,000,000+ |
+| API Requests | 20,000,000+ |
 
 ---
 
