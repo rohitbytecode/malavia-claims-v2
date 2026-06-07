@@ -9,12 +9,10 @@ const auditLogSchema = new mongoose.Schema<AuditLogDocument>(
       type: String,
       enum: Object.values(AuditModule),
       required: true,
-      index: true,
     },
     entityId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      index: true,
     },
     action: {
       type: String,
@@ -37,6 +35,11 @@ const auditLogSchema = new mongoose.Schema<AuditLogDocument>(
     timestamps: true,
   }
 );
+
+auditLogSchema.index({ module: 1, action: 1, createdAt: -1 });
+auditLogSchema.index({ entityId: 1, module: 1, createdAt: -1 });
+auditLogSchema.index({ performedBy: 1, createdAt: -1 });
+auditLogSchema.index({ createdAt: 1}, { expireAfterSeconds: 60 * 60 * 24 * 90 });
 
 export const AuditLogModel =
   mongoose.models.AuditLog ||

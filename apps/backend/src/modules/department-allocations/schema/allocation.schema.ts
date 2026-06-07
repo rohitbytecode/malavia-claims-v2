@@ -7,7 +7,6 @@ const allocationSchema = new mongoose.Schema<AllocationDocument>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Settlement",
       required: true,
-      index: true,
     },
     departmentId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -28,7 +27,6 @@ const allocationSchema = new mongoose.Schema<AllocationDocument>(
   }
 );
 
-// A department should only be allocated once per settlement
 allocationSchema.index({ settlementId: 1, departmentId: 1 }, { unique: true });
 
 export const AllocationModel =

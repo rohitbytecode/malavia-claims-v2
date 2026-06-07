@@ -10,7 +10,6 @@ const notificationSchema = new mongoose.Schema<NotificationDocument>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
     type: {
       type: String,
@@ -31,7 +30,6 @@ const notificationSchema = new mongoose.Schema<NotificationDocument>(
     isRead: {
       type: Boolean,
       default: false,
-      index: true,
     },
     readAt: {
       type: Date,
@@ -41,6 +39,10 @@ const notificationSchema = new mongoose.Schema<NotificationDocument>(
     timestamps: true,
   }
 );
+
+notificationSchema.index({ userId: 1, isRead: 1, createdAt: -1 });
+notificationSchema.index({ userId: 1, createdAt: -1 });
+notificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 });
 
 export const NotificationModel =
   mongoose.models.Notification ||

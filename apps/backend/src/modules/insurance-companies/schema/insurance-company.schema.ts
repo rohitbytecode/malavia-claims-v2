@@ -28,7 +28,6 @@ const insuranceCompanySchema = new mongoose.Schema<InsuranceCompanyDocument>(
       required: true,
       trim: true,
       unique: true,
-      index: true,
     },
     submissionMethods: {
       type: [String],
@@ -75,13 +74,14 @@ const insuranceCompanySchema = new mongoose.Schema<InsuranceCompanyDocument>(
     isActive: {
       type: Boolean,
       default: true,
-      index: true,
     },
   },
   {
     timestamps: true,
   }
 );
+
+insuranceCompanySchema.index({ isActive: 1, name: 1});
 
 export const InsuranceCompanyModel =
   mongoose.models.InsuranceCompany ||

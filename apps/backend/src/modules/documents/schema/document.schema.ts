@@ -8,13 +8,11 @@ const documentSchema = new mongoose.Schema<DocumentDocument>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Claim",
       required: true,
-      index: true,
     },
     documentType: {
       type: String,
       enum: Object.values(DocumentType),
       required: true,
-      index: true,
     },
     fileName: {
       type: String,
@@ -51,6 +49,10 @@ const documentSchema = new mongoose.Schema<DocumentDocument>(
     timestamps: true,
   }
 );
+
+documentSchema.index({ claimId: 1, documentType: 1 });
+documentSchema.index({ claimId: 1, version: -1 });
+documentSchema.index({ uploadedBy: 1, createdAt: -1}, { sparse: true});
 
 export const DocumentModel =
   (mongoose.models.Document as mongoose.Model<DocumentDocument>) ??

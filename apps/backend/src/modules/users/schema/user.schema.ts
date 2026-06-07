@@ -14,7 +14,6 @@ const userSchema = new mongoose.Schema<UserDocument>(
       trim: true,
       lowercase: true,
       unique: true,
-      index: true,
     },
     password: {
       type: String,
@@ -35,7 +34,6 @@ const userSchema = new mongoose.Schema<UserDocument>(
     isActive: {
       type: Boolean,
       default: true,
-      index: true,
     },
     refreshTokenHash: {
       type: String,
@@ -51,5 +49,7 @@ const userSchema = new mongoose.Schema<UserDocument>(
   }
 );
 
+userSchema.index({ role: 1, isActive: 1 });
+userSchema.index({ isActive: 1, fullName: 1});
 export const UserModel =
   mongoose.models.User || mongoose.model<UserDocument>("User", userSchema);

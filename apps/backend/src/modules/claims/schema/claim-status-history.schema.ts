@@ -8,7 +8,6 @@ const claimStatusHistorySchema =
         type: mongoose.Schema.Types.ObjectId,
         ref: "Claim",
         required: true,
-        index: true,
       },
       fromStatus: {
         type: String,
@@ -36,6 +35,9 @@ const claimStatusHistorySchema =
       timestamps: true,
     }
   );
+
+claimStatusHistorySchema.index({ claimId: 1, effectiveAt: -1 });
+claimStatusHistorySchema.index({ claimId: 1, createdAt: -1 });
 
 export const ClaimStatusHistoryModel =
   mongoose.models.ClaimStatusHistory ||

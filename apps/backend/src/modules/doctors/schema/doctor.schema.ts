@@ -16,13 +16,14 @@ const doctorSchema = new mongoose.Schema<DoctorDocument>(
     isActive: {
       type: Boolean,
       default: true,
-      index: true,
     },
   },
   {
     timestamps: true,
   }
 );
+
+doctorSchema.index({ departmentId: 1, isActive: 1 });
 
 export const DoctorModel =
   mongoose.models.Doctor ||

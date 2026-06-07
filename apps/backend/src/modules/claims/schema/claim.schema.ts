@@ -31,7 +31,6 @@ const claimSchema = new mongoose.Schema<ClaimDocument>(
       type: String,
       required: true,
       unique: true,
-      index: true,
     },
     type: {
       type: String,
@@ -43,7 +42,6 @@ const claimSchema = new mongoose.Schema<ClaimDocument>(
       enum: Object.values(ClaimStatus),
       required: true,
       default: ClaimStatus.DRAFT,
-      index: true,
     },
     insuranceCompanyId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -59,7 +57,6 @@ const claimSchema = new mongoose.Schema<ClaimDocument>(
       type: String,
       required: true,
       trim: true,
-      index: true,
     },
     hospitalId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -132,5 +129,10 @@ const claimSchema = new mongoose.Schema<ClaimDocument>(
   }
 );
 
+claimSchema.index({status: 1, createdAt: -1 });
+claimSchema.index({ patientId: 1, status: 1 });
+claimSchema.index({ insuranceCompanyId: 1, status:1 });
+claimSchema.index({ createdBy:1, createdAt: -1 });
+claimSchema.index({ type: 1, status: 1, createdAt: -1 });
 export const ClaimModel =
   mongoose.models.Claim || mongoose.model<ClaimDocument>("Claim", claimSchema);

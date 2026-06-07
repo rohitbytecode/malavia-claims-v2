@@ -44,6 +44,8 @@ const depositSchema = new mongoose.Schema<DepositDocument>(
   }
 );
 
+depositSchema.index({ refundStatus: 1, refundDate: 1}, { sparse: true});
+
 export const DepositModel =
   mongoose.models.Deposit ||
   mongoose.model<DepositDocument>("Deposit", depositSchema);

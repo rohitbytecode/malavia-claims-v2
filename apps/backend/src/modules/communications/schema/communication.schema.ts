@@ -8,7 +8,6 @@ const communicationSchema = new mongoose.Schema<CommunicationDocument>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Claim",
       required: true,
-      index: true,
     },
     type: {
       type: String,
@@ -19,7 +18,6 @@ const communicationSchema = new mongoose.Schema<CommunicationDocument>(
       type: String,
       enum: Object.values(CommunicationMedium),
       required: true,
-      index: true,
     },
     remarks: {
       type: String,
@@ -37,6 +35,10 @@ const communicationSchema = new mongoose.Schema<CommunicationDocument>(
     timestamps: true,
   }
 );
+
+communicationSchema.index({ claimId: 1, createdAt: -1 });
+communicationSchema.index({ claimId: 1, medium: 1 });
+communicationSchema.index({ followUpDate: 1}, { sparse: true });
 
 export const CommunicationModel =
   mongoose.models.Communication ||

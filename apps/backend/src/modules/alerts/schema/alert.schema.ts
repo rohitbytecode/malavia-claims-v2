@@ -9,13 +9,11 @@ const alertSchema = new mongoose.Schema<AlertDocument>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Claim",
       required: true,
-      index: true,
     },
     type: {
       type: String,
       enum: Object.values(AlertType),
       required: true,
-      index: true,
     },
     severity: {
       type: String,
@@ -29,7 +27,6 @@ const alertSchema = new mongoose.Schema<AlertDocument>(
     resolved: {
       type: Boolean,
       default: false,
-      index: true,
     },
     resolvedAt: {
       type: Date,
@@ -43,6 +40,10 @@ const alertSchema = new mongoose.Schema<AlertDocument>(
     timestamps: true,
   }
 );
+
+alertSchema.index({ claimId: 1, resolved: 1 });
+alertSchema.index({ resolved: 1, severity: 1, createdAt: -1 });
+alertSchema.index({ type: 1, resolved: 1});
 
 export const AlertModel =
   mongoose.models.Alert || mongoose.model<AlertDocument>("Alert", alertSchema);

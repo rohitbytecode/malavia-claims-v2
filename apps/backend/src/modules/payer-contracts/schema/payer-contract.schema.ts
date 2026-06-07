@@ -39,7 +39,6 @@ const payerContractSchema = new mongoose.Schema<PayerContractDocument>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "InsuranceCompany",
       required: true,
-      index: true,
     },
     effectiveFrom: {
       type: Date,
@@ -52,7 +51,6 @@ const payerContractSchema = new mongoose.Schema<PayerContractDocument>(
     isActive: {
       type: Boolean,
       default: true,
-      index: true,
     },
     departmentPolicies: {
       type: [departmentPolicySchema],
@@ -88,11 +86,11 @@ const payerContractSchema = new mongoose.Schema<PayerContractDocument>(
   }
 );
 
-// Compound index: one active contract per company at a time
 payerContractSchema.index(
   { insuranceCompanyId: 1, isActive: 1 },
   { unique: true, partialFilterExpression: { isActive: true } }
 );
+payerContractSchema.index({ insuranceCompanyId: 1, effectiveFrom: -1, effectiveTo: 1});
 
 export const PayerContractModel =
   mongoose.models.PayerContract ||
