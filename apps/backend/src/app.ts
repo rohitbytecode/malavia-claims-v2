@@ -12,6 +12,7 @@ import mongoose from "mongoose";
 import { randomUUID } from "node:crypto";
 
 import type { Request, Response } from "express";
+import { APP_CONFIG } from "./config/app.js";
 
 import { env } from "./config/env.js";
 import { resolveCorsOrigin } from "./config/cors.js";
@@ -140,6 +141,16 @@ app.use("/api", apiLimiter);
 setupSwagger(app);
 
 app.get("/health", (_, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Claim Management API Running",
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get(`/api/${APP_CONFIG.API_VERSION}/health`, (_, res) => {
   res.status(200).json({
     success: true,
     message: "Claim Management API Running",
