@@ -6,16 +6,44 @@ import { spawn, execSync, type ChildProcess } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import net from "node:net";
 import os from "node:os";
-import crypto from "node:crypto";
+import https from "node:https";
 
-const exePath = process.argv[0] ?? "";
-const isUncPath = exePath.startsWith("\\\\") || exePath.startsWith("//");
+function isRunningFromNetwork(): boolean {
+  const argv0 = process.argv[0] ?? "";
+
+  if (argv0.startsWith("\\\\") || argv0.startsWith("//")) return true;
+
+  const driveLetter = argv0.slice(0, 2);
+  if (driveLetter.length === 2 && driveLetter[1] === ":") {
+    try {
+      execSync(`net use ${driveLetter}`, {
+        encoding: "utf-8",
+        stdio: "pipe",
+        timeout: 3000,
+      });
+      return true; 
+    } catch {
+    }
+
+    try {
+      const result = execSync(
+        `powershell -NoProfile -Command "(Get-WmiObject Win32_LogicalDisk -Filter \"DeviceID='${driveLetter}'\").DriveType"`,
+        { encoding: "utf-8", stdio: "pipe", timeout: 5000 }
+      ).trim();
+      if (result === "4") return true; // DriveType 4 = Network Drive
+    } catch {
+      // WMI check failed — not critical
+    }
+  }
+
+  return false;
+}
+
+const isUncPath = isRunningFromNetwork();
 
 if (isUncPath) {
-  // Disable GPU hardware-acceleration
-
+  // Disable GPU hardware-acceleration — Chromium GPU process fails on network paths
   app.disableHardwareAcceleration();
-
   app.commandLine.appendSwitch("no-sandbox");
 
   // Force software rendering as a fallback
@@ -54,6 +82,8 @@ if (!gotLock) {
     if (mainWindow && !mainWindow.isDestroyed()) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
+    } else {
+      createWindow(currentPort);
     }
   });
 }
@@ -62,10 +92,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let backendProc: ChildProcess | null = null;
+let backendAlreadyRunning = false;
 let frontendServer: http.Server | null = null;
 let mainWindow: BrowserWindow | null = null;
-let currentPort = 49200;
-let backendAlreadyRunning = false;
+let currentPort = 0;
+let servingDir = "";
 
 function getProjectRoot(): string {
   if (app.isPackaged) return process.resourcesPath;
@@ -121,22 +152,29 @@ function writeRuntimeConfig(distDir: string, ip: string) {
 }
 
 function copyDistToLocal(srcDistDir: string): string {
-  const hash = crypto
-    .createHash("md5")
-    .update(srcDistDir)
-    .digest("hex")
-    .slice(0, 8);
-  const localDir = path.join(app.getPath("userData"), "frontend-cache", hash);
+  const runId = Date.now().toString(36);
+  const localDir = path.join(app.getPath("userData"), "frontend-cache", runId);
 
-  if (fs.existsSync(localDir)) {
-    fs.rmSync(localDir, { recursive: true, force: true });
-  }
   fs.mkdirSync(localDir, { recursive: true });
   fs.cpSync(srcDistDir, localDir, { recursive: true });
+
   return localDir;
 }
 
-function startFrontendServer(distDir: string, port: number): Promise<number> {
+function cleanOldCacheDirs(keepDir: string) {
+  try {
+    const cacheRoot = path.join(app.getPath("userData"), "frontend-cache");
+    if (!fs.existsSync(cacheRoot)) return;
+    for (const entry of fs.readdirSync(cacheRoot)) {
+      const full = path.join(cacheRoot, entry);
+      if (full === keepDir) continue;
+
+      fs.rm(full, { recursive: true, force: true }, () => {});
+    }
+  } catch {}
+}
+
+function startFrontendServer(distDir: string): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
       const urlPath = (req.url ?? "/").split("?")[0];
@@ -186,21 +224,13 @@ function startFrontendServer(distDir: string, port: number): Promise<number> {
       });
     });
 
-    server.listen(port, "0.0.0.0", () => {
+    server.listen(0, "0.0.0.0", () => {
       frontendServer = server;
-      resolve(port);
+      const addr = server.address() as net.AddressInfo;
+      resolve(addr.port);
     });
 
-    server.on("error", (err: NodeJS.ErrnoException) => {
-      if (err.code === "EADDRINUSE") {
-        server.close();
-        startFrontendServer(distDir, port + 1)
-          .then(resolve)
-          .catch(reject);
-      } else {
-        reject(err);
-      }
-    });
+    server.on("error", reject);
   });
 }
 
@@ -336,20 +366,41 @@ function ensureFirewallRule(port: number, logPath: string) {
   }
 }
 
-function isPortListening(port: number): Promise<boolean> {
+// function isPortListening(port: number): Promise<boolean> {
+//   return new Promise((resolve) => {
+//     const socket = new net.Socket();
+//     socket.setTimeout(2000);
+//     socket.on("connect", () => {
+//       socket.destroy();
+//       resolve(true);
+//     });
+//     socket.on("error", () => resolve(false));
+//     socket.on("timeout", () => {
+//       socket.destroy();
+//       resolve(false);
+//     });
+//     socket.connect(port, "127.0.0.1");
+//   });
+// }
+
+async function isBackendHealthy(port: number): Promise<boolean> {
   return new Promise((resolve) => {
-    const socket = new net.Socket();
-    socket.setTimeout(2000);
-    socket.on("connect", () => {
-      socket.destroy();
-      resolve(true);
-    });
-    socket.on("error", () => resolve(false));
-    socket.on("timeout", () => {
-      socket.destroy();
+    const req = https.get(
+      `https://127.0.0.1:${port}/api/v1/health`,
+      {
+        timeout: 2000,
+        rejectUnauthorized: false,
+      },
+      (res: any) => {
+        res.resume();
+        resolve(res.statusCode === 200);
+      }
+    );
+    req.on("error", () => resolve(false));
+    req.on("timeout", () => {
+      req.destroy();
       resolve(false);
     });
-    socket.connect(port, "127.0.0.1");
   });
 }
 
@@ -430,7 +481,7 @@ async function startBackendIfNeeded(
 
   const backendPort = 3443;
 
-  const alreadyUp = await isPortListening(backendPort);
+  const alreadyUp = await isBackendHealthy(backendPort);
   if (alreadyUp) {
     backendAlreadyRunning = true;
     fs.appendFileSync(
@@ -489,7 +540,7 @@ async function startBackendIfNeeded(
   const start = Date.now();
 
   while (true) {
-    const ok = await isPortListening(backendPort);
+    const ok = await isBackendHealthy(backendPort);
     if (ok) return;
 
     if (Date.now() - start > timeoutMs) {
@@ -528,6 +579,7 @@ function createWindow(port: number) {
 
   win.once("ready-to-show", () => {
     win.show();
+    setTimeout(() => cleanOldCacheDirs(servingDir), 5000);
   });
 
   win.on("closed", () => {
@@ -570,6 +622,73 @@ function createWindow(port: number) {
   return win;
 }
 
+// ── Client connectivity pre-check ────────────────────────────────────
+// Before loading the window on a client, verify that the host backend
+// is actually reachable. Show a retry dialog if not.
+async function waitForHostBackend(
+  host: string,
+  port: number,
+  logPath: string
+): Promise<void> {
+  const maxRetries = 3;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const reachable = await new Promise<boolean>((resolve) => {
+      const req = https.get(
+        `https://${host}:${port}/api/v1/health`,
+        { timeout: 5000, rejectUnauthorized: false },
+        (res: any) => {
+          res.resume();
+          resolve(res.statusCode === 200);
+        }
+      );
+      req.on("error", () => resolve(false));
+      req.on("timeout", () => {
+        req.destroy();
+        resolve(false);
+      });
+    });
+
+    if (reachable) {
+      fs.appendFileSync(
+        logPath,
+        `[Client] Host backend ${host}:${port} is reachable (attempt ${attempt})\n`
+      );
+      return;
+    }
+
+    fs.appendFileSync(
+      logPath,
+      `[Client] Host backend ${host}:${port} unreachable (attempt ${attempt}/${maxRetries})\n`
+    );
+
+    if (attempt < maxRetries) {
+      // Wait 2 seconds between retries
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
+
+  // All retries failed — show user-friendly dialog
+  const response = dialog.showMessageBoxSync({
+    type: "warning",
+    title: "Cannot Connect to Server",
+    message:
+      `Unable to connect to the server at ${host}:${port}.\n\n` +
+      `Possible reasons:\n` +
+      `• The host computer is turned off or not on the network\n` +
+      `• The application is not running on the host computer\n` +
+      `• Windows Firewall is blocking the connection\n\n` +
+      `Would you like to continue anyway?`,
+    buttons: ["Continue Anyway", "Quit"],
+    defaultId: 0,
+    cancelId: 1,
+  });
+
+  if (response === 1) {
+    app.quit();
+    throw new Error("User chose to quit — host backend unreachable");
+  }
+}
+
 app.whenReady().then(async () => {
   const logPath = path.join(app.getPath("userData"), "backend.log");
 
@@ -605,7 +724,7 @@ app.whenReady().then(async () => {
       `\n[Startup ${new Date().toISOString()}] isClient=${config.isClient}, ` +
         `remoteHost=${config.remoteHost}, hostname=${os.hostname()}, ` +
         `lanIp=${getLanIp()}, exePath=${app.getPath("exe")}, ` +
-        `uncPath=${uncPath ?? "(local)"}\n`
+        `uncPath=${uncPath ?? "(local)"}, isUncPath=${isUncPath}\n`
     );
 
     let targetHost: string;
@@ -623,6 +742,9 @@ app.whenReady().then(async () => {
         );
       }
       targetHost = config.remoteHost;
+
+      // Pre-check: verify host backend is reachable before loading the UI
+      await waitForHostBackend(targetHost, 3443, logPath);
     } else {
       targetHost = os.hostname();
     }
@@ -638,7 +760,7 @@ app.whenReady().then(async () => {
 
     writeRuntimeConfig(servingDir, targetHost);
 
-    const actualPort = await startFrontendServer(servingDir, 49200);
+    const actualPort = await startFrontendServer(servingDir);
     currentPort = actualPort;
     fs.appendFileSync(
       logPath,
