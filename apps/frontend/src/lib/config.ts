@@ -9,7 +9,12 @@ export async function loadRuntimeConfig(): Promise<RuntimeConfig> {
   if (_config) return _config;
 
   try {
-    const res = await fetch("/config.json");
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+    const res = await fetch("/config.json", { signal: controller.signal });
+    clearTimeout(timeoutId);
+
     if (res.ok) {
       _config = await res.json();
       return _config!;

@@ -8,38 +8,51 @@ import net from "node:net";
 import os from "node:os";
 import https from "node:https";
 
-function isRunningFromNetwork(): boolean {
-  const argv0 = process.argv[0] ?? "";
+function readCachedNetworkFlag(): boolean {
+  try {
+    const flagPath = path.join(
+      app.getPath("userData"),
+      "network-path-flag.json"
+    );
+    if (fs.existsSync(flagPath)) {
+      const cached = JSON.parse(fs.readFileSync(flagPath, "utf-8"));
+      return cached.isNetworkPath === true;
+    }
+  } catch {}
+  return false;
+}
 
+function isRunningFromNetworkSync(): boolean {
+  const argv0 = process.argv[0] ?? "";
   if (argv0.startsWith("\\\\") || argv0.startsWith("//")) return true;
 
+  if (readCachedNetworkFlag()) return true;
+
   const driveLetter = argv0.slice(0, 2);
-  if (driveLetter.length === 2 && driveLetter[1] === ":") {
+  if (driveLetter.length === 2 && driveLetter[1] === ":" && driveLetter.toUpperCase() !== "C:") {
     try {
       execSync(`net use ${driveLetter}`, {
         encoding: "utf-8",
         stdio: "pipe",
-        timeout: 3000,
+        timeout: 500,
       });
-      return true; 
-    } catch {
-    }
-
-    try {
-      const result = execSync(
-        `powershell -NoProfile -Command "(Get-WmiObject Win32_LogicalDisk -Filter \"DeviceID='${driveLetter}'\").DriveType"`,
-        { encoding: "utf-8", stdio: "pipe", timeout: 5000 }
-      ).trim();
-      if (result === "4") return true; // DriveType 4 = Network Drive
-    } catch {
-      // WMI check failed — not critical
-    }
+      return true;
+    } catch {}
   }
-
   return false;
 }
 
-const isUncPath = isRunningFromNetwork();
+function persistNetworkFlag(isNetworkPath: boolean): void {
+  try {
+    fs.writeFileSync(
+      path.join(app.getPath("userData"), "network-path-flag.json"),
+      JSON.stringify({ isNetworkPath }),
+      "utf-8"
+    );
+  } catch {}
+}
+
+let isUncPath = isRunningFromNetworkSync();
 
 if (isUncPath) {
   // Disable GPU hardware-acceleration — Chromium GPU process fails on network paths
@@ -50,6 +63,42 @@ if (isUncPath) {
   app.commandLine.appendSwitch("disable-gpu");
   app.commandLine.appendSwitch("disable-gpu-compositing");
   app.commandLine.appendSwitch("disable-software-rasterizer");
+}
+
+async function detectIsNetworkPath(): Promise<boolean> {
+  const argv0 = process.argv[0] ?? "";
+  if (argv0.startsWith("\\\\") || argv0.startsWith("//")) return true;
+
+  const driveLetter = argv0.slice(0, 2);
+  if (driveLetter.length !== 2 || driveLetter[1] !== ":") return false;
+
+  // Run both checks concurrently with a shared short timeout
+  const timeout = (ms: number) =>
+    new Promise<boolean>((r) => setTimeout(() => r(false), ms));
+
+  const netUseCheck = new Promise<boolean>((resolve) => {
+    const child = spawn("net", ["use", driveLetter], { stdio: "pipe" });
+    child.on("exit", (code) => resolve(code === 0));
+    child.on("error", () => resolve(false));
+  });
+
+  const wmiCheck = new Promise<boolean>((resolve) => {
+    const child = spawn("powershell", [
+      "-NoProfile",
+      "-Command",
+      `(Get-WmiObject Win32_LogicalDisk -Filter "DeviceID='${driveLetter}'").DriveType`,
+    ], { stdio: "pipe" });
+    let out = "";
+    child.stdout?.on("data", (d) => (out += d));
+    child.on("exit", () => resolve(out.trim() === "4"));
+    child.on("error", () => resolve(false));
+  });
+
+  // First one to return true wins; hard cap at 1.5 s total
+  return Promise.race([
+    Promise.any([netUseCheck, wmiCheck]),
+    timeout(1500).then(() => false),
+  ]).catch(() => false);
 }
 
 app.on(
@@ -95,8 +144,53 @@ let backendProc: ChildProcess | null = null;
 let backendAlreadyRunning = false;
 let frontendServer: http.Server | null = null;
 let mainWindow: BrowserWindow | null = null;
+let loadingWindow: BrowserWindow | null = null;
 let currentPort = 0;
 let servingDir = "";
+
+function getLoadingPagePath(): string {
+  if (app.isPackaged) {
+    return path.join(
+      process.resourcesPath,
+      "app.asar.unpacked",
+      "assets",
+      "loading.html"
+    );
+  }
+  return path.join(__dirname, "..", "assets", "loading.html");
+}
+
+function createLoadingWindow() {
+  if (loadingWindow && !loadingWindow.isDestroyed()) {
+    return loadingWindow;
+  }
+
+  loadingWindow = new BrowserWindow({
+    width: 480,
+    height: 380,
+    frame: false,
+    resizable: false,
+    transparent: true,
+    show: false,
+    icon: getIconPath(),
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  });
+
+  loadingWindow.loadFile(getLoadingPagePath());
+
+  loadingWindow.once("ready-to-show", () => {
+    loadingWindow?.show();
+  });
+
+  loadingWindow.on("closed", () => {
+    loadingWindow = null;
+  });
+
+  return loadingWindow;
+}
 
 function getProjectRoot(): string {
   if (app.isPackaged) return process.resourcesPath;
@@ -136,10 +230,16 @@ function getLanIp(): string {
   return "127.0.0.1";
 }
 
-function writeRuntimeConfig(distDir: string, ip: string) {
+function writeRuntimeConfig(distDir: string, host: string) {
+  let targetHost = host;
+  const isIp = /^[0-9.:]+$/.test(host);
+  if (!isIp && host !== "localhost" && !host.endsWith(".local")) {
+    targetHost = `${host}.local`;
+  }
+
   const config = {
-    apiBaseUrl: `https://${ip}:3443/api/v1`,
-    socketUrl: `https://${ip}:3443`,
+    apiBaseUrl: `https://${targetHost}:3443/api/v1`,
+    socketUrl: `https://${targetHost}:3443`,
   };
   try {
     fs.writeFileSync(
@@ -151,14 +251,38 @@ function writeRuntimeConfig(distDir: string, ip: string) {
   }
 }
 
-function copyDistToLocal(srcDistDir: string): string {
+async function copyDistToLocalAsync(srcDistDir: string): Promise<string> {
   const runId = Date.now().toString(36);
   const localDir = path.join(app.getPath("userData"), "frontend-cache", runId);
-
-  fs.mkdirSync(localDir, { recursive: true });
-  fs.cpSync(srcDistDir, localDir, { recursive: true });
-
+  await fs.promises.mkdir(localDir, { recursive: true });
+  // fs.promises doesn't have cpSync — use a worker or spawn cp
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(process.execPath, [
+      "-e",
+      `require('fs').cpSync(${JSON.stringify(srcDistDir)}, ${JSON.stringify(localDir)}, {recursive:true})`,
+    ], {
+      stdio: "inherit",
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+    });
+    child.on("exit", (code) => (code === 0 ? resolve() : reject(new Error(`cpSync worker exited ${code}`))));
+    child.on("error", reject);
+  });
   return localDir;
+}
+
+async function parseDotenvAsync(dotenvPath: string): Promise<Record<string, string>> {
+  const result: Record<string, string> = {};
+  try {
+    const content = await fs.promises.readFile(dotenvPath, "utf-8");
+    for (const line of content.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq === -1) continue;
+      result[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
+    }
+  } catch { /* .env is optional */ }
+  return result;
 }
 
 function cleanOldCacheDirs(keepDir: string) {
@@ -175,22 +299,23 @@ function cleanOldCacheDirs(keepDir: string) {
 }
 
 function startFrontendServer(distDir: string): Promise<number> {
+  servingDir = distDir;
   return new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
       const urlPath = (req.url ?? "/").split("?")[0];
 
       let filePath = path.join(
-        distDir,
+        servingDir,
         urlPath === "/" ? "index.html" : urlPath
       );
 
       if (!path.extname(filePath)) {
-        filePath = path.join(distDir, "index.html");
+        filePath = path.join(servingDir, "index.html");
       }
 
       fs.readFile(filePath, (err, data) => {
         if (err) {
-          fs.readFile(path.join(distDir, "index.html"), (err2, fallback) => {
+          fs.readFile(path.join(servingDir, "index.html"), (err2, fallback) => {
             if (err2) {
               res.writeHead(404);
               res.end("Not found");
@@ -234,25 +359,34 @@ function startFrontendServer(distDir: string): Promise<number> {
   });
 }
 
-function resolveExeUncPath(): string | null {
+async function resolveExeUncPath(): Promise<string | null> {
   const exePath = app.getPath("exe");
 
-  if (exePath.startsWith("\\\\")) {
+  if (exePath.startsWith("\\\\") || exePath.startsWith("//")) {
     return exePath;
   }
 
   const driveLetter = exePath.slice(0, 2);
-  try {
-    const output = execSync(`net use ${driveLetter}`, { encoding: "utf-8" });
-    const match = output.match(/Remote name\s+(\\\\[^\s]+)/i);
-    if (match) {
-      const uncRoot = match[1];
-      const relativePath = exePath.slice(2);
-      return uncRoot + relativePath;
-    }
-  } catch {}
+  if (driveLetter.length !== 2 || driveLetter[1] !== ":") return null;
 
-  return null;
+  return new Promise<string | null>((resolve) => {
+    const child = spawn("net", ["use", driveLetter], { stdio: "pipe" });
+    let out = "";
+    child.stdout?.on("data", (d) => (out += d));
+    child.on("exit", (code) => {
+      if (code === 0) {
+        const match = out.match(/Remote name\s+(\\\\[^\s]+)/i);
+        if (match) {
+          const uncRoot = match[1];
+          const relativePath = exePath.slice(2);
+          resolve(uncRoot + relativePath);
+          return;
+        }
+      }
+      resolve(null);
+    });
+    child.on("error", () => resolve(null));
+  });
 }
 
 function extractHostnameFromUnc(uncPath: string): string | null {
@@ -260,14 +394,16 @@ function extractHostnameFromUnc(uncPath: string): string | null {
   return match ? match[1] : null;
 }
 
-function detectConfig(dotenv: Record<string, string>): {
+async function detectConfig(
+  dotenv: Record<string, string>,
+  uncPath: string | null
+): Promise<{
   isClient: boolean;
   remoteHost: string | null;
-} {
+}> {
   let isClient = false;
   let remoteHost: string | null = null;
 
-  const uncPath = resolveExeUncPath();
   if (uncPath) {
     const hostFromPath = extractHostnameFromUnc(uncPath);
     if (hostFromPath) {
@@ -578,6 +714,9 @@ function createWindow(port: number) {
   mainWindow = win;
 
   win.once("ready-to-show", () => {
+    if (loadingWindow && !loadingWindow.isDestroyed()) {
+      loadingWindow.close();
+    }
     win.show();
     setTimeout(() => cleanOldCacheDirs(servingDir), 5000);
   });
@@ -630,12 +769,11 @@ async function waitForHostBackend(
   port: number,
   logPath: string
 ): Promise<void> {
-  const maxRetries = 3;
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const reachable = await new Promise<boolean>((resolve) => {
+  const singleCheck = (attempt: number) =>
+    new Promise<boolean>((resolve) => {
       const req = https.get(
         `https://${host}:${port}/api/v1/health`,
-        { timeout: 5000, rejectUnauthorized: false },
+        { timeout: 2000, rejectUnauthorized: false }, // 2 s, not 5 s
         (res: any) => {
           res.resume();
           resolve(res.statusCode === 200);
@@ -648,22 +786,25 @@ async function waitForHostBackend(
       });
     });
 
+  // Try 3 times but with 750ms between attempts, not 2s
+  // Total worst-case: 3 * 2s + 2 * 0.75s = ~7.5s instead of 15s
+  for (let i = 1; i <= 3; i++) {
+    const reachable = await singleCheck(i);
     if (reachable) {
       fs.appendFileSync(
         logPath,
-        `[Client] Host backend ${host}:${port} is reachable (attempt ${attempt})\n`
+        `[Client] Host backend ${host}:${port} is reachable (attempt ${i})\n`
       );
       return;
     }
 
     fs.appendFileSync(
       logPath,
-      `[Client] Host backend ${host}:${port} unreachable (attempt ${attempt}/${maxRetries})\n`
+      `[Client] Host backend ${host}:${port} unreachable (attempt ${i}/3)\n`
     );
 
-    if (attempt < maxRetries) {
-      // Wait 2 seconds between retries
-      await new Promise((r) => setTimeout(r, 2000));
+    if (i < 3) {
+      await new Promise((r) => setTimeout(r, 750));
     }
   }
 
@@ -690,6 +831,7 @@ async function waitForHostBackend(
 }
 
 app.whenReady().then(async () => {
+  createLoadingWindow();
   const logPath = path.join(app.getPath("userData"), "backend.log");
 
   try {
@@ -702,23 +844,18 @@ app.whenReady().then(async () => {
     const backendDir = path.join(getProjectRoot(), "apps", "backend");
     const dotenvPath = path.join(backendDir, ".env");
 
-    const dotenv: Record<string, string> = {};
-    if (fs.existsSync(dotenvPath)) {
-      const lines = fs.readFileSync(dotenvPath, "utf-8").split("\n");
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith("#")) continue;
-        const eq = trimmed.indexOf("=");
-        if (eq === -1) continue;
-        const key = trimmed.slice(0, eq).trim();
-        const val = trimmed.slice(eq + 1).trim();
-        dotenv[key] = val;
-      }
-    }
+    // Phase 1: Pure local I/O in parallel
+    const [dotenv, isNetworkDrive, uncPath] = await Promise.all([
+      parseDotenvAsync(dotenvPath),
+      detectIsNetworkPath(),
+      resolveExeUncPath(),
+    ]);
 
-    const config = detectConfig(dotenv);
+    isUncPath = isNetworkDrive;
+    persistNetworkFlag(isNetworkDrive);
 
-    const uncPath = resolveExeUncPath();
+    const config = await detectConfig(dotenv, uncPath);
+
     fs.appendFileSync(
       logPath,
       `\n[Startup ${new Date().toISOString()}] isClient=${config.isClient}, ` +
@@ -742,35 +879,59 @@ app.whenReady().then(async () => {
         );
       }
       targetHost = config.remoteHost;
-
-      // Pre-check: verify host backend is reachable before loading the UI
-      await waitForHostBackend(targetHost, 3443, logPath);
     } else {
       targetHost = os.hostname();
     }
 
-    let servingDir: string;
-    if (config.isClient) {
-      fs.appendFileSync(logPath, `[Client] Copying dist to local cache...\n`);
-      servingDir = copyDistToLocal(origDistDir);
-      fs.appendFileSync(logPath, `[Client] Local dist: ${servingDir}\n`);
-    } else {
-      servingDir = origDistDir;
-    }
+    writeRuntimeConfig(origDistDir, targetHost);
 
-    writeRuntimeConfig(servingDir, targetHost);
-
-    const actualPort = await startFrontendServer(servingDir);
+    // Phase 2: Start local server and show main window immediately
+    const actualPort = await startFrontendServer(origDistDir);
     currentPort = actualPort;
     fs.appendFileSync(
       logPath,
       `[Startup] Frontend server on port ${actualPort}\n`
     );
 
-    await startBackendIfNeeded(config.isClient, logPath, dotenv, dotenvPath);
     ipcMain.handle("get-hostname", () => os.hostname());
     createWindow(actualPort);
+
+    // Phase 3: Background non-blocking network check and initialization
+    if (config.isClient) {
+      waitForHostBackend(targetHost, 3443, logPath)
+        .then(() => {
+          if (isNetworkDrive) {
+            fs.appendFileSync(logPath, `[Client] Copying dist to local cache in the background...\n`);
+            return copyDistToLocalAsync(origDistDir).then((localDir) => {
+              servingDir = localDir;
+              writeRuntimeConfig(localDir, targetHost);
+              fs.appendFileSync(logPath, `[Client] Local dist ready: ${servingDir}\n`);
+              cleanOldCacheDirs(localDir);
+            });
+          }
+        })
+        .catch((err) => {
+          fs.appendFileSync(
+            logPath,
+            `[Client] Background connectivity error: ${err instanceof Error ? err.message : String(err)}\n`
+          );
+        });
+    } else {
+      startBackendIfNeeded(config.isClient, logPath, dotenv, dotenvPath).catch((err) => {
+        fs.appendFileSync(
+          logPath,
+          `[Backend] Startup error: ${err instanceof Error ? err.message : String(err)}\n`
+        );
+        dialog.showErrorBox(
+          "Backend Error",
+          `The backend failed to start:\n\n${err instanceof Error ? err.message : String(err)}`
+        );
+      });
+    }
   } catch (err) {
+    if (loadingWindow && !loadingWindow.isDestroyed()) {
+      loadingWindow.close();
+    }
     console.error(err);
     try {
       fs.appendFileSync(

@@ -3,7 +3,12 @@ import { BrowserRouter } from "react-router-dom";
 import { AppRoutes } from "./routes/AppRoutes";
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false },
+    queries: {
+      staleTime: 30_000,
+      retry: 2,
+      retryDelay: 1000,
+      refetchOnWindowFocus: false,
+    },
   },
 });
 export default function App() {
