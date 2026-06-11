@@ -9,7 +9,12 @@
 #
 param(
   [string]$TaskName = "ClaimSystemBackupToGoogleDrive",
-  [string]$Time = "01:00" # 24h
+  [string]$Time = "01:00", # 24h
+  [string]$BackupRoot = $env:BACKUP_ROOT,
+  [string]$MongoUri = $env:MONGO_URI,
+  [string]$RcloneRemote = $env:RCLONE_REMOTE,
+  [int]$RetentionDays = 7,
+  [string]$UploadsDir = $env:UPLOADS_DIR
 )
 
 $ErrorActionPreference = "Stop"
@@ -21,14 +26,33 @@ if (!(Test-Path $backupScript)) {
   throw "backup-to-gdrive.ps1 not found at: $backupScript"
 }
 
+# Resolve defaults if not supplied
+if ([string]::IsNullOrWhiteSpace($BackupRoot)) {
+  $BackupRoot = "C:\Backups\claim-system"
+}
+if ([string]::IsNullOrWhiteSpace($MongoUri)) {
+  $MongoUri = "mongodb://localhost:27017/hicms-prod"
+}
+if ([string]::IsNullOrWhiteSpace($RcloneRemote)) {
+  $RcloneRemote = "gdrive:claim-management"
+}
+if ([string]::IsNullOrWhiteSpace($UploadsDir)) {
+  $UploadsDir = Join-Path $scriptDir "..\..\backend\uploads"
+}
+
 # Trigger: daily at specified time
 $hour = $Time.Split(":")[0]
 $minute = $Time.Split(":")[1]
 
-# Build action
-# We run powershell with env vars read from system/user environment.
-# Hospitals can set these system-wide variables or update the task to include explicit -ArgumentList.
-$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$backupScript`""
+# Build action with explicit arguments so the scheduled task doesn't depend on system environment variables
+$arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$backupScript`""
+$arguments += " -BackupRoot `"$BackupRoot`""
+$arguments += " -MongoUri `"$MongoUri`""
+$arguments += " -RcloneRemote `"$RcloneRemote`""
+$arguments += " -RetentionDays $RetentionDays"
+$arguments += " -UploadsDir `"$UploadsDir`""
+
+$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $arguments
 
 # Trigger
 $trigger = New-ScheduledTaskTrigger -Daily -At "$hour`:$minute"

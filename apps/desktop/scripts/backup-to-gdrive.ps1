@@ -19,9 +19,13 @@ param(
   [string]$BackupRoot = $env:BACKUP_ROOT,
   [string]$MongoUri = $env:MONGO_URI,
   [string]$RcloneRemote = $env:RCLONE_REMOTE,
-  [int]$RetentionDays = [int]($env:RETENTION_DAYS ? $env:RETENTION_DAYS : 7),
+  [int]$RetentionDays = 7,
   [string]$UploadsDir = $env:UPLOADS_DIR
 )
+
+if (![string]::IsNullOrWhiteSpace($env:RETENTION_DAYS)) {
+  $RetentionDays = [int]$env:RETENTION_DAYS
+}
 
 if ([string]::IsNullOrWhiteSpace($BackupRoot)) {
   throw "BACKUP_ROOT environment variable is required."
@@ -89,9 +93,26 @@ $tarUploadsArgs = @(
 & tar @tarUploadsArgs
 
 Write-Host "Uploading archives to Google Drive via rclone..."
+
+# Auto-detect rclone configuration file if default is not configured
+$rcloneConfigArgs = @()
+& rclone listremotes 2>$null | Out-Null
+if ($LastExitCode -ne 0) {
+  Write-Host "Default rclone configuration not found or invalid. Searching for user configurations..."
+  $userConfigs = Get-ChildItem -Path "C:\Users\*\AppData\Roaming\rclone\rclone.conf" -ErrorAction SilentlyContinue
+  if ($userConfigs) {
+    # Sort by LastWriteTime to get the most recently active config
+    $detectedConfig = ($userConfigs | Sort-Object LastWriteTime -Descending)[0].FullName
+    Write-Host "Detected rclone configuration at: $detectedConfig"
+    $rcloneConfigArgs = @("--config", $detectedConfig)
+  } else {
+    Write-Warning "No rclone configuration file found in C:\Users. Upload may fail if not configured for the current account."
+  }
+}
+
 # Upload both archives
-& rclone copy $mongoArchive "$RcloneRemote/" --progress
-& rclone copy $uploadsArchive "$RcloneRemote/" --progress
+& rclone @rcloneConfigArgs copy $mongoArchive "$RcloneRemote/" --progress
+& rclone @rcloneConfigArgs copy $uploadsArchive "$RcloneRemote/" --progress
 
 Write-Host "Applying retention (keeping last $RetentionDays days)..."
 # Delete local archives older than retention days
