@@ -8,6 +8,13 @@ import net from "node:net";
 import os from "node:os";
 import https from "node:https";
 
+//Nginx Configuration
+// The DHCP-reserved IP of the host machine on the LAN.
+// All client traffic routes through Nginx on this IP (port 443).
+// Backend continues to run on localhost:3443 behind Nginx.
+const NGINX_HOST = "192.168.1.13";
+const NGINX_PORT = 443;
+
 function readCachedNetworkFlag(): boolean {
   try {
     const flagPath = path.join(
@@ -231,15 +238,11 @@ function getLanIp(): string {
 }
 
 function writeRuntimeConfig(distDir: string, host: string) {
-  let targetHost = host;
-  const isIp = /^[0-9.:]+$/.test(host);
-  if (!isIp && host !== "localhost" && !host.endsWith(".local")) {
-    targetHost = `${host}.local`;
-  }
-
+  // With Nginx in place, all traffic goes through NGINX_HOST on port 443.
+  // host is always an IP (NGINX_HOST or client's remoteHost).
   const config = {
-    apiBaseUrl: `https://${targetHost}:3443/api/v1`,
-    socketUrl: `https://${targetHost}:3443`,
+    apiBaseUrl: `https://${host}/api/v1`,
+    socketUrl: `https://${host}`,
   };
   try {
     fs.writeFileSync(
@@ -255,7 +258,7 @@ async function copyDistToLocalAsync(srcDistDir: string): Promise<string> {
   const runId = Date.now().toString(36);
   const localDir = path.join(app.getPath("userData"), "frontend-cache", runId);
   await fs.promises.mkdir(localDir, { recursive: true });
-  // fs.promises doesn't have cpSync — use a worker or spawn cp
+  // fs.promises doesn't have cpSync - use a worker or spawn cp
   await new Promise<void>((resolve, reject) => {
     const child = spawn(process.execPath, [
       "-e",
@@ -281,7 +284,7 @@ async function parseDotenvAsync(dotenvPath: string): Promise<Record<string, stri
       if (eq === -1) continue;
       result[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
     }
-  } catch { /* .env is optional */ }
+  } catch {  }
   return result;
 }
 
@@ -613,7 +616,8 @@ async function startBackendIfNeeded(
     return;
   }
 
-  ensureFirewallRule(3443, logPath);
+  ensureFirewallRule(3443, logPath);    // Backend (localhost-only, for Nginx -> backend)
+  ensureFirewallRule(NGINX_PORT, logPath); // Nginx (LAN-facing, port 443)
 
   const backendPort = 3443;
 
@@ -761,7 +765,7 @@ function createWindow(port: number) {
   return win;
 }
 
-// ── Client connectivity pre-check ────────────────────────────────────
+// Client connectivity pre-check
 // Before loading the window on a client, verify that the host backend
 // is actually reachable. Show a retry dialog if not.
 async function waitForHostBackend(
@@ -773,7 +777,7 @@ async function waitForHostBackend(
     new Promise<boolean>((resolve) => {
       const req = https.get(
         `https://${host}:${port}/api/v1/health`,
-        { timeout: 2000, rejectUnauthorized: false }, // 2 s, not 5 s
+        { timeout: 2000, rejectUnauthorized: false }, // 2 s
         (res: any) => {
           res.resume();
           resolve(res.statusCode === 200);
@@ -786,8 +790,8 @@ async function waitForHostBackend(
       });
     });
 
-  // Try 3 times but with 750ms between attempts, not 2s
-  // Total worst-case: 3 * 2s + 2 * 0.75s = ~7.5s instead of 15s
+  // Try 3 times but with 750ms between attempts.
+  // Total worst-case: 3 * 2s + 2 * 0.75s = 7.5s
   for (let i = 1; i <= 3; i++) {
     const reachable = await singleCheck(i);
     if (reachable) {
@@ -808,7 +812,7 @@ async function waitForHostBackend(
     }
   }
 
-  // All retries failed — show user-friendly dialog
+  // All retries failed- show user-friendly dialog
   const response = dialog.showMessageBoxSync({
     type: "warning",
     title: "Cannot Connect to Server",
@@ -826,7 +830,7 @@ async function waitForHostBackend(
 
   if (response === 1) {
     app.quit();
-    throw new Error("User chose to quit — host backend unreachable");
+    throw new Error("User chose to quit - host backend unreachable");
   }
 }
 
@@ -880,7 +884,8 @@ app.whenReady().then(async () => {
       }
       targetHost = config.remoteHost;
     } else {
-      targetHost = os.hostname();
+      // Host machine: use the DHCP-reserved IP so all traffic goes through Nginx
+      targetHost = NGINX_HOST;
     }
 
     writeRuntimeConfig(origDistDir, targetHost);
@@ -898,7 +903,8 @@ app.whenReady().then(async () => {
 
     // Phase 3: Background non-blocking network check and initialization
     if (config.isClient) {
-      waitForHostBackend(targetHost, 3443, logPath)
+      // Client checks Nginx on port 443 (not backend directly on 3443)
+      waitForHostBackend(targetHost, NGINX_PORT, logPath)
         .then(() => {
           if (isNetworkDrive) {
             fs.appendFileSync(logPath, `[Client] Copying dist to local cache in the background...\n`);

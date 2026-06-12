@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => ({
     mode === "production"
       ? {
           "import.meta.env.VITE_API_BASE_URL": JSON.stringify(
-            "https://127.0.0.1:3443/api/v1"
+            "https://192.168.1.13/api/v1"
           ),
         }
       : {},
