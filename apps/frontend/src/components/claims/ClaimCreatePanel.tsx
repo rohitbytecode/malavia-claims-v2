@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useDebounce } from "../../hooks/useDebounce";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -27,11 +28,18 @@ export function ClaimCreatePanel() {
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  const patientsQuery = useQuery({
-    queryKey: ["patients", "active"],
-    queryFn: () => patientApi.list({ isActive: true, limit: 100 }),
+  const [patientSearch, setPatientSearch] = useState("");
+  const debouncedSearch = useDebounce(patientSearch, 300);
+
+  const patientQuery = useQuery({
+    queryKey: ["patients", "search", debouncedSearch],
+    queryFn: () => patientApi.list({ search: debouncedSearch, limit: 20 }),
+    enabled: debouncedSearch.length >= 2,
   });
 
+  type Patient = NonNullable<typeof patientQuery.data>["data"][number];
+
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const departmentsQuery = useQuery({
     queryKey: ["departments", "active"],
     queryFn: () => departmentApi.list({ isActive: true, limit: 100 }),
@@ -68,10 +76,6 @@ export function ClaimCreatePanel() {
   });
 
   const watchedPatientId = watch("patientId");
-
-  const selectedPatient = patientsQuery.data?.data?.find(
-    (p) => p.patientId === watchedPatientId
-  );
 
   useEffect(() => {
     if (selectedPatient) {
@@ -121,10 +125,14 @@ export function ClaimCreatePanel() {
       });
 
       reset();
-
+      setPatientSearch("");
+      setSelectedPatient(null);
+      setShowDropdown(false);
       navigate(`/claims/${claim.id}`);
     },
   });
+
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const isPharmacist = user?.role === "PHARMACIST";
   if (isPharmacist) {
@@ -158,16 +166,39 @@ export function ClaimCreatePanel() {
         </Field>
 
         <Field label="Patient ID" error={errors.patientId?.message}>
-          <SelectInput {...register("patientId")} defaultValue="">
-            <option value="" disabled>
-              Select patient...
-            </option>
-            {patientsQuery.data?.data?.map((p) => (
-              <option key={p.id || p._id} value={p.patientId}>
-                {p.patientId} - {p.name}
-              </option>
-            ))}
-          </SelectInput>
+          <TextInput
+            placeholder="Type Patient ID or name..."
+            value={patientSearch}
+            onChange={(e) => {
+              setPatientSearch(e.target.value);
+              setShowDropdown(true);
+              if (watchedPatientId) {
+                setValue("patientId", "");
+                setSelectedPatient(null);
+              }
+            }}
+            onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+          />
+          {showDropdown &&
+            patientQuery.data?.data &&
+            patientSearch.length >= 2 && (
+              <ul className="search-dropdown">
+                {patientQuery.data.data.map((p) => (
+                  <li
+                    key={p.id || p._id}
+                    onClick={() => {
+                      setValue("patientId", p.patientId);
+                      setPatientSearch(`${p.patientId} - ${p.name}`);
+                      setSelectedPatient(p);
+                      setShowDropdown(false);
+                    }}
+                  >
+                    {p.patientId} - {p.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          <input type="hidden" {...register("patientId")} />
         </Field>
 
         <Field label="Patient Name">

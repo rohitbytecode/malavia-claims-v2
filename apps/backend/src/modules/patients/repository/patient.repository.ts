@@ -3,6 +3,7 @@ import { PatientDocument } from "@/modules/patients/types/patient.types.js";
 
 interface PatientFilters {
   isActive?: boolean;
+  search?: string;
 }
 
 export class PatientRepository {
@@ -27,8 +28,16 @@ export class PatientRepository {
     limit: number
   ) {
     const query: Record<string, unknown> = {};
+
     if (typeof filters.isActive === "boolean") {
       query.isActive = filters.isActive;
+    }
+
+    if (filters.search) {
+      query.$or = [
+        { patientId: { $regex: filters.search, $options: "i" } },
+        { name: { $regex: filters.search, $options: "i" } },
+      ];
     }
     return PatientModel.find(query)
       .populate("insuranceCompanyId")

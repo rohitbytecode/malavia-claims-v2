@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import { z } from "zod";
 import { logger } from "./logger.js";
 
-dotenv.config();
+dotenv.config({ override: true });
 
 const envSchema = z.object({
   NODE_ENV: z

@@ -39,10 +39,11 @@ export class PatientService {
   static async listPatients(
     isActive: boolean | undefined,
     page: number,
-    limit: number
+    limit: number,
+    search?: string
   ) {
     const patients = await PatientRepository.listPatients(
-      { isActive },
+      { isActive, search },
       page,
       limit
     );

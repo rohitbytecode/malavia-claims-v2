@@ -12,15 +12,17 @@ export class PatientController {
   }
 
   static async listPatients(req: Request, res: Response) {
-    const { isActive, page, limit } = req.query as {
+    const { isActive, page, limit, search } = req.query as {
       isActive?: string;
       page?: string;
       limit?: string;
+      search?: string;
     };
     const patients = await PatientService.listPatients(
       isActive === undefined ? undefined : isActive === "true",
       Number(page ?? 1),
-      Number(limit ?? 100)
+      Number(limit ?? 100),
+      search
     );
     return res.status(200).json({
       success: true,

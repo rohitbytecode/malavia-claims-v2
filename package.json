@@ -4,6 +4,7 @@
   "packageManager": "pnpm@10.11.0",
   "scripts": {
     "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=backend --filter=frontend",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
@@ -21,6 +22,7 @@
     "axios": "^1.16.1",
     "dotenv": "^17.4.2",
     "pino-http": "^11.0.0",
-    "tsx": "^4.22.0"
+    "tsx": "^4.22.0",
+    "usehooks-ts": "^3.1.1"
   }
 }
