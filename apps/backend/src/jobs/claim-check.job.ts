@@ -30,7 +30,8 @@ export const checkCourierDelays = async () => {
       $set: {
         resolved: true,
         resolvedAt: now,
-        message: "Resolved automatically: Claim is no longer in Settlement Pending.",
+        message:
+          "Resolved automatically: Claim is no longer in Settlement Pending.",
       },
     }
   );
@@ -75,7 +76,10 @@ export const checkCourierDelays = async () => {
 
       if (existingAlert) {
         // If it exists, update severity and message if they changed
-        if (existingAlert.severity !== severity || existingAlert.message !== message) {
+        if (
+          existingAlert.severity !== severity ||
+          existingAlert.message !== message
+        ) {
           existingAlert.severity = severity;
           existingAlert.message = message;
           await existingAlert.save();
@@ -158,13 +162,16 @@ export const checkPendingSettlements = async () => {
       $set: {
         resolved: true,
         resolvedAt: now,
-        message: "Resolved automatically: Claim is no longer pending settlement or ageing is less than 30 days.",
+        message:
+          "Resolved automatically: Claim is no longer pending settlement or ageing is less than 30 days.",
       },
     }
   );
 
   for (const claimId of activeClaimsToAlertIds) {
-    const claim = pendingClaims.find((c) => c._id.toString() === claimId.toString())!;
+    const claim = pendingClaims.find(
+      (c) => c._id.toString() === claimId.toString()
+    )!;
 
     // Check if an active SETTLEMENT_PENDING alert already exists
     const existingAlert = await AlertModel.findOne({

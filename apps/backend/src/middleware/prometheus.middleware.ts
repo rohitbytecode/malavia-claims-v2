@@ -7,7 +7,11 @@ import {
   httpResponseSizeBytes,
 } from "../config/prometheus.js";
 
-export const prometheusMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const prometheusMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const start = process.hrtime();
   const method = req.method;
 
@@ -46,7 +50,10 @@ export const prometheusMiddleware = (req: Request, res: Response, next: NextFunc
     ? path
     : path
         .replace(/\/[0-9a-fA-F]{24}(\b|\/)/g, "/:id$1")
-        .replace(/\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(\b|\/)/g, "/:id$1")
+        .replace(
+          /\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(\b|\/)/g,
+          "/:id$1"
+        )
         .replace(/\/\d+(\b|\/)/g, "/:id$1");
 
   if (fallbackRoute.length > 1 && fallbackRoute.endsWith("/")) {
@@ -85,15 +92,24 @@ export const prometheusMiddleware = (req: Request, res: Response, next: NextFunc
     const duration = diff[0] + diff[1] / 1e9;
 
     // Record metrics
-    httpRequestDurationSeconds.observe({ method, route, status_code: statusCode }, duration);
+    httpRequestDurationSeconds.observe(
+      { method, route, status_code: statusCode },
+      duration
+    );
     httpRequestCounter.inc({ method, route, status_code: statusCode });
 
     // Request size
     const requestSize = parseInt(req.headers["content-length"] || "0", 10);
-    httpRequestSizeBytes.observe({ method, route, status_code: statusCode }, requestSize);
+    httpRequestSizeBytes.observe(
+      { method, route, status_code: statusCode },
+      requestSize
+    );
 
     // Response size
-    httpResponseSizeBytes.observe({ method, route, status_code: statusCode }, responseSize);
+    httpResponseSizeBytes.observe(
+      { method, route, status_code: statusCode },
+      responseSize
+    );
   };
 
   res.on("finish", recordMetrics);

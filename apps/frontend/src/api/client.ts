@@ -73,10 +73,9 @@ apiClient.interceptors.response.use(
       }
     })();
     refreshRequest ??= axios
-      .post<ApiResponse<AuthTokens>>(
-        `${baseURL}/auth/refresh`,
-        { refreshToken }
-      )
+      .post<ApiResponse<AuthTokens>>(`${baseURL}/auth/refresh`, {
+        refreshToken,
+      })
       .then((res) => res.data.data)
       .finally(() => {
         refreshRequest = null;

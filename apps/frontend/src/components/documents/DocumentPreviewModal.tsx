@@ -63,7 +63,9 @@ export function DocumentPreviewModal({
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-          <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 600 }}>{title}</h2>
+          <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 600 }}>
+            {title}
+          </h2>
           <span style={{ fontSize: "12px", color: "#94a3b8" }}>{mimeType}</span>
         </div>
 
@@ -79,7 +81,14 @@ export function DocumentPreviewModal({
           >
             ➖
           </button>
-          <span style={{ minWidth: "50px", textAlign: "center", fontSize: "14px", fontWeight: "500" }}>
+          <span
+            style={{
+              minWidth: "50px",
+              textAlign: "center",
+              fontSize: "14px",
+              fontWeight: "500",
+            }}
+          >
             {Math.round(zoom * 100)}%
           </span>
           <button
@@ -92,7 +101,14 @@ export function DocumentPreviewModal({
           >
             ➕
           </button>
-          <div style={{ width: "1px", height: "20px", background: "rgba(255,255,255,0.15)", margin: "0 8px" }} />
+          <div
+            style={{
+              width: "1px",
+              height: "20px",
+              background: "rgba(255,255,255,0.15)",
+              margin: "0 8px",
+            }}
+          />
           <button
             onClick={handleRotateLeft}
             onMouseEnter={handleMouseEnter}

@@ -161,7 +161,9 @@ export function DocumentManager({
             <button
               className="link-button"
               type="button"
-              onClick={() => handlePreview(doc.fileName, doc.mimeType, doc.originalName)}
+              onClick={() =>
+                handlePreview(doc.fileName, doc.mimeType, doc.originalName)
+              }
             >
               Preview
             </button>

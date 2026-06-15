@@ -39,7 +39,10 @@ const auditLogSchema = new mongoose.Schema<AuditLogDocument>(
 auditLogSchema.index({ module: 1, action: 1, createdAt: -1 });
 auditLogSchema.index({ entityId: 1, module: 1, createdAt: -1 });
 auditLogSchema.index({ performedBy: 1, createdAt: -1 });
-auditLogSchema.index({ createdAt: 1}, { expireAfterSeconds: 60 * 60 * 24 * 90 });
+auditLogSchema.index(
+  { createdAt: 1 },
+  { expireAfterSeconds: 60 * 60 * 24 * 90 }
+);
 
 export const AuditLogModel =
   mongoose.models.AuditLog ||

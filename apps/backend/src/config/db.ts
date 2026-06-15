@@ -13,7 +13,7 @@ export const connectDatabase = async () => {
     });
     logger.info("MongoDB connected");
 
-    mongoose.connection.on("disconnected", () => 
+    mongoose.connection.on("disconnected", () =>
       logger.warn("MongoDB disconnected")
     );
     mongoose.connection.on("reconnected", () =>

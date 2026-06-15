@@ -38,13 +38,13 @@ graph TB
 
 ### How It Works Step-by-Step
 
-| Component | What happens | Port |
-|---|---|---|
-| **Backend** | Electron spawns `server.bundle.cjs` as a detached HTTPS process. Uses self-signed SSL certs from `apps/backend/cert/`. | **3443** (fixed, HTTPS) |
-| **Frontend Server** | Electron creates a **plain HTTP** static file server via `http.createServer()` with `server.listen(0, "0.0.0.0")` — port `0` means the OS picks a **random available port** (hence `49xxx`). | **Random** (e.g. 49152–65535) |
-| **Electron Window** | Loads `http://127.0.0.1:{randomPort}` to display the React SPA. | — |
-| **Frontend → Backend** | A `config.json` is written to the frontend's `dist/` folder with `apiBaseUrl: https://HOSTNAME:3443/api/v1` and `socketUrl: https://HOSTNAME:3443`. The React app fetches this at startup to know where the API is. | — |
-| **Client PCs** | Run the Electron app from a network share (UNC path). They detect they're clients, skip backend startup, and point `config.json` to the host's hostname + port 3443. | — |
+| Component              | What happens                                                                                                                                                                                                        | Port                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| **Backend**            | Electron spawns `server.bundle.cjs` as a detached HTTPS process. Uses self-signed SSL certs from `apps/backend/cert/`.                                                                                              | **3443** (fixed, HTTPS)       |
+| **Frontend Server**    | Electron creates a **plain HTTP** static file server via `http.createServer()` with `server.listen(0, "0.0.0.0")` — port `0` means the OS picks a **random available port** (hence `49xxx`).                        | **Random** (e.g. 49152–65535) |
+| **Electron Window**    | Loads `http://127.0.0.1:{randomPort}` to display the React SPA.                                                                                                                                                     | —                             |
+| **Frontend → Backend** | A `config.json` is written to the frontend's `dist/` folder with `apiBaseUrl: https://HOSTNAME:3443/api/v1` and `socketUrl: https://HOSTNAME:3443`. The React app fetches this at startup to know where the API is. | —                             |
+| **Client PCs**         | Run the Electron app from a network share (UNC path). They detect they're clients, skip backend startup, and point `config.json` to the host's hostname + port 3443.                                                | —                             |
 
 ### Key Points About the Current Setup
 
@@ -69,14 +69,14 @@ Using a **static IP** for the host machine eliminates all of these issues — cl
 
 ## Why Add Nginx?
 
-| Benefit | Description |
-|---|---|
-| **Single stable port** | All traffic (frontend + API + WebSocket) goes through one known port (e.g. 443 or 8443) |
-| **Proper SSL termination** | Nginx handles SSL with a real or better-managed certificate. Backend can run plain HTTP |
-| **No random ports** | Browser clients can access the app directly via `https://HOST_IP/` without needing the Electron wrapper |
-| **WebSocket proxying** | Nginx handles WebSocket upgrade for Socket.io properly |
-| **Static IP compatibility** | `config.json` points to a fixed IP — no hostname resolution required |
-| **Future scalability** | Can add caching, rate limiting, load balancing later |
+| Benefit                     | Description                                                                                             |
+| --------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **Single stable port**      | All traffic (frontend + API + WebSocket) goes through one known port (e.g. 443 or 8443)                 |
+| **Proper SSL termination**  | Nginx handles SSL with a real or better-managed certificate. Backend can run plain HTTP                 |
+| **No random ports**         | Browser clients can access the app directly via `https://HOST_IP/` without needing the Electron wrapper |
+| **WebSocket proxying**      | Nginx handles WebSocket upgrade for Socket.io properly                                                  |
+| **Static IP compatibility** | `config.json` points to a fixed IP — no hostname resolution required                                    |
+| **Future scalability**      | Can add caching, rate limiting, load balancing later                                                    |
 
 ---
 
@@ -91,12 +91,12 @@ This is the recommended approach to make client connections reliable and DNS-ind
 3. Select **Internet Protocol Version 4 (TCP/IPv4)** → **Properties**
 4. Choose **Use the following IP address** and fill in:
 
-   | Field | Example Value | Notes |
-   |---|---|---|
-   | **IP address** | `192.168.1.100` | Pick a fixed address outside your router's DHCP range |
-   | **Subnet mask** | `255.255.255.0` | Match your LAN subnet |
-   | **Default gateway** | `192.168.1.1` | Your router's IP |
-   | **Preferred DNS** | `192.168.1.1` | Can be same as gateway |
+   | Field               | Example Value   | Notes                                                 |
+   | ------------------- | --------------- | ----------------------------------------------------- |
+   | **IP address**      | `192.168.1.100` | Pick a fixed address outside your router's DHCP range |
+   | **Subnet mask**     | `255.255.255.0` | Match your LAN subnet                                 |
+   | **Default gateway** | `192.168.1.1`   | Your router's IP                                      |
+   | **Preferred DNS**   | `192.168.1.1`   | Can be same as gateway                                |
 
 > [!TIP]
 > To find your current LAN details, run `ipconfig` in PowerShell. Look at the active adapter's IPv4 Address, Subnet Mask, and Default Gateway.
@@ -129,13 +129,13 @@ This means clients need zero DNS resolution — they connect directly to the IP.
 
 ### Static IP vs Hostname — Comparison
 
-| Aspect | Hostname (current) | Static IP (proposed) |
-|---|---|---|
-| **LAN-only reliability** | ✅ Usually works | ✅ Always works |
-| **Cross-subnet / VLAN** | ❌ Hostname resolution may fail | ✅ Works |
-| **Future VPN / remote access** | ❌ Hostname may not resolve | ✅ Works |
-| **DNS dependency** | ❌ Depends on NetBIOS/DNS | ✅ None |
-| **Setup effort** | None (already works) | One-time IP assignment |
+| Aspect                         | Hostname (current)              | Static IP (proposed)   |
+| ------------------------------ | ------------------------------- | ---------------------- |
+| **LAN-only reliability**       | ✅ Usually works                | ✅ Always works        |
+| **Cross-subnet / VLAN**        | ❌ Hostname resolution may fail | ✅ Works               |
+| **Future VPN / remote access** | ❌ Hostname may not resolve     | ✅ Works               |
+| **DNS dependency**             | ❌ Depends on NetBIOS/DNS       | ✅ None                |
+| **Setup effort**               | None (already works)            | One-time IP assignment |
 
 ---
 
@@ -267,11 +267,11 @@ The self-signed certificate currently used by the backend was likely generated w
 
 **Options:**
 
-| Option | Effort | Notes |
-|---|---|---|
-| **Regenerate cert with IP SAN** | Low | Add `subjectAltName = IP:192.168.1.100` when generating. Clients still need to trust the cert manually. |
+| Option                              | Effort | Notes                                                                                                   |
+| ----------------------------------- | ------ | ------------------------------------------------------------------------------------------------------- |
+| **Regenerate cert with IP SAN**     | Low    | Add `subjectAltName = IP:192.168.1.100` when generating. Clients still need to trust the cert manually. |
 | **Add cert to client trust stores** | Medium | Push the self-signed cert to client machines via Group Policy or manually. Eliminates browser warnings. |
-| **Use a proper CA cert** | High | Only viable if you have an internal CA or a public domain pointing to the IP. |
+| **Use a proper CA cert**            | High   | Only viable if you have an internal CA or a public domain pointing to the IP.                           |
 
 ### Regenerating the cert with IP SAN (recommended quick fix)
 
@@ -291,6 +291,7 @@ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 3650 -nod
 ### Frontend `config.json` Changes
 
 Currently Electron writes:
+
 ```json
 {
   "apiBaseUrl": "https://HOSTNAME:3443/api/v1",
@@ -299,6 +300,7 @@ Currently Electron writes:
 ```
 
 **After Nginx + Static IP**, it should write:
+
 ```json
 {
   "apiBaseUrl": "https://192.168.1.100/api/v1",
@@ -310,29 +312,29 @@ No more `:3443`, no more hostname — everything goes through Nginx on port 443 
 
 ### Summary of Required Code Changes
 
-| File | Change |
-|---|---|
-| [main.ts](file:///d:/project/malavia-claims/apps/desktop/src/main.ts#L240-L242) | Change `writeRuntimeConfig()` to use static IP + port 443 instead of HOSTNAME:3443 |
-| [main.ts](file:///d:/project/malavia-claims/apps/desktop/src/main.ts#L616) | Add firewall rule for port 443 (in addition to or replacing 3443) |
-| [main.ts](file:///d:/project/malavia-claims/apps/desktop/src/main.ts#L901) | `waitForHostBackend` should check port 443 |
-| [vite.config.ts](file:///d:/project/malavia-claims/apps/frontend/vite.config.ts#L39) | Dev proxy target stays at `localhost:3443` (dev mode bypasses Nginx) |
-| [nginx.conf](file:///d:/project/malavia-claims/nginx.conf) | Replace the stale config with the one above |
-| **Backend** | No changes needed — backend keeps running on 3443, Nginx proxies to it |
-| **SSL cert** | Regenerate with IP SAN (`192.168.1.100`) to avoid browser warnings |
+| File                                                                                 | Change                                                                             |
+| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| [main.ts](file:///d:/project/malavia-claims/apps/desktop/src/main.ts#L240-L242)      | Change `writeRuntimeConfig()` to use static IP + port 443 instead of HOSTNAME:3443 |
+| [main.ts](file:///d:/project/malavia-claims/apps/desktop/src/main.ts#L616)           | Add firewall rule for port 443 (in addition to or replacing 3443)                  |
+| [main.ts](file:///d:/project/malavia-claims/apps/desktop/src/main.ts#L901)           | `waitForHostBackend` should check port 443                                         |
+| [vite.config.ts](file:///d:/project/malavia-claims/apps/frontend/vite.config.ts#L39) | Dev proxy target stays at `localhost:3443` (dev mode bypasses Nginx)               |
+| [nginx.conf](file:///d:/project/malavia-claims/nginx.conf)                           | Replace the stale config with the one above                                        |
+| **Backend**                                                                          | No changes needed — backend keeps running on 3443, Nginx proxies to it             |
+| **SSL cert**                                                                         | Regenerate with IP SAN (`192.168.1.100`) to avoid browser warnings                 |
 
 ### Before vs After Comparison
 
-| Aspect | Before (Current) | After (Nginx + Static IP) |
-|---|---|---|
-| **Frontend port** | Random (`49xxx`, HTTP) | **443** (HTTPS, via Nginx) |
-| **Backend port** | 3443 (HTTPS, direct) | 3443 (HTTPS, behind Nginx) |
-| **Client access URL** | `https://HOSTNAME:3443` for API only | `https://192.168.1.100/` for everything |
-| **DNS dependency** | ❌ Requires hostname resolution | ✅ None — direct IP |
-| **Cross-subnet access** | ❌ May fail | ✅ Works |
-| **Browser access** | Not possible without Electron | ✅ `https://192.168.1.100/` works in any browser |
-| **SSL** | Self-signed on backend only | Nginx terminates SSL for all traffic |
-| **WebSocket** | Direct to `HOSTNAME:3443` | Proxied through Nginx `/socket.io/` |
-| **Firewall ports needed** | 3443 + random frontend port | 443 only (3443 stays localhost-only) |
+| Aspect                    | Before (Current)                     | After (Nginx + Static IP)                        |
+| ------------------------- | ------------------------------------ | ------------------------------------------------ |
+| **Frontend port**         | Random (`49xxx`, HTTP)               | **443** (HTTPS, via Nginx)                       |
+| **Backend port**          | 3443 (HTTPS, direct)                 | 3443 (HTTPS, behind Nginx)                       |
+| **Client access URL**     | `https://HOSTNAME:3443` for API only | `https://192.168.1.100/` for everything          |
+| **DNS dependency**        | ❌ Requires hostname resolution      | ✅ None — direct IP                              |
+| **Cross-subnet access**   | ❌ May fail                          | ✅ Works                                         |
+| **Browser access**        | Not possible without Electron        | ✅ `https://192.168.1.100/` works in any browser |
+| **SSL**                   | Self-signed on backend only          | Nginx terminates SSL for all traffic             |
+| **WebSocket**             | Direct to `HOSTNAME:3443`            | Proxied through Nginx `/socket.io/`              |
+| **Firewall ports needed** | 3443 + random frontend port          | 443 only (3443 stays localhost-only)             |
 
 ---
 

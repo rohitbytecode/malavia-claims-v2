@@ -81,7 +81,7 @@ const insuranceCompanySchema = new mongoose.Schema<InsuranceCompanyDocument>(
   }
 );
 
-insuranceCompanySchema.index({ isActive: 1, name: 1});
+insuranceCompanySchema.index({ isActive: 1, name: 1 });
 
 export const InsuranceCompanyModel =
   mongoose.models.InsuranceCompany ||

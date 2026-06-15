@@ -90,7 +90,11 @@ payerContractSchema.index(
   { insuranceCompanyId: 1, isActive: 1 },
   { unique: true, partialFilterExpression: { isActive: true } }
 );
-payerContractSchema.index({ insuranceCompanyId: 1, effectiveFrom: -1, effectiveTo: 1});
+payerContractSchema.index({
+  insuranceCompanyId: 1,
+  effectiveFrom: -1,
+  effectiveTo: 1,
+});
 
 export const PayerContractModel =
   mongoose.models.PayerContract ||

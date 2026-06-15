@@ -91,9 +91,12 @@ export class ClaimService {
     }
 
     if (claim.status === ClaimStatus.SETTLED) {
-      const settlement = await SettlementModel.findOne({ claimId: claim._id }).lean();
+      const settlement = await SettlementModel.findOne({
+        claimId: claim._id,
+      }).lean();
       if (settlement) {
-        (claim as any).settledAmount = (settlement.netPayable || 0) + (settlement.tds || 0);
+        (claim as any).settledAmount =
+          (settlement.netPayable || 0) + (settlement.tds || 0);
       }
     }
 
@@ -128,7 +131,10 @@ export class ClaimService {
 
       const settlementMap = new Map<string, number>();
       for (const s of settlements) {
-        settlementMap.set(s.claimId.toString(), (s.netPayable || 0) + (s.tds || 0));
+        settlementMap.set(
+          s.claimId.toString(),
+          (s.netPayable || 0) + (s.tds || 0)
+        );
       }
 
       for (const claim of claims) {
@@ -388,9 +394,12 @@ export class ClaimService {
       });
 
       if (updatedClaim.status === ClaimStatus.SETTLED) {
-        const settlement = await SettlementModel.findOne({ claimId: updatedClaim._id }).lean();
+        const settlement = await SettlementModel.findOne({
+          claimId: updatedClaim._id,
+        }).lean();
         if (settlement) {
-          (updatedClaim as any).settledAmount = (settlement.netPayable || 0) + (settlement.tds || 0);
+          (updatedClaim as any).settledAmount =
+            (settlement.netPayable || 0) + (settlement.tds || 0);
         }
       }
 
@@ -435,9 +444,12 @@ export class ClaimService {
     }
 
     if (updatedClaim.status === ClaimStatus.SETTLED) {
-      const settlement = await SettlementModel.findOne({ claimId: updatedClaim._id }).lean();
+      const settlement = await SettlementModel.findOne({
+        claimId: updatedClaim._id,
+      }).lean();
       if (settlement) {
-        (updatedClaim as any).settledAmount = (settlement.netPayable || 0) + (settlement.tds || 0);
+        (updatedClaim as any).settledAmount =
+          (settlement.netPayable || 0) + (settlement.tds || 0);
       }
     }
 

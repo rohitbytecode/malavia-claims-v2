@@ -165,7 +165,10 @@ const settlementSchema = new mongoose.Schema<SettlementDocument>(
 
 settlementSchema.index({ settlementDate: -1 });
 settlementSchema.index({ settledBy: 1, settlementDate: -1 });
-settlementSchema.index({ payerContractId: 1, settlementDate: -1}, { sparse: true });
+settlementSchema.index(
+  { payerContractId: 1, settlementDate: -1 },
+  { sparse: true }
+);
 
 export const SettlementModel =
   mongoose.models.Settlement ||

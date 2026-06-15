@@ -43,7 +43,7 @@ const alertSchema = new mongoose.Schema<AlertDocument>(
 
 alertSchema.index({ claimId: 1, resolved: 1 });
 alertSchema.index({ resolved: 1, severity: 1, createdAt: -1 });
-alertSchema.index({ type: 1, resolved: 1});
+alertSchema.index({ type: 1, resolved: 1 });
 
 export const AlertModel =
   mongoose.models.Alert || mongoose.model<AlertDocument>("Alert", alertSchema);

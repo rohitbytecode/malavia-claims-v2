@@ -134,10 +134,16 @@ export const DepartmentReportTable: React.FC<DepartmentReportTableProps> = ({
                   <th style={{ textAlign: "right" }}>TDS</th>
                   <th style={{ textAlign: "right" }}>Pharmacy</th>
                   <th style={{ textAlign: "right" }}>Laboratory</th>
-                  {hasRadiology && <th style={{ textAlign: "right" }}>Radiology</th>}
+                  {hasRadiology && (
+                    <th style={{ textAlign: "right" }}>Radiology</th>
+                  )}
                   <th style={{ textAlign: "right" }}>Others</th>
-                  <th style={{ textAlign: "right" }}>Hospital Share (Before TDS)</th>
-                  <th style={{ textAlign: "right" }}>Hospital Share (After TDS)</th>
+                  <th style={{ textAlign: "right" }}>
+                    Hospital Share (Before TDS)
+                  </th>
+                  <th style={{ textAlign: "right" }}>
+                    Hospital Share (After TDS)
+                  </th>
                 </tr>
               </thead>
               <tbody>

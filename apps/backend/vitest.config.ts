@@ -6,7 +6,12 @@ export default defineConfig({
     globals: true,
     environment: "node",
     setupFiles: ["./src/tests/setup.ts"],
-    exclude: ["**/node_modules/**", "**/dist/**", "**/cypress/**", "**/.tmp/**"],
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/cypress/**",
+      "**/.tmp/**",
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

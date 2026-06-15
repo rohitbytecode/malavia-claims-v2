@@ -31,11 +31,11 @@ export class ReportService {
                     {
                       $add: [
                         { $ifNull: ["$settlement.netPayable", 0] },
-                        { $ifNull: ["$settlement.tds", 0] }
-                      ]
+                        { $ifNull: ["$settlement.tds", 0] },
+                      ],
                     },
-                    "$totalClaimAmount"
-                  ]
+                    "$totalClaimAmount",
+                  ],
                 },
                 "$totalClaimAmount",
               ],
@@ -70,12 +70,22 @@ export class ReportService {
                     { $gt: [{ $size: "$settlement" }, 0] },
                     {
                       $add: [
-                        { $ifNull: [{ $arrayElemAt: ["$settlement.netPayable", 0] }, 0] },
-                        { $ifNull: [{ $arrayElemAt: ["$settlement.tds", 0] }, 0] }
-                      ]
+                        {
+                          $ifNull: [
+                            { $arrayElemAt: ["$settlement.netPayable", 0] },
+                            0,
+                          ],
+                        },
+                        {
+                          $ifNull: [
+                            { $arrayElemAt: ["$settlement.tds", 0] },
+                            0,
+                          ],
+                        },
+                      ],
                     },
-                    "$totalClaimAmount"
-                  ]
+                    "$totalClaimAmount",
+                  ],
                 },
                 "$totalClaimAmount",
               ],
@@ -166,11 +176,11 @@ export class ReportService {
                     {
                       $add: [
                         { $ifNull: ["$settlement.netPayable", 0] },
-                        { $ifNull: ["$settlement.tds", 0] }
-                      ]
+                        { $ifNull: ["$settlement.tds", 0] },
+                      ],
                     },
-                    "$totalClaimAmount"
-                  ]
+                    "$totalClaimAmount",
+                  ],
                 },
                 "$totalClaimAmount",
               ],
@@ -242,11 +252,11 @@ export class ReportService {
               {
                 $add: [
                   { $ifNull: ["$settlement.netPayable", 0] },
-                  { $ifNull: ["$settlement.tds", 0] }
-                ]
+                  { $ifNull: ["$settlement.tds", 0] },
+                ],
               },
-              null
-            ]
+              null,
+            ],
           },
           tdsAmount: "$tdsAmount",
           hospitalDiscount: "$hospitalDiscount",
@@ -265,7 +275,11 @@ export class ReportService {
       detailedClaims,
       totalClaims: detailedClaims.length,
       totalAmount: detailedClaims.reduce(
-        (sum, c) => sum + (c.status === "SETTLED" && c.settledAmount !== null ? c.settledAmount : (c.totalClaimAmount || 0)),
+        (sum, c) =>
+          sum +
+          (c.status === "SETTLED" && c.settledAmount !== null
+            ? c.settledAmount
+            : c.totalClaimAmount || 0),
         0
       ),
     };

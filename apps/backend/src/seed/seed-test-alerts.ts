@@ -142,7 +142,10 @@ const seedTestAlertsData = async () => {
     // Set createdAt backdated field bypassing Mongoose timestamps
     await mongoose.connection
       .db!.collection("claims")
-      .updateOne({ _id: claimSettle._id }, { $set: { createdAt: date35DaysAgo } });
+      .updateOne(
+        { _id: claimSettle._id },
+        { $set: { createdAt: date35DaysAgo } }
+      );
 
     // Create transition history entry backdated to 35 days ago
     await ClaimStatusHistoryModel.create({

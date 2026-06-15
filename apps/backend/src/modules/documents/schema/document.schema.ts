@@ -52,7 +52,7 @@ const documentSchema = new mongoose.Schema<DocumentDocument>(
 
 documentSchema.index({ claimId: 1, documentType: 1 });
 documentSchema.index({ claimId: 1, version: -1 });
-documentSchema.index({ uploadedBy: 1, createdAt: -1}, { sparse: true});
+documentSchema.index({ uploadedBy: 1, createdAt: -1 }, { sparse: true });
 
 export const DocumentModel =
   (mongoose.models.Document as mongoose.Model<DocumentDocument>) ??

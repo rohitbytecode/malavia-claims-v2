@@ -364,7 +364,12 @@ export function ReportsPage() {
       const status = claim.status || "UNKNOWN";
       const current = statusMap.get(status) || { count: 0, totalAmount: 0 };
       current.count += 1;
-      current.totalAmount += (claim.status === "SETTLED" && claim.settledAmount !== null && claim.settledAmount !== undefined) ? claim.settledAmount : (claim.totalClaimAmount || 0);
+      current.totalAmount +=
+        claim.status === "SETTLED" &&
+        claim.settledAmount !== null &&
+        claim.settledAmount !== undefined
+          ? claim.settledAmount
+          : claim.totalClaimAmount || 0;
       statusMap.set(status, current);
     }
     return Array.from(statusMap.entries()).map(([status, val]) => ({
@@ -382,7 +387,13 @@ export function ReportsPage() {
 
   const totalAmount = useMemo<number>(() => {
     return detailedClaims.reduce(
-      (sum: number, r: DetailedClaim) => sum + ((r.status === "SETTLED" && r.settledAmount !== null && r.settledAmount !== undefined) ? r.settledAmount : (r.totalClaimAmount ?? 0)),
+      (sum: number, r: DetailedClaim) =>
+        sum +
+        (r.status === "SETTLED" &&
+        r.settledAmount !== null &&
+        r.settledAmount !== undefined
+          ? r.settledAmount
+          : (r.totalClaimAmount ?? 0)),
       0
     );
   }, [detailedClaims]);
@@ -526,7 +537,10 @@ export function ReportsPage() {
       }
 
       const receivedAmount = (s.netPayable || 0) + (s.tds || 0);
-      const hospitalShareAfterTds = Math.max(0, (s.netPayable || 0) - totalVendorPayout);
+      const hospitalShareAfterTds = Math.max(
+        0,
+        (s.netPayable || 0) - totalVendorPayout
+      );
       const hospitalShareBeforeTds = hospitalShareAfterTds + (s.tds || 0);
 
       let group = groupsMap.get(deptId);

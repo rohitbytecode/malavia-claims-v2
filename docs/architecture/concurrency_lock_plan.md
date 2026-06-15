@@ -6,30 +6,32 @@ This document outlines the architecture and step-by-step implementation plan for
 
 ## 1. Core Architecture
 
-The concurrency locking mechanism uses the existing **Socket.io** server to manage real-time editing locks. 
+The concurrency locking mechanism uses the existing **Socket.io** server to manage real-time editing locks.
 
 ```mermaid
 sequenceDiagram
     participant User A (Admin/Exec)
     participant Socket.io Server
     participant User B (Admin/Exec)
-    
+
     Note over User A, Socket.io Server: User A opens claim
     User A->>Socket.io Server: claim:lock:acquire { claimId: "C1", deviceName: "Host-1" }
     Socket.io Server-->>User A: claim:lock:acquired { success: true }
-    
+
     Note over User B, Socket.io Server: User B attempts to open claim
     User B->>Socket.io Server: claim:lock:acquire { claimId: "C1", deviceName: "Client-2" }
     Socket.io Server-->>User B: claim:lock:acquired { success: false, reason: "This claim is already opened in Host-1 by User A" }
-    
+
     Note over User A, Socket.io Server: User A navigates away or closes tab
     User A->>Socket.io Server: claim:lock:release { claimId: "C1" }
     Socket.io Server->>Socket.io Server: Release lock for "C1"
 ```
 
 ### In-Memory Lock Registry
+
 Since WebSocket connections are stateful, we can store active locks in-memory on the backend server. If the server scales horizontally in the future, this can be transitioned to Redis or MongoDB.
 Each lock entry will contain:
+
 - `claimId` (String) - The unique ID of the claim.
 - `userId` (String) - ID of the user currently editing.
 - `username` (String) - The username of the user editing.
@@ -43,13 +45,17 @@ Each lock entry will contain:
 ## 2. Backend Implementation Strategy (`apps/backend`)
 
 ### A. Create a Lock Manager Service
+
 Create a utility service to encapsulate in-memory lock CRUD operations:
+
 - `acquireLock(claimId, user, deviceName, socketId)`: Returns the lock if acquired, or the owner information if already locked.
 - `releaseLockByClaim(claimId, socketId)`: Releases the lock.
 - `releaseLocksBySocket(socketId)`: Releases all locks associated with a disconnected socket (prevents stale locks if a browser tab crashes).
 
 ### B. Register Socket.io Handlers (`apps/backend/src/config/socket.ts`)
+
 Listen to locking events inside the connection listener:
+
 1. **`claim:lock:acquire`**:
    - Check user role. If `role === 'PHARMACIST'`, acknowledge immediately with success (pharmacists are excluded).
    - Attempt to acquire the lock using the Lock Manager.
@@ -65,7 +71,9 @@ Listen to locking events inside the connection listener:
 ## 3. Frontend Implementation Strategy (`apps/frontend`)
 
 ### A. Resolve Device Name
+
 To identify the client device:
+
 1. **Electron Host/Clients**: If running in Electron, expose `os.hostname()` through an IPC bridge/preload script.
 2. **Web Fallback**: If running in a web browser, generate a friendly display name using browser info or user-agent details (e.g. `Chrome on Windows 11`) and store it in `localStorage` to keep it persistent for that client.
 
@@ -76,7 +84,7 @@ export function getDeviceName(): string {
   if ((window as any).electronAPI?.getHostname) {
     return (window as any).electronAPI.getHostname();
   }
-  
+
   // Web fallback
   let deviceName = localStorage.getItem("device_name");
   if (!deviceName) {
@@ -84,7 +92,7 @@ export function getDeviceName(): string {
     const isWindows = userAgent.includes("Windows");
     const isMac = userAgent.includes("Macintosh");
     const os = isMac ? "macOS" : isWindows ? "Windows" : "Linux";
-    
+
     // Create random identifier
     const rand = Math.floor(100 + Math.random() * 900);
     deviceName = `Browser (${os}-${rand})`;
@@ -95,7 +103,9 @@ export function getDeviceName(): string {
 ```
 
 ### B. Integrate in Claim Details (`ClaimDetailsPage.tsx`)
+
 Add lock state tracking to the claim detailed view:
+
 1. Check if the logged-in user is a `PHARMACIST`. If so, skip WebSocket locking entirely.
 2. For all other roles, on component mount or when `claimId` changes:
    - Resolve `deviceName`.

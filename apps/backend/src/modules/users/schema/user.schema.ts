@@ -50,6 +50,6 @@ const userSchema = new mongoose.Schema<UserDocument>(
 );
 
 userSchema.index({ role: 1, isActive: 1 });
-userSchema.index({ isActive: 1, fullName: 1});
+userSchema.index({ isActive: 1, fullName: 1 });
 export const UserModel =
   mongoose.models.User || mongoose.model<UserDocument>("User", userSchema);

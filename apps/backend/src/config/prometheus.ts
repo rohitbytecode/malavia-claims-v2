@@ -11,7 +11,9 @@ export const httpRequestDurationSeconds = new client.Histogram({
   name: "http_request_duration_seconds",
   help: "Duration of HTTP requests in seconds",
   labelNames: ["method", "route", "status_code"],
-  buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 10],
+  buckets: [
+    0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 10,
+  ],
 });
 
 export const httpRequestCounter = new client.Counter({
@@ -37,7 +39,9 @@ export const httpResponseSizeBytes = new client.Histogram({
   name: "http_response_size_bytes",
   help: "Size of HTTP responses in bytes",
   labelNames: ["method", "route", "status_code"],
-  buckets: [128, 512, 1024, 5120, 10240, 51200, 102400, 512000, 1024000, 5120000],
+  buckets: [
+    128, 512, 1024, 5120, 10240, 51200, 102400, 512000, 1024000, 5120000,
+  ],
 });
 
 register.registerMetric(httpRequestDurationSeconds);

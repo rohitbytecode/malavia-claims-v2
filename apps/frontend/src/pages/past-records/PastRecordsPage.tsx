@@ -131,18 +131,32 @@ export function PastRecordsPage() {
     const totalClaimed = deptLines.reduce((s, l) => s + l.claimedAmount, 0);
     const totalApproved = deptLines.reduce((s, l) => s + l.approvedAmount, 0);
     const totalDeductions = deptLines.reduce((s, l) => s + l.deduction, 0);
-    const totalCompanyDiscount = deptLines.reduce((s, l) => s + l.companyDiscountAmount, 0);
+    const totalCompanyDiscount = deptLines.reduce(
+      (s, l) => s + l.companyDiscountAmount,
+      0
+    );
     const totalVendorPayout = deptLines.reduce((s, l) => s + l.vendorPayout, 0);
-    const totalHospitalShare = deptLines.reduce((s, l) => s + l.hospitalShare, 0);
+    const totalHospitalShare = deptLines.reduce(
+      (s, l) => s + l.hospitalShare,
+      0
+    );
 
-    const activeApproved = isSettled && deptLines.length > 0 ? totalApproved : draft.totalClaimAmount;
-    const activeCompanyDiscount = isSettled && deptLines.length > 0 ? totalCompanyDiscount : draft.hospitalDiscount;
-    const activeDeductions = isSettled && deptLines.length > 0 ? totalDeductions : draft.deductions;
+    const activeApproved =
+      isSettled && deptLines.length > 0
+        ? totalApproved
+        : draft.totalClaimAmount;
+    const activeCompanyDiscount =
+      isSettled && deptLines.length > 0
+        ? totalCompanyDiscount
+        : draft.hospitalDiscount;
+    const activeDeductions =
+      isSettled && deptLines.length > 0 ? totalDeductions : draft.deductions;
     const activeNet = Math.max(0, activeApproved - activeCompanyDiscount);
 
     const extraRefund = Math.max(0, draft.refundAmount - draft.depositAmount);
     const netPayable = Math.max(0, activeNet - draft.tdsAmount - extraRefund);
-    const hospitalNetShare = Math.round((netPayable - totalVendorPayout) * 100) / 100;
+    const hospitalNetShare =
+      Math.round((netPayable - totalVendorPayout) * 100) / 100;
 
     return {
       totalClaimed,
@@ -183,7 +197,14 @@ export function PastRecordsPage() {
         }));
       }
     }
-  }, [computedTotals.totalClaimed, computedTotals.totalDeductions, computedTotals.totalCompanyDiscount, needsBreakdown, isSettled, deptLines.length]);
+  }, [
+    computedTotals.totalClaimed,
+    computedTotals.totalDeductions,
+    computedTotals.totalCompanyDiscount,
+    needsBreakdown,
+    isSettled,
+    deptLines.length,
+  ]);
 
   const importMutation = useMutation({
     mutationFn: () =>
@@ -198,20 +219,36 @@ export function PastRecordsPage() {
         claimDate: draft.claimDate || undefined,
         departmentName: selectedDepartmentName || undefined,
         doctorName: selectedDoctorName || undefined,
-        totalClaimAmount: isSettled ? computedTotals.totalApproved : computedTotals.totalClaimed,
-        tdsAmount: isSettled ? (draft.tdsAmount || undefined) : undefined,
-        deductions: isSettled ? (computedTotals.totalDeductions || undefined) : undefined,
-        hospitalDiscount: isSettled ? (computedTotals.totalCompanyDiscount || undefined) : undefined,
+        totalClaimAmount: isSettled
+          ? computedTotals.totalApproved
+          : computedTotals.totalClaimed,
+        tdsAmount: isSettled ? draft.tdsAmount || undefined : undefined,
+        deductions: isSettled
+          ? computedTotals.totalDeductions || undefined
+          : undefined,
+        hospitalDiscount: isSettled
+          ? computedTotals.totalCompanyDiscount || undefined
+          : undefined,
         depositAmount: draft.depositAmount || undefined,
         refundAmount: draft.refundAmount || undefined,
         remarks: draft.remarks || undefined,
 
         // Advanced settlement fields
-        settlementMethod: isSettled ? (draft.settlementMethod || undefined) : undefined,
-        settlementDate: isSettled ? (draft.settlementDate || undefined) : undefined,
-        totalCompanyDiscount: isSettled ? computedTotals.totalCompanyDiscount : undefined,
-        totalVendorPayout: isSettled ? computedTotals.totalVendorPayout : undefined,
-        hospitalNetShare: isSettled ? computedTotals.hospitalNetShare : undefined,
+        settlementMethod: isSettled
+          ? draft.settlementMethod || undefined
+          : undefined,
+        settlementDate: isSettled
+          ? draft.settlementDate || undefined
+          : undefined,
+        totalCompanyDiscount: isSettled
+          ? computedTotals.totalCompanyDiscount
+          : undefined,
+        totalVendorPayout: isSettled
+          ? computedTotals.totalVendorPayout
+          : undefined,
+        hospitalNetShare: isSettled
+          ? computedTotals.hospitalNetShare
+          : undefined,
         refundStatus: draft.refundStatus || undefined,
         departmentBreakdown: needsBreakdown ? deptLines : undefined,
       }),
@@ -256,42 +293,73 @@ export function PastRecordsPage() {
 
       // 1. If claimed/approved amount changed, recalculate deduction
       if (field === "claimedAmount" || field === "approvedAmount") {
-        updated.deduction = Math.max(0, updated.claimedAmount - updated.approvedAmount);
+        updated.deduction = Math.max(
+          0,
+          updated.claimedAmount - updated.approvedAmount
+        );
       }
 
       // 2. If approvedAmount or companyDiscountPercent changed, recalculate companyDiscountAmount
       if (field === "approvedAmount" || field === "companyDiscountPercent") {
-        updated.companyDiscountAmount = Math.round(((updated.approvedAmount * updated.companyDiscountPercent) / 100) * 100) / 100;
+        updated.companyDiscountAmount =
+          Math.round(
+            ((updated.approvedAmount * updated.companyDiscountPercent) / 100) *
+              100
+          ) / 100;
       }
       // If companyDiscountAmount changed manually, recalculate percent
       else if (field === "companyDiscountAmount") {
-        updated.companyDiscountPercent = updated.approvedAmount > 0
-          ? Math.round(((updated.companyDiscountAmount / updated.approvedAmount) * 100) * 100) / 100
-          : 0;
+        updated.companyDiscountPercent =
+          updated.approvedAmount > 0
+            ? Math.round(
+                (updated.companyDiscountAmount / updated.approvedAmount) *
+                  100 *
+                  100
+              ) / 100
+            : 0;
       }
 
       // Recalculate netAmount
-      updated.netAmount = Math.round((updated.approvedAmount - updated.companyDiscountAmount) * 100) / 100;
+      updated.netAmount =
+        Math.round(
+          (updated.approvedAmount - updated.companyDiscountAmount) * 100
+        ) / 100;
 
       // 3. If approvedAmount or vendorDiscountPercent changed, recalculate vendorDiscountAmount
       if (field === "approvedAmount" || field === "vendorDiscountPercent") {
-        updated.vendorDiscountAmount = Math.round(((updated.approvedAmount * updated.vendorDiscountPercent) / 100) * 100) / 100;
+        updated.vendorDiscountAmount =
+          Math.round(
+            ((updated.approvedAmount * updated.vendorDiscountPercent) / 100) *
+              100
+          ) / 100;
       }
       // If vendorDiscountAmount changed manually, recalculate percent
       else if (field === "vendorDiscountAmount") {
-        updated.vendorDiscountPercent = updated.approvedAmount > 0
-          ? Math.round(((updated.vendorDiscountAmount / updated.approvedAmount) * 100) * 100) / 100
-          : 0;
+        updated.vendorDiscountPercent =
+          updated.approvedAmount > 0
+            ? Math.round(
+                (updated.vendorDiscountAmount / updated.approvedAmount) *
+                  100 *
+                  100
+              ) / 100
+            : 0;
       }
 
       // Recalculate vendorPayout
       updated.vendorPayout = isVendor
-        ? Math.max(0, Math.round((updated.approvedAmount - updated.vendorDiscountAmount) * 100) / 100)
+        ? Math.max(
+            0,
+            Math.round(
+              (updated.approvedAmount - updated.vendorDiscountAmount) * 100
+            ) / 100
+          )
         : 0;
 
       // Recalculate hospitalShare
       updated.hospitalShare = isVendor
-        ? Math.round((updated.vendorDiscountAmount - updated.companyDiscountAmount) * 100) / 100
+        ? Math.round(
+            (updated.vendorDiscountAmount - updated.companyDiscountAmount) * 100
+          ) / 100
         : updated.netAmount;
 
       next[index] = updated;
@@ -380,7 +448,10 @@ export function PastRecordsPage() {
 
       <form onSubmit={handleSubmit}>
         {/* Patient Details */}
-        <fieldset className="card" style={{ marginBottom: "20px", minWidth: 0 }}>
+        <fieldset
+          className="card"
+          style={{ marginBottom: "20px", minWidth: 0 }}
+        >
           <legend
             style={{
               fontWeight: 600,
@@ -432,7 +503,10 @@ export function PastRecordsPage() {
         </fieldset>
 
         {/* Claim Details */}
-        <fieldset className="card" style={{ marginBottom: "20px", minWidth: 0 }}>
+        <fieldset
+          className="card"
+          style={{ marginBottom: "20px", minWidth: 0 }}
+        >
           <legend
             style={{
               fontWeight: 600,
@@ -455,9 +529,7 @@ export function PastRecordsPage() {
             <Field label="Claim Type *">
               <SelectInput
                 value={draft.claimType}
-                onChange={(e) =>
-                  set("claimType", e.target.value as ClaimType)
-                }
+                onChange={(e) => set("claimType", e.target.value as ClaimType)}
               >
                 {claimTypes.map((t) => (
                   <option key={t} value={t}>
@@ -518,7 +590,10 @@ export function PastRecordsPage() {
 
         {/* Dynamic Department Settlement Breakdown Section */}
         {needsBreakdown && (
-          <fieldset className="card" style={{ marginBottom: "20px", minWidth: 0 }}>
+          <fieldset
+            className="card"
+            style={{ marginBottom: "20px", minWidth: 0 }}
+          >
             <legend
               style={{
                 fontWeight: 600,
@@ -595,13 +670,21 @@ export function PastRecordsPage() {
                     }}
                   >
                     <thead>
-                      <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                        <th style={{ padding: "8px", textAlign: "left" }}>Dept</th>
+                      <tr
+                        style={{
+                          borderBottom: "1px solid rgba(255,255,255,0.1)",
+                        }}
+                      >
+                        <th style={{ padding: "8px", textAlign: "left" }}>
+                          Dept
+                        </th>
                         <th style={{ padding: "8px" }}>Claimed (₹)</th>
                         <th style={{ padding: "8px" }}>Approved (₹)</th>
                         <th style={{ padding: "8px" }}>Deduction (₹)</th>
                         <th style={{ padding: "8px" }}>Co. Disc % / Amt (₹)</th>
-                        <th style={{ padding: "8px" }}>Vend. Disc % / Amt (₹)</th>
+                        <th style={{ padding: "8px" }}>
+                          Vend. Disc % / Amt (₹)
+                        </th>
                         <th style={{ padding: "8px" }}>Co. Net (₹)</th>
                         <th style={{ padding: "8px" }}>Vend. Payout (₹)</th>
                         <th style={{ padding: "8px" }}>Hosp. Share (₹)</th>
@@ -747,53 +830,58 @@ export function PastRecordsPage() {
                             </td>
                             <td style={{ padding: "6px 8px" }}>
                               <TextInput
-                                  type="number"
-                                  step="any"
-                                  min={0}
-                                  style={{ width: "70px", padding: "4px" }}
-                                  value={line.netAmount}
-                                  onChange={(e) =>
-                                    handleLineValueChange(
-                                      index,
-                                      "netAmount",
-                                      Number(e.target.value)
-                                    )
-                                  }
-                                />
+                                type="number"
+                                step="any"
+                                min={0}
+                                style={{ width: "70px", padding: "4px" }}
+                                value={line.netAmount}
+                                onChange={(e) =>
+                                  handleLineValueChange(
+                                    index,
+                                    "netAmount",
+                                    Number(e.target.value)
+                                  )
+                                }
+                              />
                             </td>
                             <td style={{ padding: "6px 8px" }}>
                               <TextInput
-                                  type="number"
-                                  step="any"
-                                  min={0}
-                                  disabled={!isVendor}
-                                  style={{ width: "70px", padding: "4px" }}
-                                  value={line.vendorPayout}
-                                  onChange={(e) =>
-                                    handleLineValueChange(
-                                      index,
-                                      "vendorPayout",
-                                      Number(e.target.value)
-                                    )
-                                  }
-                                />
+                                type="number"
+                                step="any"
+                                min={0}
+                                disabled={!isVendor}
+                                style={{ width: "70px", padding: "4px" }}
+                                value={line.vendorPayout}
+                                onChange={(e) =>
+                                  handleLineValueChange(
+                                    index,
+                                    "vendorPayout",
+                                    Number(e.target.value)
+                                  )
+                                }
+                              />
                             </td>
                             <td style={{ padding: "6px 8px" }}>
                               <TextInput
-                                  type="number"
-                                  step="any"
-                                  style={{ width: "70px", padding: "4px" }}
-                                  value={line.hospitalShare}
-                                  onChange={(e) =>
-                                    handleLineValueChange(
-                                      index,
-                                      "hospitalShare",
-                                      Number(e.target.value)
-                                    )
-                                  }
-                                />
+                                type="number"
+                                step="any"
+                                style={{ width: "70px", padding: "4px" }}
+                                value={line.hospitalShare}
+                                onChange={(e) =>
+                                  handleLineValueChange(
+                                    index,
+                                    "hospitalShare",
+                                    Number(e.target.value)
+                                  )
+                                }
+                              />
                             </td>
-                            <td style={{ padding: "6px 8px", textAlign: "center" }}>
+                            <td
+                              style={{
+                                padding: "6px 8px",
+                                textAlign: "center",
+                              }}
+                            >
                               <Button
                                 type="button"
                                 variant="danger"
@@ -819,7 +907,10 @@ export function PastRecordsPage() {
         )}
 
         {/* Financial & Settlement Overall Details */}
-        <fieldset className="card" style={{ marginBottom: "20px", minWidth: 0 }}>
+        <fieldset
+          className="card"
+          style={{ marginBottom: "20px", minWidth: 0 }}
+        >
           <legend
             style={{
               fontWeight: 600,
@@ -932,7 +1023,9 @@ export function PastRecordsPage() {
                   color: "var(--emerald)",
                 }}
               >
-                {formatCurrency(computedTotals.hospitalNetShare + draft.tdsAmount)}
+                {formatCurrency(
+                  computedTotals.hospitalNetShare + draft.tdsAmount
+                )}
               </div>
             </Field>
             <Field label="Net Hospital Share (After TDS)">
@@ -1004,7 +1097,10 @@ export function PastRecordsPage() {
         </fieldset>
 
         {/* Remarks */}
-        <fieldset className="card" style={{ marginBottom: "20px", minWidth: 0 }}>
+        <fieldset
+          className="card"
+          style={{ marginBottom: "20px", minWidth: 0 }}
+        >
           <legend
             style={{
               fontWeight: 600,

@@ -24,14 +24,14 @@ interface PastRecordSeed {
   patientName: string;
   insurerId?: string;
   insuranceCompanyName?: string; // Resolved to insuranceCompanyId (e.g., "HDFC Ergo", "Star Health", "ICICI Lombard")
-  
+
   // Claim details
   claimNumber: string;
   claimType: ClaimType;
   claimStatus: ClaimStatus;
-  claimDate?: string;            // The date when the claim was registered or status transitioned (e.g., "2026-03-15")
-  departmentName?: string;       // Resolved to departmentId (e.g., "Cardiology", "Neurology", "Orthopedics", "General Surgery")
-  doctorName?: string;           // Resolved to doctorId (e.g., "Dr. Alice Smith", "Dr. Bob Johnson")
+  claimDate?: string; // The date when the claim was registered or status transitioned (e.g., "2026-03-15")
+  departmentName?: string; // Resolved to departmentId (e.g., "Cardiology", "Neurology", "Orthopedics", "General Surgery")
+  doctorName?: string; // Resolved to doctorId (e.g., "Dr. Alice Smith", "Dr. Bob Johnson")
   totalClaimAmount: number;
   tdsAmount?: number;
   deductions?: number;
@@ -163,7 +163,10 @@ const pastRecords: PastRecordSeed[] = [
     hospitalDiscount: 3000,
     depositAmount: 20000,
     refundAmount: 0,
-    remarks: ["Past record seed", "Discharge card uploaded, awaiting final approval"],
+    remarks: [
+      "Past record seed",
+      "Discharge card uploaded, awaiting final approval",
+    ],
     pharmacyAmount: 50000,
     laboratoryAmount: 30000,
     radiologyAmount: 20000,
@@ -225,7 +228,10 @@ const pastRecords: PastRecordSeed[] = [
     hospitalDiscount: 2000,
     depositAmount: 0,
     refundAmount: 0,
-    remarks: ["Past record seed", "Approved, awaiting bank settlement transfer"],
+    remarks: [
+      "Past record seed",
+      "Approved, awaiting bank settlement transfer",
+    ],
   },
   {
     patientId: "PAT-PAST-009",
@@ -282,7 +288,10 @@ const pastRecords: PastRecordSeed[] = [
     hospitalDiscount: 0,
     depositAmount: 0,
     refundAmount: 0,
-    remarks: ["Past record seed", "Pre-auth rejected by insurer due to pre-existing condition"],
+    remarks: [
+      "Past record seed",
+      "Pre-auth rejected by insurer due to pre-existing condition",
+    ],
   },
   {
     patientId: "PAT-PAST-012",
@@ -358,7 +367,10 @@ const pastRecords: PastRecordSeed[] = [
     hospitalDiscount: 1000,
     depositAmount: 10000,
     refundAmount: 10000,
-    remarks: ["Past record seed", "Refund completed, deposit returned to patient"],
+    remarks: [
+      "Past record seed",
+      "Refund completed, deposit returned to patient",
+    ],
   },
   {
     patientId: "PAT-PAST-016",
@@ -377,7 +389,10 @@ const pastRecords: PastRecordSeed[] = [
     hospitalDiscount: 0,
     depositAmount: 0,
     refundAmount: 0,
-    remarks: ["Past record seed", "Reconsideration request filed with new documents"],
+    remarks: [
+      "Past record seed",
+      "Reconsideration request filed with new documents",
+    ],
   },
   {
     patientId: "PAT-PAST-017",
@@ -507,7 +522,9 @@ const runSeeder = async () => {
     // Find the admin user to associate with 'createdBy'
     const adminUser = await UserModel.findOne({ role: Roles.ADMIN });
     if (!adminUser) {
-      logger.warn("Admin user not found. Claims will be created without 'createdBy' reference.");
+      logger.warn(
+        "Admin user not found. Claims will be created without 'createdBy' reference."
+      );
     }
 
     let successCount = 0;
@@ -515,23 +532,33 @@ const runSeeder = async () => {
     for (const record of pastRecords) {
       try {
         // Resolve relations
-        const dbInsuranceCompany = await findInsuranceCompany(record.insuranceCompanyName);
+        const dbInsuranceCompany = await findInsuranceCompany(
+          record.insuranceCompanyName
+        );
         const dbDepartment = await findDepartment(record.departmentName);
         const dbDoctor = await findDoctor(record.doctorName);
 
         if (record.insuranceCompanyName && !dbInsuranceCompany) {
-          logger.warn(`Insurance company "${record.insuranceCompanyName}" not found for patient ${record.patientName}. Proceeding without it.`);
+          logger.warn(
+            `Insurance company "${record.insuranceCompanyName}" not found for patient ${record.patientName}. Proceeding without it.`
+          );
         }
         if (record.departmentName && !dbDepartment) {
-          logger.warn(`Department "${record.departmentName}" not found for claim ${record.claimNumber}. Proceeding without it.`);
+          logger.warn(
+            `Department "${record.departmentName}" not found for claim ${record.claimNumber}. Proceeding without it.`
+          );
         }
         if (record.doctorName && !dbDoctor) {
-          logger.warn(`Doctor "${record.doctorName}" not found for claim ${record.claimNumber}. Proceeding without it.`);
+          logger.warn(
+            `Doctor "${record.doctorName}" not found for claim ${record.claimNumber}. Proceeding without it.`
+          );
         }
 
         // 1. Seed or update Patient
-        let patient = await PatientModel.findOne({ patientId: record.patientId });
-        
+        let patient = await PatientModel.findOne({
+          patientId: record.patientId,
+        });
+
         const patientData = {
           patientId: record.patientId,
           name: record.patientName,
@@ -542,41 +569,83 @@ const runSeeder = async () => {
 
         if (patient) {
           // Update existing patient record
-          patient = await PatientModel.findByIdAndUpdate(patient._id, patientData, { new: true });
-          logger.info(`Patient ${record.patientId} (${record.patientName}) updated.`);
+          patient = await PatientModel.findByIdAndUpdate(
+            patient._id,
+            patientData,
+            { new: true }
+          );
+          logger.info(
+            `Patient ${record.patientId} (${record.patientName}) updated.`
+          );
         } else {
           // Create new patient record
           patient = await PatientModel.create(patientData);
-          logger.info(`Patient ${record.patientId} (${record.patientName}) created.`);
+          logger.info(
+            `Patient ${record.patientId} (${record.patientName}) created.`
+          );
         }
 
         // 2. Seed or update Claim
-        let claim = await ClaimModel.findOne({ claimNumber: record.claimNumber });
+        let claim = await ClaimModel.findOne({
+          claimNumber: record.claimNumber,
+        });
 
         const billBreakdown = [];
         if (record.pharmacyAmount) {
-          billBreakdown.push({ departmentCategory: DepartmentCategory.PHARMACY, amount: record.pharmacyAmount, description: "Pharmacy charges" });
+          billBreakdown.push({
+            departmentCategory: DepartmentCategory.PHARMACY,
+            amount: record.pharmacyAmount,
+            description: "Pharmacy charges",
+          });
         }
         if (record.laboratoryAmount) {
-          billBreakdown.push({ departmentCategory: DepartmentCategory.LABORATORY, amount: record.laboratoryAmount, description: "Laboratory charges" });
+          billBreakdown.push({
+            departmentCategory: DepartmentCategory.LABORATORY,
+            amount: record.laboratoryAmount,
+            description: "Laboratory charges",
+          });
         }
         if (record.radiologyAmount) {
-          billBreakdown.push({ departmentCategory: DepartmentCategory.RADIOLOGY, amount: record.radiologyAmount, description: "Radiology charges" });
+          billBreakdown.push({
+            departmentCategory: DepartmentCategory.RADIOLOGY,
+            amount: record.radiologyAmount,
+            description: "Radiology charges",
+          });
         }
         if (record.roomChargesAmount) {
-          billBreakdown.push({ departmentCategory: DepartmentCategory.ROOM_CHARGES, amount: record.roomChargesAmount, description: "Room charges" });
+          billBreakdown.push({
+            departmentCategory: DepartmentCategory.ROOM_CHARGES,
+            amount: record.roomChargesAmount,
+            description: "Room charges",
+          });
         }
         if (record.doctorFeesAmount) {
-          billBreakdown.push({ departmentCategory: DepartmentCategory.DOCTOR_FEES, amount: record.doctorFeesAmount, description: "Doctor fees" });
+          billBreakdown.push({
+            departmentCategory: DepartmentCategory.DOCTOR_FEES,
+            amount: record.doctorFeesAmount,
+            description: "Doctor fees",
+          });
         }
         if (record.otChargesAmount) {
-          billBreakdown.push({ departmentCategory: DepartmentCategory.OT_CHARGES, amount: record.otChargesAmount, description: "OT charges" });
+          billBreakdown.push({
+            departmentCategory: DepartmentCategory.OT_CHARGES,
+            amount: record.otChargesAmount,
+            description: "OT charges",
+          });
         }
         if (record.consumablesAmount) {
-          billBreakdown.push({ departmentCategory: DepartmentCategory.CONSUMABLES, amount: record.consumablesAmount, description: "Consumables charges" });
+          billBreakdown.push({
+            departmentCategory: DepartmentCategory.CONSUMABLES,
+            amount: record.consumablesAmount,
+            description: "Consumables charges",
+          });
         }
         if (record.otherAmount) {
-          billBreakdown.push({ departmentCategory: DepartmentCategory.OTHER, amount: record.otherAmount, description: "Other charges" });
+          billBreakdown.push({
+            departmentCategory: DepartmentCategory.OTHER,
+            amount: record.otherAmount,
+            description: "Other charges",
+          });
         }
 
         const claimData = {
@@ -602,13 +671,15 @@ const runSeeder = async () => {
         };
 
         let savedClaimId: mongoose.Types.ObjectId;
-        const parsedDate = record.claimDate ? new Date(record.claimDate) : undefined;
+        const parsedDate = record.claimDate
+          ? new Date(record.claimDate)
+          : undefined;
 
         if (claim) {
           // Update existing claim record
           await ClaimModel.findByIdAndUpdate(claim._id, claimData);
           savedClaimId = claim._id;
-          
+
           if (parsedDate) {
             await ClaimModel.findByIdAndUpdate(
               claim._id,
@@ -644,7 +715,9 @@ const runSeeder = async () => {
           historyDoc.updatedAt = parsedDate;
         }
         await historyDoc.save({ timestamps: false });
-        logger.info(`ClaimStatusHistory seeded for claim ${record.claimNumber}.`);
+        logger.info(
+          `ClaimStatusHistory seeded for claim ${record.claimNumber}.`
+        );
 
         // 4. Handle Settlement if status is SETTLED
         if (record.claimStatus === ClaimStatus.SETTLED) {
@@ -652,7 +725,10 @@ const runSeeder = async () => {
           const hospitalDiscount = record.hospitalDiscount || 0;
           const deductions = record.deductions || 0;
           const tds = record.tdsAmount || 0;
-          const netPayable = Math.max(0, approvedAmount - hospitalDiscount - deductions - tds);
+          const netPayable = Math.max(
+            0,
+            approvedAmount - hospitalDiscount - deductions - tds
+          );
 
           const departmentBreakdown = [];
           if (record.pharmacyAmount) {
@@ -757,7 +833,9 @@ const runSeeder = async () => {
             departmentBreakdown,
           };
 
-          const settlementDoc = await SettlementModel.findOne({ claimId: savedClaimId });
+          const settlementDoc = await SettlementModel.findOne({
+            claimId: savedClaimId,
+          });
           if (settlementDoc) {
             await SettlementModel.findByIdAndUpdate(
               settlementDoc._id,
@@ -779,29 +857,38 @@ const runSeeder = async () => {
             }
             await newSettlement.save({ timestamps: false });
           }
-          logger.info(`Settlement record created/updated for claim ${record.claimNumber}.`);
+          logger.info(
+            `Settlement record created/updated for claim ${record.claimNumber}.`
+          );
         } else {
           // If status is not SETTLED, clean up any existing settlement record
           await SettlementModel.deleteOne({ claimId: savedClaimId });
         }
 
         // 5. Handle Deposit if depositAmount > 0 or refundAmount > 0
-        if ((record.depositAmount && record.depositAmount > 0) || (record.refundAmount && record.refundAmount > 0)) {
-          const isCompleted = record.claimStatus === ClaimStatus.DEPOSIT_RETURNED || record.claimStatus === ClaimStatus.CLOSED;
+        if (
+          (record.depositAmount && record.depositAmount > 0) ||
+          (record.refundAmount && record.refundAmount > 0)
+        ) {
+          const isCompleted =
+            record.claimStatus === ClaimStatus.DEPOSIT_RETURNED ||
+            record.claimStatus === ClaimStatus.CLOSED;
           const depositData = {
             claimId: savedClaimId,
             collectedAmount: record.depositAmount || 0,
             refundAmount: record.refundAmount || 0,
-            refundStatus: isCompleted ? RefundStatus.COMPLETED : RefundStatus.PENDING,
+            refundStatus: isCompleted
+              ? RefundStatus.COMPLETED
+              : RefundStatus.PENDING,
           };
 
-          const depositDoc = await DepositModel.findOne({ claimId: savedClaimId });
+          const depositDoc = await DepositModel.findOne({
+            claimId: savedClaimId,
+          });
           if (depositDoc) {
-            await DepositModel.findByIdAndUpdate(
-              depositDoc._id,
-              depositData,
-              { timestamps: false }
-            );
+            await DepositModel.findByIdAndUpdate(depositDoc._id, depositData, {
+              timestamps: false,
+            });
             if (parsedDate) {
               await DepositModel.findByIdAndUpdate(
                 depositDoc._id,
@@ -817,18 +904,24 @@ const runSeeder = async () => {
             }
             await newDeposit.save({ timestamps: false });
           }
-          logger.info(`Deposit record created/updated for claim ${record.claimNumber}.`);
+          logger.info(
+            `Deposit record created/updated for claim ${record.claimNumber}.`
+          );
         } else {
           await DepositModel.deleteOne({ claimId: savedClaimId });
         }
 
         successCount++;
       } catch (innerError: any) {
-        logger.error(`Failed to seed record for patient "${record.patientName}" / claim "${record.claimNumber}": ${innerError.message}`);
+        logger.error(
+          `Failed to seed record for patient "${record.patientName}" / claim "${record.claimNumber}": ${innerError.message}`
+        );
       }
     }
 
-    logger.info(`Successfully processed ${successCount}/${pastRecords.length} records.`);
+    logger.info(
+      `Successfully processed ${successCount}/${pastRecords.length} records.`
+    );
   } catch (error) {
     logger.error(error, "Failed to run past records seeder");
   } finally {

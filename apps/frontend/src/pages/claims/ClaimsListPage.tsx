@@ -143,7 +143,9 @@ export function ClaimsListPage() {
           return formatCurrency(pharmacyItem?.amount ?? 0);
         }
         const displayAmt =
-          c.status === "SETTLED" && c.settledAmount !== null && c.settledAmount !== undefined
+          c.status === "SETTLED" &&
+          c.settledAmount !== null &&
+          c.settledAmount !== undefined
             ? c.settledAmount
             : c.totalClaimAmount;
         return formatCurrency(displayAmt);
@@ -156,7 +158,9 @@ export function ClaimsListPage() {
               ?.amount ?? 0
           );
         }
-        return c.status === "SETTLED" && c.settledAmount !== null && c.settledAmount !== undefined
+        return c.status === "SETTLED" &&
+          c.settledAmount !== null &&
+          c.settledAmount !== undefined
           ? c.settledAmount
           : c.totalClaimAmount;
       },

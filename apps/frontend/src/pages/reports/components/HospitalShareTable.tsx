@@ -143,7 +143,13 @@ export const HospitalShareTable: React.FC<HospitalShareTableProps> = ({
                 <td>
                   <strong>{row.claimNumber || "—"}</strong>
                   {row.patientName && (
-                    <div style={{ fontSize: "0.82em", color: "var(--text-secondary)", marginTop: 2 }}>
+                    <div
+                      style={{
+                        fontSize: "0.82em",
+                        color: "var(--text-secondary)",
+                        marginTop: 2,
+                      }}
+                    >
                       {row.patientName}
                     </div>
                   )}

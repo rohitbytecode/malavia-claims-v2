@@ -21,7 +21,8 @@ const sdk = new NodeSDK({
 sdk.start();
 
 process.on("SIGTERM", () => {
-  sdk.shutdown()
+  sdk
+    .shutdown()
     .then(() => console.log("Tracing terminated"))
     .catch((err) => console.log("Error terminating tracing", err))
     .finally(() => process.exit(0));

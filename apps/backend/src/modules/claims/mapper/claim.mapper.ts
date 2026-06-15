@@ -29,7 +29,10 @@ export const toClaimResponse = (claim: any) => {
     doctor: mapRelation(claimObject.doctorId),
 
     totalClaimAmount: claimObject.totalClaimAmount,
-    settledAmount: claimObject.settledAmount !== undefined ? claimObject.settledAmount : null,
+    settledAmount:
+      claimObject.settledAmount !== undefined
+        ? claimObject.settledAmount
+        : null,
 
     tdsAmount: claimObject.tdsAmount,
 

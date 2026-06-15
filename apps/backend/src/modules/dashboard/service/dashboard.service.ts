@@ -74,10 +74,7 @@ export class DashboardService {
           _id: null,
           total: {
             $sum: {
-              $add: [
-                { $ifNull: ["$netPayable", 0] },
-                { $ifNull: ["$tds", 0] },
-              ],
+              $add: [{ $ifNull: ["$netPayable", 0] }, { $ifNull: ["$tds", 0] }],
             },
           },
         },

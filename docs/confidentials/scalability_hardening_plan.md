@@ -2,27 +2,27 @@
 
 ## Target Benchmarks
 
-| Metric | Target |
-|---|---|
-| Total Claims | 500,000+ |
-| Concurrent Users | 1000 |
-| Notifications | 5,000,000+ |
-| API Requests | 20,000,000+ |
+| Metric           | Target      |
+| ---------------- | ----------- |
+| Total Claims     | 500,000+    |
+| Concurrent Users | 1000        |
+| Notifications    | 5,000,000+  |
+| API Requests     | 20,000,000+ |
 
 ---
 
 ## Current State — What's Already in Place ✅
 
-| Capability | Status | File |
-|---|---|---|
-| PM2 cluster mode (all CPU cores) | ✅ | [ecosystem.config.cjs](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/ecosystem.config.cjs) |
-| Rate limiting (`express-rate-limit`) | ✅ | [security.middleware.ts](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/src/middleware/security.middleware.ts) |
-| Graceful shutdown (SIGINT/SIGTERM) | ✅ | [server.ts](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/src/server.ts) |
-| Prometheus metrics + OpenTelemetry | ✅ | [prometheus.middleware.ts](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/src/middleware/prometheus.middleware.ts), [tracing.ts](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/src/tracing.ts) |
-| `uncaughtException` / `unhandledRejection` handlers | ✅ | [app.ts](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/src/app.ts) |
-| Helmet + Mongo Sanitization | ✅ | [security.middleware.ts](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/src/middleware/security.middleware.ts) |
-| Memory-based auto-restart (1 GB) | ✅ | [ecosystem.config.cjs](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/ecosystem.config.cjs) |
-| Health / Liveness / Readiness probes | ✅ | [app.ts](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/src/app.ts) |
+| Capability                                          | Status | File                                                                                                                                                                                                                                              |
+| --------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PM2 cluster mode (all CPU cores)                    | ✅     | [ecosystem.config.cjs](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/ecosystem.config.cjs)                                                                                                                              |
+| Rate limiting (`express-rate-limit`)                | ✅     | [security.middleware.ts](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/src/middleware/security.middleware.ts)                                                                                                           |
+| Graceful shutdown (SIGINT/SIGTERM)                  | ✅     | [server.ts](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/src/server.ts)                                                                                                                                                |
+| Prometheus metrics + OpenTelemetry                  | ✅     | [prometheus.middleware.ts](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/src/middleware/prometheus.middleware.ts), [tracing.ts](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/src/tracing.ts) |
+| `uncaughtException` / `unhandledRejection` handlers | ✅     | [app.ts](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/src/app.ts)                                                                                                                                                      |
+| Helmet + Mongo Sanitization                         | ✅     | [security.middleware.ts](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/src/middleware/security.middleware.ts)                                                                                                           |
+| Memory-based auto-restart (1 GB)                    | ✅     | [ecosystem.config.cjs](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/ecosystem.config.cjs)                                                                                                                              |
+| Health / Liveness / Readiness probes                | ✅     | [app.ts](file:///d:/Rohit%202.0/Programing%20projects/Malavia-claim/apps/backend/src/app.ts)                                                                                                                                                      |
 
 ---
 
@@ -77,10 +77,10 @@ Add `.lean()` to all find/aggregate queries that don't need Mongoose document me
 
 ```typescript
 // Before
-const claims = await Claim.find({ status: 'PENDING' });
+const claims = await Claim.find({ status: "PENDING" });
 
 // After — 3-5x faster, returns plain JS objects
-const claims = await Claim.find({ status: 'PENDING' }).lean();
+const claims = await Claim.find({ status: "PENDING" }).lean();
 ```
 
 **Files to modify:** All `*.repository.ts` files under `src/modules/`
@@ -92,9 +92,7 @@ Replace offset pagination (`skip/limit`) with cursor-based for large collections
 ```typescript
 // Instead of: .skip((page - 1) * limit).limit(limit)
 // Use cursor-based:
-const query = lastId
-  ? { _id: { $gt: lastId }, ...filters }
-  : { ...filters };
+const query = lastId ? { _id: { $gt: lastId }, ...filters } : { ...filters };
 
 const results = await Claim.find(query).sort({ _id: 1 }).limit(limit).lean();
 ```
@@ -126,7 +124,7 @@ Prevent slow queries from holding connections open forever:
 
 ```typescript
 // src/middleware/timeout.middleware.ts
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 
 export const requestTimeout = (ms: number = 30000) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -134,7 +132,7 @@ export const requestTimeout = (ms: number = 30000) => {
       if (!res.headersSent) {
         res.status(408).json({
           success: false,
-          message: 'Request timed out',
+          message: "Request timed out",
         });
       }
     });
@@ -188,7 +186,7 @@ export const requestTimeout = (ms: number = 30000) => {
 ```typescript
 // In notification service — fan-out to multiple users
 await Notification.insertMany(
-  userIds.map(userId => ({
+  userIds.map((userId) => ({
     userId,
     title,
     message,
@@ -196,7 +194,7 @@ await Notification.insertMany(
     read: false,
     createdAt: new Date(),
   })),
-  { ordered: false }  // Continue on individual failures
+  { ordered: false } // Continue on individual failures
 );
 ```
 
@@ -218,21 +216,25 @@ pnpm add bullmq ioredis
 
 ```typescript
 // src/config/queue.ts
-import { Queue, Worker } from 'bullmq';
-import IORedis from 'ioredis';
+import { Queue, Worker } from "bullmq";
+import IORedis from "ioredis";
 
 const connection = new IORedis({ maxRetriesPerRequest: null });
 
-export const notificationQueue = new Queue('notifications', { connection });
+export const notificationQueue = new Queue("notifications", { connection });
 
 // Worker processes bulk inserts off the main thread
-new Worker('notifications', async (job) => {
-  const { userIds, payload } = job.data;
-  await Notification.insertMany(
-    userIds.map(id => ({ userId: id, ...payload })),
-    { ordered: false }
-  );
-}, { connection, concurrency: 5 });
+new Worker(
+  "notifications",
+  async (job) => {
+    const { userIds, payload } = job.data;
+    await Notification.insertMany(
+      userIds.map((id) => ({ userId: id, ...payload })),
+      { ordered: false }
+    );
+  },
+  { connection, concurrency: 5 }
+);
 ```
 
 > [!NOTE]
@@ -270,32 +272,41 @@ Replace the in-memory `lockManager` with Redis-backed distributed locks:
 
 ```typescript
 // src/config/lock-manager.ts — refactor to use Redis
-import { Redis } from 'ioredis';
+import { Redis } from "ioredis";
 
 const redis = new Redis(env.REDIS_URL);
 const LOCK_TTL = 300; // 5 minutes
 
 export const lockManager = {
-  async acquireLock(claimId: string, user: UserInfo, device: string, socketId: string) {
+  async acquireLock(
+    claimId: string,
+    user: UserInfo,
+    device: string,
+    socketId: string
+  ) {
     const key = `claim:lock:${claimId}`;
     const existing = await redis.get(key);
-    
+
     if (existing) {
       const lock = JSON.parse(existing);
       if (lock.userId !== user.id) {
         return { success: false, lockedBy: lock };
       }
     }
-    
-    await redis.setex(key, LOCK_TTL, JSON.stringify({
-      userId: user.id,
-      username: user.username,
-      fullName: user.fullName,
-      device,
-      socketId,
-      lockedAt: Date.now(),
-    }));
-    
+
+    await redis.setex(
+      key,
+      LOCK_TTL,
+      JSON.stringify({
+        userId: user.id,
+        username: user.username,
+        fullName: user.fullName,
+        device,
+        socketId,
+        lockedAt: Date.now(),
+      })
+    );
+
     return { success: true };
   },
 
@@ -382,7 +393,12 @@ pnpm add cockatiel
 
 ```typescript
 // src/config/circuit-breaker.ts
-import { circuitBreaker, ConsecutiveBreaker, handleAll, SamplingBreaker } from 'cockatiel';
+import {
+  circuitBreaker,
+  ConsecutiveBreaker,
+  handleAll,
+  SamplingBreaker,
+} from "cockatiel";
 
 export const externalServiceBreaker = circuitBreaker(handleAll, {
   halfOpenAfter: 10_000,
@@ -391,7 +407,7 @@ export const externalServiceBreaker = circuitBreaker(handleAll, {
 
 // Usage in any service calling external APIs:
 const result = await externalServiceBreaker.execute(() =>
-  axios.get('https://insurance-api.example.com/verify')
+  axios.get("https://insurance-api.example.com/verify")
 );
 ```
 
@@ -403,26 +419,26 @@ const result = await externalServiceBreaker.execute(() =>
 
 ```javascript
 // load-test/stress-test.js
-import http from 'k6/http';
-import { check, sleep } from 'k6';
+import http from "k6/http";
+import { check, sleep } from "k6";
 
 export const options = {
   stages: [
-    { duration: '2m', target: 50 },   // Ramp up to 50 users
-    { duration: '5m', target: 100 },   // Hold at 100 concurrent
-    { duration: '2m', target: 0 },     // Ramp down
+    { duration: "2m", target: 50 }, // Ramp up to 50 users
+    { duration: "5m", target: 100 }, // Hold at 100 concurrent
+    { duration: "2m", target: 0 }, // Ramp down
   ],
   thresholds: {
-    http_req_duration: ['p(95)<500'],  // 95% of requests under 500ms
-    http_req_failed: ['rate<0.01'],    // Less than 1% failures
+    http_req_duration: ["p(95)<500"], // 95% of requests under 500ms
+    http_req_failed: ["rate<0.01"], // Less than 1% failures
   },
 };
 
 export default function () {
-  const res = http.get('https://localhost:5000/api/v1/claims?page=1&limit=20', {
+  const res = http.get("https://localhost:5000/api/v1/claims?page=1&limit=20", {
     headers: { Authorization: `Bearer ${__ENV.TOKEN}` },
   });
-  check(res, { 'status 200': (r) => r.status === 200 });
+  check(res, { "status 200": (r) => r.status === 200 });
   sleep(1);
 }
 ```
@@ -439,8 +455,8 @@ k6 run --env TOKEN=<jwt_token> load-test/stress-test.js
 | Priority  | Task                                                   | Area          | Impact      | Effort | isDone? |
 | --------- | ------------------------------------------------------ | ------------- | ----------- | ------ | ------- |
 | **P0** 🔴 | MongoDB indexes + connection pool                      | Database      | 🔥 Critical | Low    | Yes     |
-| **P0** 🔴 | Socket.IO Redis Adapter *(required for PM2 cluster)*   | Concurrency   | 🔥 Critical | Medium | Pending |
-| **P0** 🔴 | Redis-backed Lock Manager *(required for PM2 cluster)* | Concurrency   | 🔥 Critical | Medium | Pending |
+| **P0** 🔴 | Socket.IO Redis Adapter _(required for PM2 cluster)_   | Concurrency   | 🔥 Critical | Medium | Pending |
+| **P0** 🔴 | Redis-backed Lock Manager _(required for PM2 cluster)_ | Concurrency   | 🔥 Critical | Medium | Pending |
 | **P0** 🔴 | Request timeout middleware                             | API           | 🔥 Critical | Low    | Pending |
 | **P0** 🔴 | `.lean()` on read-heavy queries                        | Database      | 🔥 Critical | Medium | Pending |
 | **P0** 🔴 | Socket authentication & authorization                  | Security      | 🔥 Critical | Medium | Pending |
@@ -454,7 +470,6 @@ k6 run --env TOKEN=<jwt_token> load-test/stress-test.js
 | **P2** 🟡 | BullMQ notification queue                              | Notifications | Medium      | High   | Pending |
 | **P2** 🟡 | Circuit breaker for external integrations              | Reliability   | Medium      | Medium | Pending |
 | **P3** 🟢 | Cursor-based pagination                                | Database      | Low         | High   | Pending |
-
 
 ---
 
@@ -475,10 +490,10 @@ pnpm add bullmq cockatiel
 
 ## Estimated Timeline
 
-| Phase | Tasks | Time |
-|---|---|---|
-| Phase 1 (P0) | Indexes, Pool, Redis adapter, Lock manager | ~3-4 hours |
-| Phase 2 (P1) | Compression, timeout, bulk inserts, `.lean()` | ~2-3 hours |
-| Phase 3 (P2) | Retry logic, health check, keep-alive, queue | ~2-3 hours |
-| Phase 4 (P3) | Load tests, circuit breaker, cursor pagination | ~2-3 hours |
-| **Total** | | **~10-13 hours** |
+| Phase        | Tasks                                          | Time             |
+| ------------ | ---------------------------------------------- | ---------------- |
+| Phase 1 (P0) | Indexes, Pool, Redis adapter, Lock manager     | ~3-4 hours       |
+| Phase 2 (P1) | Compression, timeout, bulk inserts, `.lean()`  | ~2-3 hours       |
+| Phase 3 (P2) | Retry logic, health check, keep-alive, queue   | ~2-3 hours       |
+| Phase 4 (P3) | Load tests, circuit breaker, cursor pagination | ~2-3 hours       |
+| **Total**    |                                                | **~10-13 hours** |

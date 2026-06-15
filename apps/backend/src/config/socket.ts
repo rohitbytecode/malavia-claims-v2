@@ -44,7 +44,10 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
             fullName = fullName || userDoc.fullName;
           }
         } catch (dbError) {
-          logger.warn({ error: dbError }, "Socket auth user database fallback failed");
+          logger.warn(
+            { error: dbError },
+            "Socket auth user database fallback failed"
+          );
         }
       }
 

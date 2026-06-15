@@ -97,28 +97,54 @@ const findDoctor = async (name?: string) => {
 function buildFlatBreakdown(record: PastRecordInput) {
   const items: { category: DepartmentCategory; amount: number }[] = [];
   if (record.pharmacyAmount)
-    items.push({ category: DepartmentCategory.PHARMACY, amount: record.pharmacyAmount });
+    items.push({
+      category: DepartmentCategory.PHARMACY,
+      amount: record.pharmacyAmount,
+    });
   if (record.laboratoryAmount)
-    items.push({ category: DepartmentCategory.LABORATORY, amount: record.laboratoryAmount });
+    items.push({
+      category: DepartmentCategory.LABORATORY,
+      amount: record.laboratoryAmount,
+    });
   if (record.radiologyAmount)
-    items.push({ category: DepartmentCategory.RADIOLOGY, amount: record.radiologyAmount });
+    items.push({
+      category: DepartmentCategory.RADIOLOGY,
+      amount: record.radiologyAmount,
+    });
   if (record.roomChargesAmount)
-    items.push({ category: DepartmentCategory.ROOM_CHARGES, amount: record.roomChargesAmount });
+    items.push({
+      category: DepartmentCategory.ROOM_CHARGES,
+      amount: record.roomChargesAmount,
+    });
   if (record.doctorFeesAmount)
-    items.push({ category: DepartmentCategory.DOCTOR_FEES, amount: record.doctorFeesAmount });
+    items.push({
+      category: DepartmentCategory.DOCTOR_FEES,
+      amount: record.doctorFeesAmount,
+    });
   if (record.otChargesAmount)
-    items.push({ category: DepartmentCategory.OT_CHARGES, amount: record.otChargesAmount });
+    items.push({
+      category: DepartmentCategory.OT_CHARGES,
+      amount: record.otChargesAmount,
+    });
   if (record.consumablesAmount)
-    items.push({ category: DepartmentCategory.CONSUMABLES, amount: record.consumablesAmount });
+    items.push({
+      category: DepartmentCategory.CONSUMABLES,
+      amount: record.consumablesAmount,
+    });
   if (record.otherAmount)
-    items.push({ category: DepartmentCategory.OTHER, amount: record.otherAmount });
+    items.push({
+      category: DepartmentCategory.OTHER,
+      amount: record.otherAmount,
+    });
   return items;
 }
 
 export class PastRecordsService {
   static async importRecord(record: PastRecordInput, userId: string) {
     // Resolve relations
-    const dbInsuranceCompany = await findInsuranceCompany(record.insuranceCompanyName);
+    const dbInsuranceCompany = await findInsuranceCompany(
+      record.insuranceCompanyName
+    );
     const dbDepartment = await findDepartment(record.departmentName);
     const dbDoctor = await findDoctor(record.doctorName);
 
@@ -126,7 +152,9 @@ export class PastRecordsService {
     if (!Object.values(ClaimType).includes(record.claimType as ClaimType)) {
       throw new AppError(`Invalid claim type: ${record.claimType}`, 400);
     }
-    if (!Object.values(ClaimStatus).includes(record.claimStatus as ClaimStatus)) {
+    if (
+      !Object.values(ClaimStatus).includes(record.claimStatus as ClaimStatus)
+    ) {
       throw new AppError(`Invalid claim status: ${record.claimStatus}`, 400);
     }
 
@@ -141,11 +169,17 @@ export class PastRecordsService {
     };
 
     if (patient) {
-      patient = await PatientModel.findByIdAndUpdate(patient._id, patientData, { new: true });
-      logger.info(`Patient ${record.patientId} (${record.patientName}) updated.`);
+      patient = await PatientModel.findByIdAndUpdate(patient._id, patientData, {
+        new: true,
+      });
+      logger.info(
+        `Patient ${record.patientId} (${record.patientName}) updated.`
+      );
     } else {
       patient = await PatientModel.create(patientData);
-      logger.info(`Patient ${record.patientId} (${record.patientName}) created.`);
+      logger.info(
+        `Patient ${record.patientId} (${record.patientName}) created.`
+      );
     }
 
     // 2. Build bill breakdown
@@ -190,7 +224,9 @@ export class PastRecordsService {
     };
 
     let savedClaimId: mongoose.Types.ObjectId;
-    const parsedDate = record.claimDate ? new Date(record.claimDate) : undefined;
+    const parsedDate = record.claimDate
+      ? new Date(record.claimDate)
+      : undefined;
 
     if (claim) {
       await ClaimModel.findByIdAndUpdate(claim._id, claimData);
@@ -236,7 +272,10 @@ export class PastRecordsService {
       const hospitalDiscount = record.hospitalDiscount || 0;
       const deductions = record.deductions || 0;
       const tds = record.tdsAmount || 0;
-      const netPayable = Math.max(0, approvedAmount - hospitalDiscount - deductions - tds);
+      const netPayable = Math.max(
+        0,
+        approvedAmount - hospitalDiscount - deductions - tds
+      );
 
       let finalBreakdown = [];
       if (record.departmentBreakdown && record.departmentBreakdown.length > 0) {
@@ -272,8 +311,12 @@ export class PastRecordsService {
         }));
       }
 
-      const method = (record.settlementMethod as SettlementMethod) || SettlementMethod.PORTAL;
-      const settlementDate = record.settlementDate ? new Date(record.settlementDate) : (parsedDate || new Date());
+      const method =
+        (record.settlementMethod as SettlementMethod) ||
+        SettlementMethod.PORTAL;
+      const settlementDate = record.settlementDate
+        ? new Date(record.settlementDate)
+        : parsedDate || new Date();
 
       const settlementData = {
         claimId: savedClaimId,
@@ -282,18 +325,30 @@ export class PastRecordsService {
         deductions,
         tds,
         netPayable,
-        totalCompanyDiscount: record.totalCompanyDiscount !== undefined ? record.totalCompanyDiscount : hospitalDiscount,
+        totalCompanyDiscount:
+          record.totalCompanyDiscount !== undefined
+            ? record.totalCompanyDiscount
+            : hospitalDiscount,
         totalVendorPayout: record.totalVendorPayout || 0,
-        hospitalNetShare: record.hospitalNetShare !== undefined ? record.hospitalNetShare : (netPayable - (record.totalVendorPayout || 0)),
+        hospitalNetShare:
+          record.hospitalNetShare !== undefined
+            ? record.hospitalNetShare
+            : netPayable - (record.totalVendorPayout || 0),
         settlementMethod: method,
         settlementDate,
         settledBy: new mongoose.Types.ObjectId(userId),
         departmentBreakdown: finalBreakdown,
       };
 
-      const settlementDoc = await SettlementModel.findOne({ claimId: savedClaimId });
+      const settlementDoc = await SettlementModel.findOne({
+        claimId: savedClaimId,
+      });
       if (settlementDoc) {
-        await SettlementModel.findByIdAndUpdate(settlementDoc._id, settlementData, { timestamps: false });
+        await SettlementModel.findByIdAndUpdate(
+          settlementDoc._id,
+          settlementData,
+          { timestamps: false }
+        );
         if (parsedDate) {
           await SettlementModel.findByIdAndUpdate(
             settlementDoc._id,
@@ -309,13 +364,18 @@ export class PastRecordsService {
         }
         await newSettlement.save({ timestamps: false });
       }
-      logger.info(`Settlement created/updated for claim ${record.claimNumber}.`);
+      logger.info(
+        `Settlement created/updated for claim ${record.claimNumber}.`
+      );
     } else {
       await SettlementModel.deleteOne({ claimId: savedClaimId });
     }
 
     // 6. Handle Deposit if depositAmount > 0 or refundAmount > 0
-    if ((record.depositAmount && record.depositAmount > 0) || (record.refundAmount && record.refundAmount > 0)) {
+    if (
+      (record.depositAmount && record.depositAmount > 0) ||
+      (record.refundAmount && record.refundAmount > 0)
+    ) {
       const isCompleted =
         record.claimStatus === ClaimStatus.DEPOSIT_RETURNED ||
         record.claimStatus === ClaimStatus.CLOSED ||
@@ -325,12 +385,16 @@ export class PastRecordsService {
         claimId: savedClaimId,
         collectedAmount: record.depositAmount || 0,
         refundAmount: record.refundAmount || 0,
-        refundStatus: isCompleted ? RefundStatus.COMPLETED : RefundStatus.PENDING,
+        refundStatus: isCompleted
+          ? RefundStatus.COMPLETED
+          : RefundStatus.PENDING,
       };
 
       const depositDoc = await DepositModel.findOne({ claimId: savedClaimId });
       if (depositDoc) {
-        await DepositModel.findByIdAndUpdate(depositDoc._id, depositData, { timestamps: false });
+        await DepositModel.findByIdAndUpdate(depositDoc._id, depositData, {
+          timestamps: false,
+        });
         if (parsedDate) {
           await DepositModel.findByIdAndUpdate(
             depositDoc._id,

@@ -36,7 +36,11 @@ function isRunningFromNetworkSync(): boolean {
   if (readCachedNetworkFlag()) return true;
 
   const driveLetter = argv0.slice(0, 2);
-  if (driveLetter.length === 2 && driveLetter[1] === ":" && driveLetter.toUpperCase() !== "C:") {
+  if (
+    driveLetter.length === 2 &&
+    driveLetter[1] === ":" &&
+    driveLetter.toUpperCase() !== "C:"
+  ) {
     try {
       execSync(`net use ${driveLetter}`, {
         encoding: "utf-8",
@@ -90,11 +94,15 @@ async function detectIsNetworkPath(): Promise<boolean> {
   });
 
   const wmiCheck = new Promise<boolean>((resolve) => {
-    const child = spawn("powershell", [
-      "-NoProfile",
-      "-Command",
-      `(Get-WmiObject Win32_LogicalDisk -Filter "DeviceID='${driveLetter}'").DriveType`,
-    ], { stdio: "pipe" });
+    const child = spawn(
+      "powershell",
+      [
+        "-NoProfile",
+        "-Command",
+        `(Get-WmiObject Win32_LogicalDisk -Filter "DeviceID='${driveLetter}'").DriveType`,
+      ],
+      { stdio: "pipe" }
+    );
     let out = "";
     child.stdout?.on("data", (d) => (out += d));
     child.on("exit", () => resolve(out.trim() === "4"));
@@ -260,20 +268,28 @@ async function copyDistToLocalAsync(srcDistDir: string): Promise<string> {
   await fs.promises.mkdir(localDir, { recursive: true });
   // fs.promises doesn't have cpSync - use a worker or spawn cp
   await new Promise<void>((resolve, reject) => {
-    const child = spawn(process.execPath, [
-      "-e",
-      `require('fs').cpSync(${JSON.stringify(srcDistDir)}, ${JSON.stringify(localDir)}, {recursive:true})`,
-    ], {
-      stdio: "inherit",
-      env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
-    });
-    child.on("exit", (code) => (code === 0 ? resolve() : reject(new Error(`cpSync worker exited ${code}`))));
+    const child = spawn(
+      process.execPath,
+      [
+        "-e",
+        `require('fs').cpSync(${JSON.stringify(srcDistDir)}, ${JSON.stringify(localDir)}, {recursive:true})`,
+      ],
+      {
+        stdio: "inherit",
+        env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+      }
+    );
+    child.on("exit", (code) =>
+      code === 0 ? resolve() : reject(new Error(`cpSync worker exited ${code}`))
+    );
     child.on("error", reject);
   });
   return localDir;
 }
 
-async function parseDotenvAsync(dotenvPath: string): Promise<Record<string, string>> {
+async function parseDotenvAsync(
+  dotenvPath: string
+): Promise<Record<string, string>> {
   const result: Record<string, string> = {};
   try {
     const content = await fs.promises.readFile(dotenvPath, "utf-8");
@@ -284,7 +300,7 @@ async function parseDotenvAsync(dotenvPath: string): Promise<Record<string, stri
       if (eq === -1) continue;
       result[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
     }
-  } catch {  }
+  } catch {}
   return result;
 }
 
@@ -616,7 +632,7 @@ async function startBackendIfNeeded(
     return;
   }
 
-  ensureFirewallRule(3443, logPath);    // Backend (localhost-only, for Nginx -> backend)
+  ensureFirewallRule(3443, logPath); // Backend (localhost-only, for Nginx -> backend)
   ensureFirewallRule(NGINX_PORT, logPath); // Nginx (LAN-facing, port 443)
 
   const backendPort = 3443;
@@ -907,11 +923,17 @@ app.whenReady().then(async () => {
       waitForHostBackend(targetHost, NGINX_PORT, logPath)
         .then(() => {
           if (isNetworkDrive) {
-            fs.appendFileSync(logPath, `[Client] Copying dist to local cache in the background...\n`);
+            fs.appendFileSync(
+              logPath,
+              `[Client] Copying dist to local cache in the background...\n`
+            );
             return copyDistToLocalAsync(origDistDir).then((localDir) => {
               servingDir = localDir;
               writeRuntimeConfig(localDir, targetHost);
-              fs.appendFileSync(logPath, `[Client] Local dist ready: ${servingDir}\n`);
+              fs.appendFileSync(
+                logPath,
+                `[Client] Local dist ready: ${servingDir}\n`
+              );
               cleanOldCacheDirs(localDir);
             });
           }
@@ -923,16 +945,18 @@ app.whenReady().then(async () => {
           );
         });
     } else {
-      startBackendIfNeeded(config.isClient, logPath, dotenv, dotenvPath).catch((err) => {
-        fs.appendFileSync(
-          logPath,
-          `[Backend] Startup error: ${err instanceof Error ? err.message : String(err)}\n`
-        );
-        dialog.showErrorBox(
-          "Backend Error",
-          `The backend failed to start:\n\n${err instanceof Error ? err.message : String(err)}`
-        );
-      });
+      startBackendIfNeeded(config.isClient, logPath, dotenv, dotenvPath).catch(
+        (err) => {
+          fs.appendFileSync(
+            logPath,
+            `[Backend] Startup error: ${err instanceof Error ? err.message : String(err)}\n`
+          );
+          dialog.showErrorBox(
+            "Backend Error",
+            `The backend failed to start:\n\n${err instanceof Error ? err.message : String(err)}`
+          );
+        }
+      );
     }
   } catch (err) {
     if (loadingWindow && !loadingWindow.isDestroyed()) {

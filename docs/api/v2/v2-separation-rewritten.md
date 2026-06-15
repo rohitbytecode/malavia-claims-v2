@@ -6,11 +6,11 @@ To make V1 and V2 install and run independently on the same Windows machine, per
 
 File: `apps/desktop/package.json`
 
-| Field | Current Value | V2 Value |
-|---------|---------|---------|
-| `appId` | `com.claimmanagement.desktop` | `com.claimmanagement.desktop.v2` |
-| `productName` | `Claim Management` | `Claim Management V2` |
-| `build.directories.output` | `release` | `release-v2` |
+| Field                      | Current Value                 | V2 Value                         |
+| -------------------------- | ----------------------------- | -------------------------------- |
+| `appId`                    | `com.claimmanagement.desktop` | `com.claimmanagement.desktop.v2` |
+| `productName`              | `Claim Management`            | `Claim Management V2`            |
+| `build.directories.output` | `release`                     | `release-v2`                     |
 
 ### Why
 
@@ -45,13 +45,13 @@ This prevents V1 and V2 from blocking each other through the Electron single-ins
 Change:
 
 ```ts
-ClaimManagement-Backend
+ClaimManagement - Backend;
 ```
 
 to:
 
 ```ts
-ClaimManagement-Backend-V2
+ClaimManagement - Backend - V2;
 ```
 
 This prevents V2 from overwriting V1's Windows startup registration.

@@ -38,7 +38,7 @@ const communicationSchema = new mongoose.Schema<CommunicationDocument>(
 
 communicationSchema.index({ claimId: 1, createdAt: -1 });
 communicationSchema.index({ claimId: 1, medium: 1 });
-communicationSchema.index({ followUpDate: 1}, { sparse: true });
+communicationSchema.index({ followUpDate: 1 }, { sparse: true });
 
 export const CommunicationModel =
   mongoose.models.Communication ||

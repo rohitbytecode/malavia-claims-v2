@@ -6,20 +6,32 @@ export class PastRecordsController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({ success: false, message: "Unauthorized" });
+        return res
+          .status(401)
+          .json({ success: false, message: "Unauthorized" });
       }
 
       const record = req.body;
 
       // Basic validation
-      if (!record.patientId || !record.patientName || !record.claimNumber || !record.claimType || !record.claimStatus) {
+      if (
+        !record.patientId ||
+        !record.patientName ||
+        !record.claimNumber ||
+        !record.claimType ||
+        !record.claimStatus
+      ) {
         return res.status(400).json({
           success: false,
-          message: "Missing required fields: patientId, patientName, claimNumber, claimType, claimStatus",
+          message:
+            "Missing required fields: patientId, patientName, claimNumber, claimType, claimStatus",
         });
       }
 
-      const result = await PastRecordsService.importRecord(record, userId.toString());
+      const result = await PastRecordsService.importRecord(
+        record,
+        userId.toString()
+      );
 
       return res.status(201).json({
         success: true,
