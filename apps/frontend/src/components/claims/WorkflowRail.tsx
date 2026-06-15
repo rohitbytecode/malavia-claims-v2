@@ -115,7 +115,7 @@ export function WorkflowRail({ claim, isPharmacist }: WorkflowRailProps) {
                       className={`workflow-stage workflow-stage--${state} workflow-stage--${stage.risk ?? "normal"}`}
                       title={
                         stage.irreversible
-                          ? `${stage.label} (terminal — irreversible)`
+                          ? `${stage.label} (terminal -irreversible)`
                           : stage.label
                       }
                     >
@@ -159,7 +159,7 @@ export function WorkflowRail({ claim, isPharmacist }: WorkflowRailProps) {
             ) : (
               <span className="workflow-rail__no-transitions">
                 {isClosed
-                  ? "Claim is closed — no further transitions"
+                  ? "Claim is closed -no further transitions"
                   : "No further transitions available"}
               </span>
             )}

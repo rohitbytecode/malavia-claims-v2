@@ -219,7 +219,7 @@ export function SettingsPage() {
                   letterSpacing: "1.5px",
                 }}
               >
-                — The System Architect —
+                -The System Architect —
               </span>
               solely for <strong>{APP_CONFIG.ORG_NAME}</strong> internal use.
               Any unauthorized reproduction, distribution, reverse engineering,

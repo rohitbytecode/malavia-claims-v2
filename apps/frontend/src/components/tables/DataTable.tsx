@@ -296,7 +296,7 @@ export function DataTable<T>({
       {totalPages > 1 && (
         <div className="dt-pagination">
           <span className="dt-pagination__info">
-            Page {page} of {totalPages} — {sorted.length} records
+            Page {page} of {totalPages} -{sorted.length} records
           </span>
           <div className="dt-pagination__controls">
             <button

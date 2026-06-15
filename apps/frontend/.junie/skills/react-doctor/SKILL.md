@@ -16,7 +16,7 @@ If the score dropped, fix the regressions before committing.
 
 ## For general cleanup or code improvement:
 
-Run `npx react-doctor@latest --verbose` (without `--diff`) to scan the full codebase. Fix issues by severity — errors first, then warnings.
+Run `npx react-doctor@latest --verbose` (without `--diff`) to scan the full codebase. Fix issues by severity -errors first, then warnings.
 
 ## Command
 

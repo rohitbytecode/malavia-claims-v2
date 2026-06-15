@@ -491,7 +491,7 @@ export function PastRecordsPage() {
                 value={draft.insuranceCompanyId}
                 onChange={(e) => set("insuranceCompanyId", e.target.value)}
               >
-                <option value="">— Select —</option>
+                <option value="">-Select —</option>
                 {insuranceCompanies.map((c) => (
                   <option key={c._id} value={c._id}>
                     {c.name}
@@ -564,7 +564,7 @@ export function PastRecordsPage() {
                 value={draft.departmentId}
                 onChange={(e) => set("departmentId", e.target.value)}
               >
-                <option value="">— Select —</option>
+                <option value="">-Select —</option>
                 {departments.map((d) => (
                   <option key={d._id} value={d._id}>
                     {d.name}
@@ -577,7 +577,7 @@ export function PastRecordsPage() {
                 value={draft.doctorId}
                 onChange={(e) => set("doctorId", e.target.value)}
               >
-                <option value="">— Select —</option>
+                <option value="">-Select —</option>
                 {doctors.map((d) => (
                   <option key={d._id} value={d._id}>
                     {d.name}

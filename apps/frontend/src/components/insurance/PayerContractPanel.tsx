@@ -180,7 +180,7 @@ export function PayerContractPanel({
         <div>
           <p className="eyebrow">Payer Contract Engine</p>
           <h3 style={{ margin: 0 }}>
-            Deduction &amp; Discount Policies — {companyName}
+            Deduction &amp; Discount Policies -{companyName}
           </h3>
           <small style={{ color: "var(--text-secondary)" }}>
             Define department-wise discount percentages, TDS, and hospital

@@ -1019,9 +1019,7 @@ export function ReportsPage() {
             )}
 
             <div className="report-footer">
-              <span>
-                Pharmacy billing report — for internal reference only.
-              </span>
+              <span>Pharmacy billing report -for internal reference only.</span>
               <span>Authorized signature: __________________</span>
             </div>
           </div>
@@ -1096,7 +1094,7 @@ export function ReportsPage() {
       <div className="report-preview">
         <div className="report-watermark">{HOSPITAL_NAME}</div>
 
-        {/* Shared printable header — always visible */}
+        {/* Shared printable header -always visible */}
         <div className="report-header">
           <div>
             <p
@@ -1294,7 +1292,7 @@ export function ReportsPage() {
           />
         </div>
 
-        {/* Shared printable footer — always visible */}
+        {/* Shared printable footer -always visible */}
         <div className="report-footer">
           <span>
             Prepared for administration, insurers, auditors and financial

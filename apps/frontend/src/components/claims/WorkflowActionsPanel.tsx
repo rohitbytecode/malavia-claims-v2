@@ -272,7 +272,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
           <div className="action-panel__guardrails">
             <p className="action-panel__section-label">System Guardrails</p>
             <ul>
-              <li>Invalid transitions are hidden — not blocked</li>
+              <li>Invalid transitions are hidden -not blocked</li>
               <li>Every action requires a minimum 8-character audit reason</li>
               <li>System workflow validator is the final authority</li>
               <li>All actions are logged to the immutable audit trail</li>
@@ -352,7 +352,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                 </div>
               )}
 
-              {/* Insurance Claim / AL Number — mandatory for pre-auth approval */}
+              {/* Insurance Claim / AL Number -mandatory for pre-auth approval */}
               {needsAlNumber && (
                 <div className="action-panel__audit-section">
                   <label className="field">
@@ -392,7 +392,7 @@ export function WorkflowActionsPanel({ claim }: { claim: Claim }) {
                 </div>
               )}
 
-              {/* Claim amount edit — only for permitted transitions */}
+              {/* Claim amount edit -only for permitted transitions */}
               {canEditAmount && (
                 <div className="action-panel__audit-section">
                   <label className="field">

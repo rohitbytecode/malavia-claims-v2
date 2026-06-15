@@ -63,7 +63,7 @@ export const ClaimsSummary: React.FC<ClaimsSummaryProps> = ({
               marginBottom: 12,
             }}
           >
-            Claims by Status — {periodLabel}
+            Claims by Status -{periodLabel}
           </h3>
           <div className="report-summary" style={{ marginBottom: 28 }}>
             {summary.map((row) => (

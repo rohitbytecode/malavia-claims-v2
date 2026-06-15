@@ -2,7 +2,7 @@
 
 ## Current Setup (No Nginx)
 
-You're correct — **Nginx is NOT involved in the current setup at all**. The existing `nginx.conf` in the repo root is a stale/unused file (it references port 80, `localhost:5000`, and `D:/Claims/` — none of which match your actual setup).
+You're correct -**Nginx is NOT involved in the current setup at all**. The existing `nginx.conf` in the repo root is a stale/unused file (it references port 80, `localhost:5000`, and `D:/Claims/` -none of which match your actual setup).
 
 Here's how it actually works today:
 
@@ -41,18 +41,18 @@ graph TB
 | Component              | What happens                                                                                                                                                                                                        | Port                          |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
 | **Backend**            | Electron spawns `server.bundle.cjs` as a detached HTTPS process. Uses self-signed SSL certs from `apps/backend/cert/`.                                                                                              | **3443** (fixed, HTTPS)       |
-| **Frontend Server**    | Electron creates a **plain HTTP** static file server via `http.createServer()` with `server.listen(0, "0.0.0.0")` — port `0` means the OS picks a **random available port** (hence `49xxx`).                        | **Random** (e.g. 49152–65535) |
-| **Electron Window**    | Loads `http://127.0.0.1:{randomPort}` to display the React SPA.                                                                                                                                                     | —                             |
-| **Frontend → Backend** | A `config.json` is written to the frontend's `dist/` folder with `apiBaseUrl: https://HOSTNAME:3443/api/v1` and `socketUrl: https://HOSTNAME:3443`. The React app fetches this at startup to know where the API is. | —                             |
-| **Client PCs**         | Run the Electron app from a network share (UNC path). They detect they're clients, skip backend startup, and point `config.json` to the host's hostname + port 3443.                                                | —                             |
+| **Frontend Server**    | Electron creates a **plain HTTP** static file server via `http.createServer()` with `server.listen(0, "0.0.0.0")` -port `0` means the OS picks a **random available port** (hence `49xxx`).                         | **Random** (e.g. 49152–65535) |
+| **Electron Window**    | Loads `http://127.0.0.1:{randomPort}` to display the React SPA.                                                                                                                                                     | -                             |
+| **Frontend → Backend** | A `config.json` is written to the frontend's `dist/` folder with `apiBaseUrl: https://HOSTNAME:3443/api/v1` and `socketUrl: https://HOSTNAME:3443`. The React app fetches this at startup to know where the API is. | -                             |
+| **Client PCs**         | Run the Electron app from a network share (UNC path). They detect they're clients, skip backend startup, and point `config.json` to the host's hostname + port 3443.                                                | -                             |
 
 ### Key Points About the Current Setup
 
-1. **No Nginx** — The old `nginx.conf` at repo root is not used
-2. **Frontend port is random** — Different on every launch, different on every client machine
-3. **Backend is always HTTPS on 3443** — Self-signed certificate
-4. **Direct connection** — Clients connect directly to `https://HOSTNAME:3443` for API/Socket.io
-5. **Firewall rule** — Electron auto-creates a Windows Firewall rule for port 3443
+1. **No Nginx** -The old `nginx.conf` at repo root is not used
+2. **Frontend port is random** -Different on every launch, different on every client machine
+3. **Backend is always HTTPS on 3443** -Self-signed certificate
+4. **Direct connection** -Clients connect directly to `https://HOSTNAME:3443` for API/Socket.io
+5. **Firewall rule** -Electron auto-creates a Windows Firewall rule for port 3443
 
 ### Why Hostname-Based Access Has Limits
 
@@ -63,7 +63,7 @@ The current setup uses the host machine's **Windows hostname** (e.g. `https://MA
 - Environments with custom DNS configurations that don't propagate the host's name
 - Inconsistent hostname resolution across different Windows network profiles
 
-Using a **static IP** for the host machine eliminates all of these issues — clients always connect to a known, fixed address regardless of DNS or hostname resolution.
+Using a **static IP** for the host machine eliminates all of these issues -clients always connect to a known, fixed address regardless of DNS or hostname resolution.
 
 ---
 
@@ -75,7 +75,7 @@ Using a **static IP** for the host machine eliminates all of these issues — cl
 | **Proper SSL termination**  | Nginx handles SSL with a real or better-managed certificate. Backend can run plain HTTP                 |
 | **No random ports**         | Browser clients can access the app directly via `https://HOST_IP/` without needing the Electron wrapper |
 | **WebSocket proxying**      | Nginx handles WebSocket upgrade for Socket.io properly                                                  |
-| **Static IP compatibility** | `config.json` points to a fixed IP — no hostname resolution required                                    |
+| **Static IP compatibility** | `config.json` points to a fixed IP -no hostname resolution required                                     |
 | **Future scalability**      | Can add caching, rate limiting, load balancing later                                                    |
 
 ---
@@ -84,7 +84,7 @@ Using a **static IP** for the host machine eliminates all of these issues — cl
 
 This is the recommended approach to make client connections reliable and DNS-independent.
 
-### Step 1 — Assign a Static IP on the Host Machine
+### Step 1 -Assign a Static IP on the Host Machine
 
 1. Open **Control Panel → Network and Sharing Center → Change adapter settings**
 2. Right-click the active network adapter → **Properties**
@@ -104,7 +104,7 @@ This is the recommended approach to make client connections reliable and DNS-ind
 > [!IMPORTANT]
 > Also log into your **router's admin panel** and add a **DHCP reservation** (also called "static DHCP" or "address binding") for the host machine's MAC address. This prevents the router from assigning that IP to another device even on DHCP leases.
 
-### Step 2 — Verify the Static IP
+### Step 2 -Verify the Static IP
 
 ```powershell
 # Confirm the IP is assigned
@@ -114,7 +114,7 @@ ipconfig
 ping 192.168.1.100
 ```
 
-### Step 3 — Update `config.json` to Use the Static IP
+### Step 3 -Update `config.json` to Use the Static IP
 
 After setting up Nginx, `main.ts` should write the `config.json` using the **static IP** instead of the hostname:
 
@@ -125,9 +125,9 @@ After setting up Nginx, `main.ts` should write the `config.json` using the **sta
 }
 ```
 
-This means clients need zero DNS resolution — they connect directly to the IP.
+This means clients need zero DNS resolution -they connect directly to the IP.
 
-### Static IP vs Hostname — Comparison
+### Static IP vs Hostname -Comparison
 
 | Aspect                         | Hostname (current)              | Static IP (proposed)   |
 | ------------------------------ | ------------------------------- | ---------------------- |
@@ -308,7 +308,7 @@ Currently Electron writes:
 }
 ```
 
-No more `:3443`, no more hostname — everything goes through Nginx on port 443 at the fixed IP.
+No more `:3443`, no more hostname -everything goes through Nginx on port 443 at the fixed IP.
 
 ### Summary of Required Code Changes
 
@@ -319,7 +319,7 @@ No more `:3443`, no more hostname — everything goes through Nginx on port 443 
 | [main.ts](file:///d:/project/malavia-claims/apps/desktop/src/main.ts#L901)           | `waitForHostBackend` should check port 443                                         |
 | [vite.config.ts](file:///d:/project/malavia-claims/apps/frontend/vite.config.ts#L39) | Dev proxy target stays at `localhost:3443` (dev mode bypasses Nginx)               |
 | [nginx.conf](file:///d:/project/malavia-claims/nginx.conf)                           | Replace the stale config with the one above                                        |
-| **Backend**                                                                          | No changes needed — backend keeps running on 3443, Nginx proxies to it             |
+| **Backend**                                                                          | No changes needed -backend keeps running on 3443, Nginx proxies to it              |
 | **SSL cert**                                                                         | Regenerate with IP SAN (`192.168.1.100`) to avoid browser warnings                 |
 
 ### Before vs After Comparison
@@ -329,7 +329,7 @@ No more `:3443`, no more hostname — everything goes through Nginx on port 443 
 | **Frontend port**         | Random (`49xxx`, HTTP)               | **443** (HTTPS, via Nginx)                       |
 | **Backend port**          | 3443 (HTTPS, direct)                 | 3443 (HTTPS, behind Nginx)                       |
 | **Client access URL**     | `https://HOSTNAME:3443` for API only | `https://192.168.1.100/` for everything          |
-| **DNS dependency**        | ❌ Requires hostname resolution      | ✅ None — direct IP                              |
+| **DNS dependency**        | ❌ Requires hostname resolution      | ✅ None -direct IP                               |
 | **Cross-subnet access**   | ❌ May fail                          | ✅ Works                                         |
 | **Browser access**        | Not possible without Electron        | ✅ `https://192.168.1.100/` works in any browser |
 | **SSL**                   | Self-signed on backend only          | Nginx terminates SSL for all traffic             |
@@ -366,4 +366,4 @@ cd C:\nginx; .\nginx.exe -t
 ```
 
 > [!IMPORTANT]
-> After setting up Nginx, update `main.ts` to remove the built-in HTTP server and write `config.json` pointing to the static IP on port 443 instead of HOSTNAME:3443. Also ensure port 3443 is **not** exposed in Windows Firewall for external interfaces — it should only be reachable on `127.0.0.1` (i.e., Nginx → backend, localhost only).
+> After setting up Nginx, update `main.ts` to remove the built-in HTTP server and write `config.json` pointing to the static IP on port 443 instead of HOSTNAME:3443. Also ensure port 3443 is **not** exposed in Windows Firewall for external interfaces -it should only be reachable on `127.0.0.1` (i.e., Nginx → backend, localhost only).

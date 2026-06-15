@@ -816,7 +816,7 @@ export function SettlementPanel({ claim }: { claim: Claim }) {
         create.mutate();
       }}
     >
-      <h3>Smart Finance Console — Create Settlement</h3>
+      <h3>Smart Finance Console -Create Settlement</h3>
 
       {contract && (
         <div

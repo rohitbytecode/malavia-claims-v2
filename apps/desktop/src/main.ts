@@ -66,7 +66,7 @@ function persistNetworkFlag(isNetworkPath: boolean): void {
 let isUncPath = isRunningFromNetworkSync();
 
 if (isUncPath) {
-  // Disable GPU hardware-acceleration — Chromium GPU process fails on network paths
+  // Disable GPU hardware-acceleration -Chromium GPU process fails on network paths
   app.disableHardwareAcceleration();
   app.commandLine.appendSwitch("no-sandbox");
 
@@ -642,7 +642,7 @@ async function startBackendIfNeeded(
     backendAlreadyRunning = true;
     fs.appendFileSync(
       logPath,
-      `\n[Backend] Port ${backendPort} already listening — reusing existing backend\n`
+      `\n[Backend] Port ${backendPort} already listening -reusing existing backend\n`
     );
     return;
   }

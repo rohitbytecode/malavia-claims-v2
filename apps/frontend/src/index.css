@@ -6,15 +6,15 @@
    Bloomberg Terminal × Swiss private banking ops.
    
    Fonts loaded via @import in main.tsx:
-   - "IBM Plex Mono" — data/numbers/codes (monospaced authority)
-   - "Instrument Serif" — display headings (editorial weight)
-   - "DM Sans" — UI body text (clean operational)
+   - "IBM Plex Mono" -data/numbers/codes (monospaced authority)
+   - "Instrument Serif" -display headings (editorial weight)
+   - "DM Sans" -UI body text (clean operational)
    ============================================================ */
 
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;400;500;600;700;800;900&display=swap");
 
 /* ============================================================
-   LIGHT THEME (default) — Executive Steel
+   LIGHT THEME (default) -Executive Steel
    ============================================================ */
 :root {
   color-scheme: light;
@@ -105,7 +105,7 @@
 }
 
 /* ============================================================
-   DARK THEME — Obsidian Command
+   DARK THEME -Obsidian Command
    ============================================================ */
 :root[data-theme="dark"] {
   color-scheme: dark;
@@ -346,7 +346,7 @@ hr {
   padding: 28px;
 }
 
-/* Panel variant — slightly elevated, used for major sections */
+/* Panel variant -slightly elevated, used for major sections */
 .panel {
   background: var(--surface-0);
   border: 1px solid var(--border);
@@ -730,7 +730,7 @@ select.input {
 }
 
 /* ============================================================
-   APP SHELL — SIDEBAR + WORKSPACE
+   APP SHELL -SIDEBAR + WORKSPACE
    ============================================================ */
 .app-shell {
   display: flex;
@@ -1073,14 +1073,14 @@ select.input {
 }
 
 /* ============================================================
-   DASHBOARD — COMMAND CENTER
+   DASHBOARD -COMMAND CENTER
    ============================================================ */
 .command-center {
   display: grid;
   gap: 20px;
 }
 
-/* KPI strip — horizontal scrolling row of metric tiles */
+/* KPI strip -horizontal scrolling row of metric tiles */
 .kpi-strip {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -1314,7 +1314,7 @@ select.input {
 }
 
 /* ============================================================
-   DATA TABLE — ENTERPRISE GRADE
+   DATA TABLE -ENTERPRISE GRADE
    ============================================================ */
 .table-shell {
   background: var(--surface-0);
@@ -1563,7 +1563,7 @@ select.input {
 }
 
 /* ============================================================
-   CLAIM COCKPIT — OPERATIONAL COMMAND CENTER
+   CLAIM COCKPIT -OPERATIONAL COMMAND CENTER
    ============================================================ */
 .claim-cockpit {
   display: grid;
@@ -1907,7 +1907,7 @@ select.input {
   color: var(--red);
 }
 
-/* Cockpit grid — 2 equal panels */
+/* Cockpit grid -2 equal panels */
 .cockpit-row-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3031,7 +3031,7 @@ select.input {
 }
 
 /* ============================================================
-   REPAIR PASS — CURRENT REACT CLASS CONTRACT
+   REPAIR PASS -CURRENT REACT CLASS CONTRACT
    The redesigned React components use BEM-style class names. This
    section intentionally normalizes the app shell, sidebar, data tables,
    timeline, workflow rail, and operational panels so every routed page
@@ -3651,7 +3651,7 @@ select.input {
   font-size: 10px;
 }
 
-/* Empty state — reusable for any panel with no data */
+/* Empty state -reusable for any panel with no data */
 .empty-state {
   display: flex;
   flex-direction: column;

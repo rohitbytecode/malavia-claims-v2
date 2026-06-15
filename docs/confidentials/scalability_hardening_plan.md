@@ -11,7 +11,7 @@
 
 ---
 
-## Current State — What's Already in Place ✅
+## Current State -What's Already in Place ✅
 
 | Capability                                          | Status | File                                                                                                                                                                                                                                              |
 | --------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -26,7 +26,7 @@
 
 ---
 
-## Area 1 — Database Layer (50K Claims)
+## Area 1 -Database Layer (50K Claims)
 
 > [!IMPORTANT]
 > The database is the #1 bottleneck. Without indexes and connection pooling, 50K claims will grind queries to a halt.
@@ -79,7 +79,7 @@ Add `.lean()` to all find/aggregate queries that don't need Mongoose document me
 // Before
 const claims = await Claim.find({ status: "PENDING" });
 
-// After — 3-5x faster, returns plain JS objects
+// After -3-5x faster, returns plain JS objects
 const claims = await Claim.find({ status: "PENDING" }).lean();
 ```
 
@@ -99,7 +99,7 @@ const results = await Claim.find(query).sort({ _id: 1 }).limit(limit).lean();
 
 ---
 
-## Area 2 — API Resilience (2M Requests)
+## Area 2 -API Resilience (2M Requests)
 
 ### 2.1 Response Compression
 
@@ -112,7 +112,7 @@ pnpm add compression @types/compression
 + import compression from 'compression';
 
   setupSecurityMiddleware(app);
-+ app.use(compression());     // gzip responses — cuts payload ~70%
++ app.use(compression());     // gzip responses -cuts payload ~70%
   app.use(prometheusMiddleware);
 ```
 
@@ -176,7 +176,7 @@ export const requestTimeout = (ms: number = 30000) => {
 
 ---
 
-## Area 3 — Notifications (500K)
+## Area 3 -Notifications (500K)
 
 > [!WARNING]
 > Inserting 500K notifications one-by-one will kill performance. Bulk operations and TTL cleanup are mandatory.
@@ -184,7 +184,7 @@ export const requestTimeout = (ms: number = 30000) => {
 ### 3.1 Bulk Notification Inserts
 
 ```typescript
-// In notification service — fan-out to multiple users
+// In notification service -fan-out to multiple users
 await Notification.insertMany(
   userIds.map((userId) => ({
     userId,
@@ -201,14 +201,14 @@ await Notification.insertMany(
 ### 3.2 TTL Index for Auto-Cleanup
 
 ```typescript
-// Notification model — auto-delete after 90 days
+// Notification model -auto-delete after 90 days
 NotificationSchema.index(
   { createdAt: 1 },
   { expireAfterSeconds: 90 * 24 * 60 * 60 }
 );
 ```
 
-### 3.3 Job Queue for Heavy Fan-Outs (Optional — High Impact)
+### 3.3 Job Queue for Heavy Fan-Outs (Optional -High Impact)
 
 ```bash
 pnpm add bullmq ioredis
@@ -242,7 +242,7 @@ new Worker(
 
 ---
 
-## Area 4 — Concurrent Users (100 Users)
+## Area 4 -Concurrent Users (100 Users)
 
 > [!CAUTION]
 > **Critical Bug:** PM2 cluster mode + Socket.io + in-memory lock manager = **BROKEN**. Each PM2 instance has its own memory. A user connected to instance 1 cannot see locks from instance 2.
@@ -271,7 +271,7 @@ pnpm add @socket.io/redis-adapter ioredis
 Replace the in-memory `lockManager` with Redis-backed distributed locks:
 
 ```typescript
-// src/config/lock-manager.ts — refactor to use Redis
+// src/config/lock-manager.ts -refactor to use Redis
 import { Redis } from "ioredis";
 
 const redis = new Redis(env.REDIS_URL);
@@ -327,7 +327,7 @@ export const lockManager = {
 
 ---
 
-## Area 5 — Crash Prevention
+## Area 5 -Crash Prevention
 
 ### 5.1 MongoDB Reconnection Retry
 
@@ -364,7 +364,7 @@ export const lockManager = {
 ### 5.2 Enhanced Health Check
 
 ```diff
-// src/app.ts — /health endpoint
+// src/app.ts -/health endpoint
   app.get("/health", (_, res) => {
 +   const memUsage = process.memoryUsage();
 +   const heapUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
@@ -413,7 +413,7 @@ const result = await externalServiceBreaker.execute(() =>
 
 ---
 
-## Area 6 — Load Testing (Validation)
+## Area 6 -Load Testing (Validation)
 
 ### k6 Test Script
 
@@ -484,7 +484,7 @@ pnpm add bullmq cockatiel
 ```
 
 > [!IMPORTANT]
-> **Redis is required** for P0 tasks (Socket.io adapter + lock manager). You'll need a Redis instance running — either local (`redis-server`) or via Docker (`docker run -d -p 6379:6379 redis:alpine`).
+> **Redis is required** for P0 tasks (Socket.io adapter + lock manager). You'll need a Redis instance running -either local (`redis-server`) or via Docker (`docker run -d -p 6379:6379 redis:alpine`).
 
 ---
 
