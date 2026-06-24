@@ -20,7 +20,7 @@ import { DepartmentReportTable } from "./components/DepartmentReportTable";
 import { InsurancePerformanceTable } from "./components/InsurancePerformanceTable";
 import { SettlementReviewTable } from "./components/SettlementReviewTable";
 import { HospitalShareTable } from "./components/HospitalShareTable";
-import { APP_CONFIG } from "../../../../backend/src/config/app";
+import { APP_CONFIG } from "../../config/app";
 
 // Type definitions
 import type {

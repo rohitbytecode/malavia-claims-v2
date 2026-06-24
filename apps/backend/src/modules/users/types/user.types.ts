@@ -7,6 +7,7 @@ export interface UserBase {
   password: string;
   role: Roles;
   isActive: boolean;
+  organizationId?: Types.ObjectId;
   refreshTokenHash?: string;
   refreshTokenHashes?: string[];
 }
@@ -15,3 +16,4 @@ export interface UserDocument extends UserBase, Document {
   createdAt: Date;
   updatedAt: Date;
 }
+

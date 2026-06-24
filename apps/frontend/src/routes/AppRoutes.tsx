@@ -1,5 +1,7 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { LoginPage } from "../pages/auth/LoginPage";
+import { RegisterPage } from "../pages/auth/RegisterPage";
+import { LandingPage } from "../pages/landing/LandingPage";
 import { DashboardPage } from "../pages/dashboard/DashboardPage";
 import { ClaimsListPage } from "../pages/claims/ClaimsListPage";
 import { AllClaimsPage } from "../pages/claims/AllClaimsPage";
@@ -27,8 +29,9 @@ import {
 export function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/register" element={<RegisterPage />} />
       <Route
         path="/dashboard"
         element={

@@ -12,7 +12,10 @@ import { toUserResponse } from "@/modules/users/mapper/user.mapper.js";
 import { UserDocument } from "@/modules/users/types/user.types.js";
 import { Roles } from "@/core/enums/roles.enum.js";
 
+import mongoose from "mongoose";
+
 interface LoginPayload {
+  organizationSlug: string;
   username: string;
   password: string;
 }
@@ -26,13 +29,17 @@ const buildTokenPayload = (
   userId: string,
   role: Roles,
   username: string,
-  fullName: string
-) => ({
-  userId,
-  role,
-  username,
-  fullName,
-});
+  fullName: string,
+  organizationId?: string
+) => {
+  return {
+    userId,
+    role,
+    username,
+    fullName,
+    organizationId,
+  };
+};
 
 const refreshTokenMatchesAnyHash = async (
   refreshToken: string,
@@ -46,10 +53,23 @@ const refreshTokenMatchesAnyHash = async (
 
 export class AuthService {
   static async login(payload: LoginPayload) {
-    const user = await AuthRepository.findUserByUsername(payload.username);
+    // 1. Resolve Organization by slug
+    const org = await mongoose.model("Organization").findOne({
+      slug: payload.organizationSlug.toLowerCase().trim(),
+    });
+
+    if (!org) {
+      throw new AppError("Invalid organization, username or password", 401);
+    }
+
+    // 2. Resolve User by username and organizationId
+    const user = await mongoose.model("User").findOne({
+      username: payload.username.toLowerCase().trim(),
+      organizationId: org._id,
+    });
 
     if (!user || !user.password) {
-      throw new AppError("Invalid username or password", 401);
+      throw new AppError("Invalid organization, username or password", 401);
     }
 
     if (!user.isActive) {
@@ -68,12 +88,15 @@ export class AuthService {
       throw new AppError("Invalid username or password", 401);
     }
 
+    const orgId = (user as any).organizationId?.toString();
+
     const accessToken = signAccessToken(
       buildTokenPayload(
         user._id.toString(),
         user.role,
         user.username,
-        user.fullName
+        user.fullName,
+        orgId
       )
     );
     const refreshToken = signRefreshToken(
@@ -81,7 +104,8 @@ export class AuthService {
         user._id.toString(),
         user.role,
         user.username,
-        user.fullName
+        user.fullName,
+        orgId
       )
     );
     const refreshTokenHash = await hashPassword(refreshToken);
@@ -127,12 +151,15 @@ export class AuthService {
       );
     }
 
+    const orgId = (user as any).organizationId?.toString();
+
     const accessToken = signAccessToken(
       buildTokenPayload(
         user._id.toString(),
         user.role,
         user.username,
-        user.fullName
+        user.fullName,
+        orgId
       )
     );
     const newRefreshToken = signRefreshToken(
@@ -140,7 +167,8 @@ export class AuthService {
         user._id.toString(),
         user.role,
         user.username,
-        user.fullName
+        user.fullName,
+        orgId
       )
     );
     const newRefreshTokenHash = await hashPassword(newRefreshToken);
@@ -189,3 +217,4 @@ export class AuthService {
     return UserRepository.listActiveUsers();
   }
 }
+

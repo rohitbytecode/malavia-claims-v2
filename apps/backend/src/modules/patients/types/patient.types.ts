@@ -6,6 +6,7 @@ export interface PatientBase {
   insurerId?: string;
   insuranceCompanyId?: Types.ObjectId;
   isActive: boolean;
+  organizationId: Types.ObjectId;
 }
 
 export interface PatientDocument extends PatientBase, Document {

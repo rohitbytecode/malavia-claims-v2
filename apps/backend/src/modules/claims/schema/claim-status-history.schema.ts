@@ -30,6 +30,12 @@ const claimStatusHistorySchema =
         required: true,
         default: () => new Date(),
       },
+      organizationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Organization",
+        required: true,
+        index: true,
+      },
     },
     {
       timestamps: true,

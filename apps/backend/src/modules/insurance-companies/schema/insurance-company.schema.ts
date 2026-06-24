@@ -27,7 +27,6 @@ const insuranceCompanySchema = new mongoose.Schema<InsuranceCompanyDocument>(
       type: String,
       required: true,
       trim: true,
-      unique: true,
     },
     submissionMethods: {
       type: [String],
@@ -75,13 +74,20 @@ const insuranceCompanySchema = new mongoose.Schema<InsuranceCompanyDocument>(
       type: Boolean,
       default: true,
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-insuranceCompanySchema.index({ isActive: 1, name: 1 });
+insuranceCompanySchema.index({ name: 1, organizationId: 1 }, { unique: true });
+insuranceCompanySchema.index({ organizationId: 1, isActive: 1, name: 1 });
 
 export const InsuranceCompanyModel =
   mongoose.models.InsuranceCompany ||

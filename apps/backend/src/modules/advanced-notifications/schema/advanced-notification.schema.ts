@@ -29,6 +29,12 @@ const advancedNotificationSchema =
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
       },
+      organizationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Organization",
+        required: true,
+        index: true,
+      },
     },
     {
       timestamps: true,

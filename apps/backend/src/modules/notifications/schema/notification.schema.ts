@@ -34,6 +34,12 @@ const notificationSchema = new mongoose.Schema<NotificationDocument>(
     readAt: {
       type: Date,
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
   },
   {
     timestamps: true,

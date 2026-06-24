@@ -56,6 +56,7 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
         role: payload.role,
         username: username,
         fullName: fullName,
+        organizationId: payload.organizationId,
       };
       return next();
     } catch (error) {
@@ -66,7 +67,7 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
 
   io.on("connection", (socket) => {
     const user = socket.data.user as
-      | { id?: string; role?: string; fullName?: string; username?: string }
+      | { id?: string; role?: string; fullName?: string; username?: string; organizationId?: string }
       | undefined;
 
     if (user?.id) {
@@ -75,6 +76,14 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
 
     if (user?.role) {
       socket.join(`role:${user.role}`);
+    }
+
+    // Join org-specific room for tenant-scoped events
+    if (user?.organizationId) {
+      socket.join(`org:${user.organizationId}`);
+      if (user?.role) {
+        socket.join(`org:${user.organizationId}:role:${user.role}`);
+      }
     }
 
     logger.info(

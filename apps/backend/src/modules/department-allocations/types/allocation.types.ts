@@ -5,6 +5,7 @@ export interface AllocationDocument extends Document {
   departmentId: Types.ObjectId;
   amount: number;
   remarks?: string;
+  organizationId: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../../api/services";
@@ -8,28 +8,32 @@ import { ErrorPanel } from "../../components/ui/ErrorPanel";
 import {
   Field,
   TextInput,
-  SelectInput,
 } from "../../components/forms/FormField";
 import { AuthLayout } from "../../layouts/AuthLayout";
 import { useAuthStore } from "../../store/auth.store";
 import { loginSchema } from "../../validators/forms";
 import type { z } from "zod";
+
 type LoginForm = z.infer<typeof loginSchema>;
+
 export function LoginPage() {
   const navigate = useNavigate();
   const setSession = useAuthStore((s) => s.setSession);
   const queryClient = useQueryClient();
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ["publicUsers"],
-    queryFn: authApi.getUsers,
-  });
-
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+  } = useForm<LoginForm>({ 
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      organizationSlug: "default",
+      username: "",
+      password: "",
+    }
+  });
+
   const mutation = useMutation({
     mutationFn: authApi.login,
     onSuccess: ({ user, accessToken, refreshToken }) => {
@@ -38,6 +42,7 @@ export function LoginPage() {
       navigate("/dashboard");
     },
   });
+
   return (
     <AuthLayout>
       <form
@@ -46,24 +51,33 @@ export function LoginPage() {
       >
         <p className="eyebrow">Secure Login</p>
         <h2>Operator sign in</h2>
-        <Field label="Operator Username" error={errors.username?.message}>
-          <SelectInput {...register("username")} disabled={isLoading}>
-            <option value="">Select Operator</option>
-            {users.map((u) => (
-              <option key={u.username} value={u.username}>
-                {u.fullName} ({u.username})
-              </option>
-            ))}
-          </SelectInput>
+
+        <Field label="Organization Code" error={errors.organizationSlug?.message}>
+          <TextInput
+            placeholder="e.g. default, city-hospital"
+            {...register("organizationSlug")}
+          />
         </Field>
+
+        <Field label="Username" error={errors.username?.message}>
+          <TextInput
+            placeholder="Enter username"
+            autoComplete="username"
+            {...register("username")}
+          />
+        </Field>
+
         <Field label="Password" error={errors.password?.message}>
           <TextInput
             type="password"
+            placeholder="••••••••"
             autoComplete="current-password"
             {...register("password")}
           />
         </Field>
+
         {mutation.isError && <ErrorPanel error={mutation.error} />}
+
         <Button disabled={mutation.isPending}>
           {mutation.isPending
             ? "Authenticating..."

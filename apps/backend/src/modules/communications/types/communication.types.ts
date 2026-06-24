@@ -8,6 +8,7 @@ export interface CommunicationBase {
   remarks?: string;
   followUpDate?: Date;
   createdBy?: Types.ObjectId;
+  organizationId: Types.ObjectId;
 }
 
 export interface CommunicationDocument extends CommunicationBase, Document {

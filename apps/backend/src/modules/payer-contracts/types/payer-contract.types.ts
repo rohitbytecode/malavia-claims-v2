@@ -19,6 +19,7 @@ export interface PayerContractBase {
   defaultHospitalDiscountPercent: number;
   remarks: string;
   createdBy: Types.ObjectId;
+  organizationId: Types.ObjectId;
 }
 
 export interface PayerContractDocument extends PayerContractBase, Document {

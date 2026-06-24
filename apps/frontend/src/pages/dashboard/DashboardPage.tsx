@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { dashboardApi, alertApi } from "../../api/services";
+import { dashboardApi, alertApi, organizationApi } from "../../api/services";
 import { AlertPlaybookPanel } from "../../components/alerts/AlertPlaybookPanel";
 import { OperationalQueue } from "../../components/dashboard/OperationalQueue";
 import { RoleMissionPanel } from "../../components/dashboard/RoleMissionPanel";
@@ -15,7 +15,6 @@ import {
 } from "../../constants/operations";
 import { useAuthStore } from "../../store/auth.store";
 import { formatCurrency, labelize } from "../../utils/format";
-import { APP_CONFIG } from "../../../../backend/src/config/app";
 
 export function DashboardPage() {
   const user = useAuthStore((state) => state.user);
@@ -27,6 +26,19 @@ export function DashboardPage() {
     queryKey: ["alerts", "active", 12],
     queryFn: () => alertApi.active({ limit: 12 }),
   });
+  const orgQuery = useQuery({
+    queryKey: ["organization", "me"],
+    queryFn: () => organizationApi.getOwn(),
+    enabled: !!user,
+  });
+
+  const orgName = orgQuery.data?.name || "Claims Platform";
+  const orgAbbr = orgName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
 
   const roleHotStatuses = useMemo(() => {
     const role = user?.role;
@@ -67,14 +79,14 @@ export function DashboardPage() {
       <section className="hero-command premium-panel">
         <div className="hero-copy">
           <p className="eyebrow">Operational Command Center</p>
-          <h1>{APP_CONFIG.APP_NAME}</h1>
+          <h1>{orgName}</h1>
           <span>
             Live control surface for insurer waiting, settlement blockers,
             courier ageing, refunds, alerts, and workflow bottlenecks.
           </span>
         </div>
         <div className="hero-radar" aria-label="Operational pulse">
-          <div className="radar-core">MH</div>
+          <div className="radar-core">{orgAbbr}</div>
           <div className="radar-ring one" />
           <div className="radar-ring two" />
         </div>

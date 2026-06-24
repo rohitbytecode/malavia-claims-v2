@@ -4,6 +4,7 @@ export interface DoctorBase {
   name: string;
   departmentId: Types.ObjectId;
   isActive: boolean;
+  organizationId: Types.ObjectId;
 }
 
 export interface DoctorDocument extends DoctorBase, Document {

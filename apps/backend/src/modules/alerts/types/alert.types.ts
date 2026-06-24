@@ -10,6 +10,7 @@ export interface AlertDocument extends Document {
   resolved: boolean;
   resolvedAt?: Date;
   resolvedBy?: Types.ObjectId;
+  organizationId: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

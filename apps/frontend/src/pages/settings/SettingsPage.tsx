@@ -5,7 +5,7 @@ import { Field, TextInput } from "../../components/forms/FormField";
 import { useUiStore } from "../../store/ui.store";
 import { useAuthStore } from "../../store/auth.store";
 import { authApi } from "../../api/services";
-import { APP_CONFIG } from "../../../../backend/src/config/app";
+import { APP_CONFIG } from "../../config/app";
 
 export function SettingsPage() {
   const { theme, toggleTheme } = useUiStore();

@@ -18,6 +18,7 @@ import type {
   PayerContract,
   Doctor,
   ListParams,
+  Organization,
   Paginated,
   ReportRow,
   Settlement,
@@ -33,6 +34,7 @@ import type {
   SubmissionMethod,
   Notification,
   AdvancedNotificationSettings,
+  PlanTier,
 } from "../types/domain";
 const normalized = <T>(
   value:
@@ -59,11 +61,35 @@ const normalized = <T>(
   return value;
 };
 export const authApi = {
-  login: (body: { username: string; password: string }) =>
+  login: (body: { organizationSlug: string; username: string; password: string }) =>
     unwrap<AuthPayload>(apiClient.post("/auth/login", body)),
   getUsers: () => unwrap<User[]>(apiClient.get("/auth/users")),
   changePassword: (body: { oldPassword: string; newPassword: string }) =>
     unwrap<{ success: boolean }>(apiClient.post("/auth/change-password", body)),
+};
+
+export const organizationApi = {
+  register: (body: {
+    organizationName: string;
+    adminFullName: string;
+    adminUsername: string;
+    adminPassword: string;
+    adminEmail?: string;
+    plan?: PlanTier;
+  }) =>
+    unwrap<{
+      organization: Organization;
+      user: User;
+      accessToken: string;
+      refreshToken: string;
+    }>(apiClient.post("/organizations/register", body)),
+  getOwn: () => unwrap<Organization>(apiClient.get("/organizations/me")),
+  updateOwn: (body: Partial<{ name: string; settings: Organization["settings"] }>) =>
+    unwrap<Organization>(apiClient.patch("/organizations/me", body)),
+  listAll: (params: { page?: number; limit?: number } = {}) =>
+    unwrap<Paginated<Organization>>(
+      apiClient.get("/organizations", { params })
+    ),
 };
 export const claimsApi = {
   list: (params: ListParams) =>

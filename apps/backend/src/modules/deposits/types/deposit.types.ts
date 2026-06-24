@@ -10,6 +10,7 @@ export interface DepositDocument extends Document {
   refundStatus: RefundStatus;
   refundDate?: Date;
   remarks?: string;
+  organizationId: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

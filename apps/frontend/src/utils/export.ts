@@ -6,7 +6,7 @@ import type {
   SettlementTotals,
   DetailedClaim,
 } from "../types/reports";
-import { APP_CONFIG } from "../../../backend/src/config/app";
+import { APP_CONFIG } from "../config/app";
 
 interface ExportReportParams {
   periodLabel: string;

@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { ClaimStatus } from "@/modules/claims/constant/claim-status.enum.js";
 import { logger } from "@/config/logger.js";
 import { AdvancedNotificationRepository } from "../repository/advanced-notification.repository.js";
@@ -76,7 +77,7 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#39;");
 }
 
-function buildClaimTransitionEmail(payload: ClaimTransitionMailPayload) {
+function buildClaimTransitionEmail(payload: ClaimTransitionMailPayload, orgName: string) {
   const displayClaim = payload.claimNumber ?? payload.claimId;
   const statusLabel = STATUS_LABEL[payload.toStatus] ?? payload.toStatus;
   const safePatientName = payload.patientName
@@ -93,9 +94,9 @@ function buildClaimTransitionEmail(payload: ClaimTransitionMailPayload) {
     ? `Updated by: ${payload.performedByName}`
     : "Updated by: System";
   const remarksLine = payload.remarks ? `Remarks: ${payload.remarks}` : "";
-  const subject = `Claim ${displayClaim} is ${statusLabel}`;
+  const subject = `[${orgName}] Claim ${displayClaim} is ${statusLabel}`;
   const text = [
-    "Malavia Claims advanced notification",
+    `${orgName} - Claims Advanced Notification`,
     "",
     `Claim: ${displayClaim}`,
     payload.patientName ? `Patient: ${payload.patientName}` : "",
@@ -110,8 +111,8 @@ function buildClaimTransitionEmail(payload: ClaimTransitionMailPayload) {
 
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111827">
-  <h2 style="margin:0 0 12px">Claim ${safeDisplayClaim} is ${safeStatusLabel}</h2>
-  <p>The claim has reached one of the advanced notification milestones.</p>
+  <h2 style="margin:0 0 12px">${escapeHtml(orgName)} - Claim ${safeDisplayClaim} is ${safeStatusLabel}</h2>
+  <p>The claim has reached one of the advanced notification milestones on your portal.</p>
   <table style="border-collapse:collapse;margin-top:12px">
     <tr><td style="padding:6px 12px;border:1px solid #e5e7eb"><strong>Claim</strong></td><td style="padding:6px 12px;border:1px solid #e5e7eb">${safeDisplayClaim}</td></tr>
     ${safePatientName ? `<tr><td style="padding:6px 12px;border:1px solid #e5e7eb"><strong>Patient</strong></td><td style="padding:6px 12px;border:1px solid #e5e7eb">${safePatientName}</td></tr>` : ""}
@@ -161,7 +162,15 @@ export class AdvancedNotificationService {
 
       if (activeEmails.length === 0) return;
 
-      const message = buildClaimTransitionEmail(payload);
+      let orgName = "Claims Platform";
+      if (settings.organizationId) {
+        const org = (await mongoose.model("Organization").findById(settings.organizationId).lean()) as any;
+        if (org) {
+          orgName = org.name;
+        }
+      }
+
+      const message = buildClaimTransitionEmail(payload, orgName);
 
       await Promise.all(
         activeEmails.map(({ email }: NotificationEmail) =>

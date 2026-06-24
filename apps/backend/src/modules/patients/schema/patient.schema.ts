@@ -7,7 +7,6 @@ const patientSchema = new mongoose.Schema<PatientDocument>(
       type: String,
       required: true,
       trim: true,
-      unique: true,
     },
     name: {
       type: String,
@@ -28,15 +27,23 @@ const patientSchema = new mongoose.Schema<PatientDocument>(
       type: Boolean,
       default: true,
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-patientSchema.index({ name: 1 });
-patientSchema.index({ insuranceCompanyId: 1, isActive: 1 }, { sparse: true });
+patientSchema.index({ patientId: 1, organizationId: 1 }, { unique: true });
+patientSchema.index({ organizationId: 1, name: 1 });
+patientSchema.index({ organizationId: 1, insuranceCompanyId: 1, isActive: 1 }, { sparse: true });
 
 export const PatientModel =
   mongoose.models.Patient ||
   mongoose.model<PatientDocument>("Patient", patientSchema);
+

@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from "react";
-import { APP_CONFIG } from "../../../backend/src/config/app";
+import { APP_CONFIG } from "../config/app";
 
 export function AuthLayout({ children }: PropsWithChildren) {
   return (

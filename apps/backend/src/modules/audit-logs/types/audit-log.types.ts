@@ -9,6 +9,7 @@ export interface AuditLogDocument extends Document {
   performedBy: Types.ObjectId;
   previousData?: Record<string, any>;
   newData?: Record<string, any>;
+  organizationId: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

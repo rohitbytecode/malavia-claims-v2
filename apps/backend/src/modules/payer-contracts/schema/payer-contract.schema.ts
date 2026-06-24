@@ -80,6 +80,12 @@ const payerContractSchema = new mongoose.Schema<PayerContractDocument>(
       ref: "User",
       required: true,
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
   },
   {
     timestamps: true,

@@ -5,6 +5,7 @@ import { UserModel } from "@/modules/users/schema/user.schema.js";
 import { getIO } from "@/config/socket.js";
 import { logger } from "@/config/logger.js";
 import { Roles } from "@/core/enums/roles.enum.js";
+import { getTenantId } from "@/core/tenant/tenant-context.js";
 
 interface CreateNotificationParams {
   userId: string;
@@ -110,8 +111,13 @@ export class NotificationService {
         updatedAt: timestamp,
       };
       const io = getIO();
-      io.to(`role:${Roles.PHARMACIST}`).emit("notification:new", payload);
-      io.to(`role:${Roles.PHARMACIST}`).emit("claim:status-changed", payload);
+      const orgId = getTenantId();
+      const targetRoom = orgId
+        ? `org:${orgId}:role:${Roles.PHARMACIST}`
+        : `role:${Roles.PHARMACIST}`;
+
+      io.to(targetRoom).emit("notification:new", payload);
+      io.to(targetRoom).emit("claim:status-changed", payload);
 
       logger.info(
         `Broadcasted claim status change: ${displayClaim} → ${toStatus} to ${docs.length} pharmacists`

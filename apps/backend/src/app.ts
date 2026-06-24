@@ -11,6 +11,8 @@ import cors from "cors";
 import mongoose from "mongoose";
 import { randomUUID } from "node:crypto";
 
+import "./config/tenant-init.js";
+
 import type { Request, Response } from "express";
 import { APP_CONFIG } from "./config/app.js";
 
@@ -23,6 +25,8 @@ import {
   setupSecurityMiddleware,
   apiLimiter,
 } from "./middleware/security.middleware.js";
+
+import { tenantContextMiddleware } from "./middleware/tenant-context.middleware.js";
 
 import authRouter from "./modules/auth/index.js";
 import usersRouter from "./modules/users/index.js";
@@ -45,6 +49,8 @@ import doctorsRouter from "./modules/doctors/index.js";
 import payerContractsRouter from "./modules/payer-contracts/index.js";
 import advancedNotificationsRouter from "./modules/advanced-notifications/index.js";
 import pastRecordsRouter from "./modules/past-records/index.js";
+import organizationsRouter from "./modules/organizations/index.js";
+import paymentsRouter from "./modules/payments/routes/payments.routes.js";
 
 import { setupSwagger } from "./config/swagger.js";
 import { register } from "./config/prometheus.js";
@@ -137,6 +143,7 @@ app.use(
 
 app.use(express.json({ limit: "10kb" }));
 app.use("/api", apiLimiter);
+app.use(tenantContextMiddleware);
 
 setupSwagger(app);
 
@@ -203,6 +210,8 @@ app.use("/api/v1/doctors", doctorsRouter);
 app.use("/api/v1/payer-contracts", payerContractsRouter);
 app.use("/api/v1/advanced-notifications", advancedNotificationsRouter);
 app.use("/api/v1/past-records", pastRecordsRouter);
+app.use("/api/v1/organizations", organizationsRouter);
+app.use("/api/v1/payments", paymentsRouter);
 
 app.use(errorMiddleware);
 

@@ -9,6 +9,7 @@ export interface AdvancedNotificationDocument extends Document {
   notificationEmails: NotificationEmail[];
   isEnabled: boolean;
   updatedBy?: Types.ObjectId;
+  organizationId: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

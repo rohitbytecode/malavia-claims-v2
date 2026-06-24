@@ -10,7 +10,7 @@ import {
   operationalRoles,
   pharmacistRoles,
 } from "../constants/workflow";
-import { alertApi, notificationApi } from "../api/services";
+import { alertApi, notificationApi, organizationApi } from "../api/services";
 import type { Role, Notification } from "../types/domain";
 import { NotificationBell } from "../components/notifications/NotificationBell";
 import { NotificationToast } from "../components/notifications/NotificationToast";
@@ -257,6 +257,7 @@ const ROLE_META: Record<Role, { label: string; color: string; abbr: string }> =
     },
     ACCOUNTANT: { label: "Accountant", color: "var(--amber)", abbr: "AC" },
     PHARMACIST: { label: "Pharmacist", color: "var(--emerald)", abbr: "PH" },
+    PLATFORM_ADMIN: { label: "Platform Admin", color: "var(--purple, #a855f7)", abbr: "PA" },
   };
 
 export function AppLayout({ children }: PropsWithChildren) {
@@ -275,6 +276,19 @@ export function AppLayout({ children }: PropsWithChildren) {
   const alertCount =
     activeAlerts.data?.data?.filter((a) => !a.resolved).length ?? 0;
 
+  const orgQuery = useQuery({
+    queryKey: ["organization", "me"],
+    queryFn: () => organizationApi.getOwn(),
+    enabled: !!user,
+  });
+  const orgName = orgQuery.data?.name || "Malavia";
+  const orgAbbr = orgName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
+
   const filteredNav = NAV_ITEMS.filter((item) => hasRole(item.roles));
   const groups = ["operations", "finance", "administration", "system"];
   const roleMeta = user?.role ? ROLE_META[user.role] : null;
@@ -292,6 +306,10 @@ export function AppLayout({ children }: PropsWithChildren) {
       sidebarCollapsed ? "collapsed" : "expanded"
     );
   }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    document.title = `${orgName} - Claims Control`;
+  }, [orgName]);
 
   useEffect(() => {
     if (!user) return;
@@ -370,11 +388,11 @@ export function AppLayout({ children }: PropsWithChildren) {
         {/* Brand */}
         <div className="sidebar__brand">
           <div className="sidebar__logo">
-            <span>MH</span>
+            <span>{orgAbbr}</span>
           </div>
           {!sidebarCollapsed && (
             <div className="sidebar__brand-text">
-              <strong>Malavia</strong>
+              <strong>{orgName}</strong>
               <span>Claims Control</span>
             </div>
           )}

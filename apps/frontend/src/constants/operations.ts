@@ -273,6 +273,21 @@ export const roleExperiences: Record<Role, RoleExperience> = {
       "Cannot modify settlements or claim statuses",
     ],
   },
+  PLATFORM_ADMIN: {
+    role: "PLATFORM_ADMIN",
+    title: "SaaS Platform Operations",
+    mission:
+      "Manage multi-tenant organizations, monitor billing/subscription states, and administer system-wide resources.",
+    primaryQueues: [],
+    visibleModules: ["Organizations", "Users", "Billing"],
+    criticalActions: [
+      "Suspend organizations",
+      "Update global configurations",
+    ],
+    guardrails: [
+      "All multi-tenant isolation rules still apply at data level",
+    ],
+  },
 };
 
 export const alertPlaybook: Record<

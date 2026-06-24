@@ -38,6 +38,9 @@ const envSchema = z.object({
   SMTP_PASS: z.string().optional(),
   SMTP_HELO_HOST: z.string().optional(),
   MAIL_FROM: z.string().optional(),
+  
+  APP_NAME: z.string().default("Claims Management Platform"),
+  ORG_NAME: z.string().default("Claims Platform Organization"),
 });
 
 const parsed = envSchema.safeParse(process.env);

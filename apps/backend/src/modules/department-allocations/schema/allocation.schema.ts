@@ -21,6 +21,12 @@ const allocationSchema = new mongoose.Schema<AllocationDocument>(
     remarks: {
       type: String,
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
   },
   {
     timestamps: true,

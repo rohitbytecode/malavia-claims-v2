@@ -7,7 +7,9 @@ export const toUserResponse = (user: Partial<UserDocument>) => {
     username: (user as any).username,
     role: user.role,
     isActive: user.isActive,
+    organizationId: user.organizationId?.toString() ?? null,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
 };
+

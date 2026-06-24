@@ -35,6 +35,12 @@ const alertSchema = new mongoose.Schema<AlertDocument>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
   },
   {
     timestamps: true,

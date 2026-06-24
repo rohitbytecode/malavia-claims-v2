@@ -13,7 +13,6 @@ const userSchema = new mongoose.Schema<UserDocument>(
       required: true,
       trim: true,
       lowercase: true,
-      unique: true,
     },
     password: {
       type: String,
@@ -23,6 +22,7 @@ const userSchema = new mongoose.Schema<UserDocument>(
       type: String,
       required: true,
       enum: [
+        "PLATFORM_ADMIN",
         "SUPER_ADMIN",
         "ADMIN",
         "CLAIM_MANAGER",
@@ -34,6 +34,12 @@ const userSchema = new mongoose.Schema<UserDocument>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: false, // Optional for PLATFORM_ADMIN who are cross-org
+      index: true,
     },
     refreshTokenHash: {
       type: String,
@@ -49,7 +55,12 @@ const userSchema = new mongoose.Schema<UserDocument>(
   }
 );
 
+// Compound unique: same username allowed across different orgs
+userSchema.index({ username: 1, organizationId: 1 }, { unique: true });
 userSchema.index({ role: 1, isActive: 1 });
 userSchema.index({ isActive: 1, fullName: 1 });
+userSchema.index({ organizationId: 1, role: 1, isActive: 1 });
+
 export const UserModel =
   mongoose.models.User || mongoose.model<UserDocument>("User", userSchema);
+

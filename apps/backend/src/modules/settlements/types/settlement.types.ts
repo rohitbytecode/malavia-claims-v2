@@ -35,6 +35,7 @@ export interface SettlementDocument extends Document {
   settlementDate: Date;
   remarks: string[];
   settledBy: Types.ObjectId;
+  organizationId: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

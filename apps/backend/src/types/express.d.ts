@@ -6,9 +6,13 @@ declare global {
       user?: {
         id: string;
         role: Roles;
+        organizationId?: string;
       };
+      /** Convenience alias set by requireTenant middleware */
+      organizationId?: string;
     }
   }
 }
 
 export {};
+

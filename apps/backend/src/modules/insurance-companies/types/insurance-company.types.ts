@@ -28,6 +28,7 @@ export interface InsuranceCompanyBase {
   escalationMatrix: EscalationContact[];
   remarks?: string;
   isActive: boolean;
+  organizationId: Types.ObjectId;
 }
 
 export interface InsuranceCompanyDocument

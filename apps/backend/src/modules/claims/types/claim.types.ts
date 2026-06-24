@@ -29,6 +29,7 @@ export interface ClaimBase {
   billBreakdown: BillLineItem[];
   createdBy?: Types.ObjectId;
   updatedBy?: Types.ObjectId;
+  organizationId: Types.ObjectId;
 }
 
 export interface ClaimDocument extends ClaimBase, Document {
@@ -43,6 +44,7 @@ export interface ClaimStatusHistoryBase {
   remarks?: string;
   changedBy?: Types.ObjectId;
   effectiveAt: Date;
+  organizationId: Types.ObjectId;
 }
 
 export interface ClaimStatusHistoryDocument

@@ -23,9 +23,11 @@ export const authenticate = (
     req.user = {
       id: payload.userId,
       role: payload.role as Roles,
+      organizationId: payload.organizationId,
     };
     next();
   } catch (error) {
     return next(new AppError("Invalid or expired access token", 401));
   }
 };
+

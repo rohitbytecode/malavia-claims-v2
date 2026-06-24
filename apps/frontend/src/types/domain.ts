@@ -1,4 +1,5 @@
 export type Role =
+  | "PLATFORM_ADMIN"
   | "SUPER_ADMIN"
   | "ADMIN"
   | "CLAIM_MANAGER"
@@ -135,6 +136,7 @@ export interface User {
   fullName: string;
   username: string;
   role: Role;
+  organizationId?: string;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -145,6 +147,32 @@ export interface AuthTokens {
 }
 export interface AuthPayload extends AuthTokens {
   user: User;
+  organization?: Organization;
+}
+
+export type PlanTier = "FREE" | "STARTER" | "PRO" | "ENTERPRISE";
+
+export interface OrganizationSettings {
+  logoUrl?: string;
+  primaryColor?: string;
+  timezone?: string;
+  currency?: string;
+}
+
+export interface Organization {
+  _id: string;
+  id: string;
+  name: string;
+  slug: string;
+  plan: PlanTier;
+  isActive: boolean;
+  settings?: OrganizationSettings;
+  billing?: {
+    email?: string;
+    planExpiresAt?: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Claim {

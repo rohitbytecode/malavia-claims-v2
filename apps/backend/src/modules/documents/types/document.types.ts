@@ -11,6 +11,7 @@ export interface DocumentBase {
   uploadedBy?: Types.ObjectId;
   remarks?: string;
   version: number;
+  organizationId: Types.ObjectId;
 }
 
 export interface DocumentDocument extends DocumentBase, Document {

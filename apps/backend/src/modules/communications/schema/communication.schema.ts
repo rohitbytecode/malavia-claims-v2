@@ -30,6 +30,12 @@ const communicationSchema = new mongoose.Schema<CommunicationDocument>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
   },
   {
     timestamps: true,

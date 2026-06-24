@@ -115,6 +115,12 @@ const claimSchema = new mongoose.Schema<ClaimDocument>(
       type: [billLineItemSchema],
       default: [],
     },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+      index: true,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -129,10 +135,10 @@ const claimSchema = new mongoose.Schema<ClaimDocument>(
   }
 );
 
-claimSchema.index({ status: 1, createdAt: -1 });
-claimSchema.index({ patientId: 1, status: 1 });
-claimSchema.index({ insuranceCompanyId: 1, status: 1 });
-claimSchema.index({ createdBy: 1, createdAt: -1 });
-claimSchema.index({ type: 1, status: 1, createdAt: -1 });
+claimSchema.index({ organizationId: 1, status: 1, createdAt: -1 });
+claimSchema.index({ organizationId: 1, patientId: 1, status: 1 });
+claimSchema.index({ organizationId: 1, insuranceCompanyId: 1, status: 1 });
+claimSchema.index({ organizationId: 1, createdBy: 1, createdAt: -1 });
+claimSchema.index({ organizationId: 1, type: 1, status: 1, createdAt: -1 });
 export const ClaimModel =
   mongoose.models.Claim || mongoose.model<ClaimDocument>("Claim", claimSchema);

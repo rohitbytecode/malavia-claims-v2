@@ -7,16 +7,12 @@ const departmentSchema = new mongoose.Schema<DepartmentDocument>(
       type: String,
       required: true,
       trim: true,
-      unique: true,
-      index: true,
     },
     code: {
       type: String,
       required: true,
       trim: true,
       uppercase: true,
-      unique: true,
-      index: true,
     },
     description: {
       type: String,
@@ -26,6 +22,11 @@ const departmentSchema = new mongoose.Schema<DepartmentDocument>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
       index: true,
     },
   },
@@ -33,6 +34,10 @@ const departmentSchema = new mongoose.Schema<DepartmentDocument>(
     timestamps: true,
   }
 );
+
+departmentSchema.index({ name: 1, organizationId: 1 }, { unique: true });
+departmentSchema.index({ code: 1, organizationId: 1 }, { unique: true });
+departmentSchema.index({ organizationId: 1, isActive: 1 });
 
 export const DepartmentModel =
   mongoose.models.Department ||

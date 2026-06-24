@@ -15,6 +15,7 @@ export interface NotificationDocument extends Document {
   entityId?: Types.ObjectId;
   isRead: boolean;
   readAt?: Date;
+  organizationId: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
