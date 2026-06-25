@@ -78,7 +78,7 @@ export function SettingsPage() {
         subscription_id: res.subscriptionId,
         name: "Hospitra",
         description: `Upgrade to ${planName} Plan`,
-        handler: async function (response: any) {
+        handler: async function (_response: any) {
           try {
             const verifyRes = await paymentsApi.verifySubscription({
               subscriptionId: res.subscriptionId

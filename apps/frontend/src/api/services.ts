@@ -555,6 +555,8 @@ export const paymentsApi = {
       plan: PlanTier;
       isActive: boolean;
       expiresAt: string | null;
+      usage: number;
+      limit: number;
     }>(apiClient.get("/payments/subscription/status")),
 };
 
