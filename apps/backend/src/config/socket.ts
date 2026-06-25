@@ -67,7 +67,13 @@ export function initSocketServer(httpServer: HttpServer): SocketServer {
 
   io.on("connection", (socket) => {
     const user = socket.data.user as
-      | { id?: string; role?: string; fullName?: string; username?: string; organizationId?: string }
+      | {
+          id?: string;
+          role?: string;
+          fullName?: string;
+          username?: string;
+          organizationId?: string;
+        }
       | undefined;
 
     if (user?.id) {

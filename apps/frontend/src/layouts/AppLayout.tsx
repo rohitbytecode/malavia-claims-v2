@@ -257,7 +257,11 @@ const ROLE_META: Record<Role, { label: string; color: string; abbr: string }> =
     },
     ACCOUNTANT: { label: "Accountant", color: "var(--amber)", abbr: "AC" },
     PHARMACIST: { label: "Pharmacist", color: "var(--emerald)", abbr: "PH" },
-    PLATFORM_ADMIN: { label: "Platform Admin", color: "var(--purple, #a855f7)", abbr: "PA" },
+    PLATFORM_ADMIN: {
+      label: "Platform Admin",
+      color: "var(--purple, #a855f7)",
+      abbr: "PA",
+    },
   };
 
 export function AppLayout({ children }: PropsWithChildren) {

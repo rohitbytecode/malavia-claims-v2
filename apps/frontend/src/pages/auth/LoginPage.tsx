@@ -5,10 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { authApi } from "../../api/services";
 import { Button } from "../../components/ui/Button";
 import { ErrorPanel } from "../../components/ui/ErrorPanel";
-import {
-  Field,
-  TextInput,
-} from "../../components/forms/FormField";
+import { Field, TextInput } from "../../components/forms/FormField";
 import { AuthLayout } from "../../layouts/AuthLayout";
 import { useAuthStore } from "../../store/auth.store";
 import { loginSchema } from "../../validators/forms";
@@ -25,13 +22,13 @@ export function LoginPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginForm>({ 
+  } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       organizationSlug: "default",
       username: "",
       password: "",
-    }
+    },
   });
 
   const mutation = useMutation({
@@ -52,7 +49,10 @@ export function LoginPage() {
         <p className="eyebrow">Secure Login</p>
         <h2>Operator sign in</h2>
 
-        <Field label="Organization Code" error={errors.organizationSlug?.message}>
+        <Field
+          label="Organization Code"
+          error={errors.organizationSlug?.message}
+        >
           <TextInput
             placeholder="e.g. default, city-hospital"
             {...register("organizationSlug")}

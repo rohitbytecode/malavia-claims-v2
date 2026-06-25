@@ -61,8 +61,11 @@ const normalized = <T>(
   return value;
 };
 export const authApi = {
-  login: (body: { organizationSlug: string; username: string; password: string }) =>
-    unwrap<AuthPayload>(apiClient.post("/auth/login", body)),
+  login: (body: {
+    organizationSlug: string;
+    username: string;
+    password: string;
+  }) => unwrap<AuthPayload>(apiClient.post("/auth/login", body)),
   getUsers: () => unwrap<User[]>(apiClient.get("/auth/users")),
   changePassword: (body: { oldPassword: string; newPassword: string }) =>
     unwrap<{ success: boolean }>(apiClient.post("/auth/change-password", body)),
@@ -84,8 +87,9 @@ export const organizationApi = {
       refreshToken: string;
     }>(apiClient.post("/organizations/register", body)),
   getOwn: () => unwrap<Organization>(apiClient.get("/organizations/me")),
-  updateOwn: (body: Partial<{ name: string; settings: Organization["settings"] }>) =>
-    unwrap<Organization>(apiClient.patch("/organizations/me", body)),
+  updateOwn: (
+    body: Partial<{ name: string; settings: Organization["settings"] }>
+  ) => unwrap<Organization>(apiClient.patch("/organizations/me", body)),
   listAll: (params: { page?: number; limit?: number } = {}) =>
     unwrap<Paginated<Organization>>(
       apiClient.get("/organizations", { params })
@@ -559,4 +563,3 @@ export const paymentsApi = {
       limit: number;
     }>(apiClient.get("/payments/subscription/status")),
 };
-

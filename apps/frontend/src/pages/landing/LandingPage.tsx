@@ -62,7 +62,8 @@ export function LandingPage() {
           <p className="hero-subtitle">
             Secure, audited, real-time insurance claims processing with robust
             logical tenant isolation, custom contracts, and instant department
-            allocation. Built for modern clinics and enterprise hospital networks.
+            allocation. Built for modern clinics and enterprise hospital
+            networks.
           </p>
           <div className="hero-actions">
             {user ? (
@@ -99,7 +100,9 @@ export function LandingPage() {
               <span className="dot red"></span>
               <span className="dot yellow"></span>
               <span className="dot green"></span>
-              <div className="mockup-title">Claims Dashboard (Tenant isolated)</div>
+              <div className="mockup-title">
+                Claims Dashboard (Tenant isolated)
+              </div>
             </div>
             <div className="mockup-body">
               <div className="mockup-sidebar"></div>

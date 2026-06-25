@@ -37,8 +37,10 @@ export class DocumentController {
     }
 
     try {
-      const { stream, fromCloud } = await StorageService.getFileStream(doc.filePath);
-      
+      const { stream, fromCloud } = await StorageService.getFileStream(
+        doc.filePath
+      );
+
       res.setHeader("Content-Type", doc.mimeType);
       res.setHeader(
         "Content-Disposition",
@@ -49,14 +51,16 @@ export class DocumentController {
       stream.on("error", (err) => {
         console.error("Stream pipe error:", err);
         if (!res.headersSent) {
-          res.status(500).json({ success: false, message: "Error downloading file" });
+          res
+            .status(500)
+            .json({ success: false, message: "Error downloading file" });
         }
       });
 
       return stream.pipe(res);
     } catch (error: any) {
       console.error("❌ Document stream retrieval failed:", error);
-      
+
       // Fallback local check
       const localFilePath = path.resolve(doc.filePath);
       if (fs.existsSync(localFilePath)) {

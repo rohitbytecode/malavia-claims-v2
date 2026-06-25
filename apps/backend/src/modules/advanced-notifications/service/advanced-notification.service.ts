@@ -77,7 +77,10 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#39;");
 }
 
-function buildClaimTransitionEmail(payload: ClaimTransitionMailPayload, orgName: string) {
+function buildClaimTransitionEmail(
+  payload: ClaimTransitionMailPayload,
+  orgName: string
+) {
   const displayClaim = payload.claimNumber ?? payload.claimId;
   const statusLabel = STATUS_LABEL[payload.toStatus] ?? payload.toStatus;
   const safePatientName = payload.patientName
@@ -164,7 +167,10 @@ export class AdvancedNotificationService {
 
       let orgName = "Claims Platform";
       if (settings.organizationId) {
-        const org = (await mongoose.model("Organization").findById(settings.organizationId).lean()) as any;
+        const org = (await mongoose
+          .model("Organization")
+          .findById(settings.organizationId)
+          .lean()) as any;
         if (org) {
           orgName = org.name;
         }

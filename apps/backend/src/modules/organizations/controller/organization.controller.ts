@@ -17,7 +17,9 @@ export class OrganizationController {
   static async getOwn(req: Request, res: Response) {
     const orgId = req.user?.organizationId;
     if (!orgId) {
-      return res.status(403).json({ success: false, message: "No organization context" });
+      return res
+        .status(403)
+        .json({ success: false, message: "No organization context" });
     }
 
     const organization = await OrganizationService.getById(orgId);
@@ -32,7 +34,9 @@ export class OrganizationController {
   static async updateOwn(req: Request, res: Response) {
     const orgId = req.user?.organizationId;
     if (!orgId) {
-      return res.status(403).json({ success: false, message: "No organization context" });
+      return res
+        .status(403)
+        .json({ success: false, message: "No organization context" });
     }
 
     const organization = await OrganizationService.update(orgId, req.body);

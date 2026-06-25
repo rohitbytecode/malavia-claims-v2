@@ -1,5 +1,9 @@
 import fs from "fs";
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
 import { Readable } from "stream";
 
 // Load configuration
@@ -9,9 +13,7 @@ const AWS_REGION = process.env.AWS_REGION || "us-east-1";
 const AWS_S3_BUCKET = process.env.AWS_S3_BUCKET;
 
 const isS3Configured = Boolean(
-  AWS_ACCESS_KEY_ID &&
-  AWS_SECRET_ACCESS_KEY &&
-  AWS_S3_BUCKET
+  AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY && AWS_S3_BUCKET
 );
 
 let s3Client: S3Client | null = null;
@@ -25,7 +27,9 @@ if (isS3Configured) {
     },
   });
 } else {
-  console.log("📁 Local file storage active (S3 env variables not fully configured).");
+  console.log(
+    "📁 Local file storage active (S3 env variables not fully configured)."
+  );
 }
 
 export class StorageService {
@@ -70,7 +74,10 @@ export class StorageService {
         console.log(`☁️ Successfully uploaded file to S3: ${s3Key}`);
         return s3Key;
       } catch (err) {
-        console.error("❌ AWS S3 Upload Error. Falling back to local storage:", err);
+        console.error(
+          "❌ AWS S3 Upload Error. Falling back to local storage:",
+          err
+        );
         return localPath; // fallback
       }
     }
@@ -105,7 +112,10 @@ export class StorageService {
           throw new Error("S3 Response Body is not a readable stream.");
         }
       } catch (err) {
-        console.error("❌ AWS S3 Download Error. Falling back to local check:", err);
+        console.error(
+          "❌ AWS S3 Download Error. Falling back to local check:",
+          err
+        );
       }
     }
 

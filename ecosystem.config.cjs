@@ -15,6 +15,6 @@ module.exports = {
       out_file: "./logs/pm2-backend-out.log",
       merge_logs: true,
       time: true,
-    }
-  ]
+    },
+  ],
 };

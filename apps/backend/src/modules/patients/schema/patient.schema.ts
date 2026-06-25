@@ -41,9 +41,11 @@ const patientSchema = new mongoose.Schema<PatientDocument>(
 
 patientSchema.index({ patientId: 1, organizationId: 1 }, { unique: true });
 patientSchema.index({ organizationId: 1, name: 1 });
-patientSchema.index({ organizationId: 1, insuranceCompanyId: 1, isActive: 1 }, { sparse: true });
+patientSchema.index(
+  { organizationId: 1, insuranceCompanyId: 1, isActive: 1 },
+  { sparse: true }
+);
 
 export const PatientModel =
   mongoose.models.Patient ||
   mongoose.model<PatientDocument>("Patient", patientSchema);
-

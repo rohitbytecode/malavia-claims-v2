@@ -68,7 +68,7 @@ export class ClaimService {
           startOfMonth.setHours(0, 0, 0, 0);
 
           const count = await ClaimRepository.countClaims({
-            createdAt: { $gte: startOfMonth } as any
+            createdAt: { $gte: startOfMonth } as any,
           });
 
           if (count >= limit) {

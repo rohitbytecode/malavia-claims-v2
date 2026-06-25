@@ -30,4 +30,3 @@ export const authenticate = (
     return next(new AppError("Invalid or expired access token", 401));
   }
 };
-

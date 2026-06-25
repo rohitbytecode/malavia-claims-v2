@@ -1,6 +1,8 @@
 import { z } from "zod";
 export const loginSchema = z.object({
-  organizationSlug: z.string().min(2, "Organization code must be at least 2 characters"),
+  organizationSlug: z
+    .string()
+    .min(2, "Organization code must be at least 2 characters"),
   username: z.string().min(3, "Username must contain at least 3 characters"),
   password: z.string().min(8, "Password must contain at least 8 characters"),
 });
@@ -57,10 +59,22 @@ export const doctorSchema = z.object({
 });
 
 export const registerSchema = z.object({
-  organizationName: z.string().min(3, "Organization name must be at least 3 characters"),
-  adminFullName: z.string().min(3, "Admin full name must be at least 3 characters"),
-  adminUsername: z.string().min(3, "Admin username must be at least 3 characters"),
-  adminPassword: z.string().min(8, "Admin password must be at least 8 characters"),
-  adminEmail: z.string().email("Invalid email format").optional().or(z.literal("")),
+  organizationName: z
+    .string()
+    .min(3, "Organization name must be at least 3 characters"),
+  adminFullName: z
+    .string()
+    .min(3, "Admin full name must be at least 3 characters"),
+  adminUsername: z
+    .string()
+    .min(3, "Admin username must be at least 3 characters"),
+  adminPassword: z
+    .string()
+    .min(8, "Admin password must be at least 8 characters"),
+  adminEmail: z
+    .string()
+    .email("Invalid email format")
+    .optional()
+    .or(z.literal("")),
   plan: z.enum(["FREE", "STARTER", "PRO", "ENTERPRISE"]),
 });

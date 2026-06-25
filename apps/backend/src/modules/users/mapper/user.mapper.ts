@@ -12,4 +12,3 @@ export const toUserResponse = (user: Partial<UserDocument>) => {
     updatedAt: user.updatedAt,
   };
 };
-

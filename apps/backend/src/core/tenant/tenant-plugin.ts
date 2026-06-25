@@ -50,7 +50,11 @@ export function tenantScopePlugin(schema: Schema) {
 
     // Check if the first stage already matches organizationId
     const firstStage = pipeline[0];
-    if (firstStage && firstStage.$match && firstStage.$match.organizationId !== undefined) {
+    if (
+      firstStage &&
+      firstStage.$match &&
+      firstStage.$match.organizationId !== undefined
+    ) {
       return;
     }
 

@@ -16,4 +16,3 @@ export interface UserDocument extends UserBase, Document {
   createdAt: Date;
   updatedAt: Date;
 }
-

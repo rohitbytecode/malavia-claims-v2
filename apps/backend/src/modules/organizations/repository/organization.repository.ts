@@ -13,7 +13,9 @@ export class OrganizationRepository {
   }
 
   static async findBySlug(slug: string) {
-    return OrganizationModel.findOne({ slug: slug.toLowerCase().trim() }).lean();
+    return OrganizationModel.findOne({
+      slug: slug.toLowerCase().trim(),
+    }).lean();
   }
 
   static async list(page = 1, limit = 50) {

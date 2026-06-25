@@ -5,7 +5,11 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { organizationApi, paymentsApi } from "../../api/services";
 import { Button } from "../../components/ui/Button";
 import { ErrorPanel } from "../../components/ui/ErrorPanel";
-import { Field, TextInput, SelectInput } from "../../components/forms/FormField";
+import {
+  Field,
+  TextInput,
+  SelectInput,
+} from "../../components/forms/FormField";
 import { AuthLayout } from "../../layouts/AuthLayout";
 import { useAuthStore } from "../../store/auth.store";
 import { registerSchema } from "../../validators/forms";
@@ -34,10 +38,17 @@ export function RegisterPage() {
   const setSession = useAuthStore((s) => s.setSession);
   const queryClient = useQueryClient();
 
-  const [checkoutState, setCheckoutState] = useState<"form" | "pending_payment" | "verifying" | "success" | "error">("form");
-  const [subscriptionData, setSubscriptionData] = useState<{ subscriptionId: string; status: string; key: string } | null>(null);
+  const [checkoutState, setCheckoutState] = useState<
+    "form" | "pending_payment" | "verifying" | "success" | "error"
+  >("form");
+  const [subscriptionData, setSubscriptionData] = useState<{
+    subscriptionId: string;
+    status: string;
+    key: string;
+  } | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [selectedPlanForCheckout, setSelectedPlanForCheckout] = useState<string>("FREE");
+  const [selectedPlanForCheckout, setSelectedPlanForCheckout] =
+    useState<string>("FREE");
 
   const defaultPlan = (searchParams.get("plan") || "FREE") as any;
 
@@ -76,7 +87,9 @@ export function RegisterPage() {
           setSubscriptionData(res);
         } catch (err: any) {
           console.error("Failed to generate subscription link", err);
-          setPaymentError(err.message || "Failed to initiate payment. Please try again.");
+          setPaymentError(
+            err.message || "Failed to initiate payment. Please try again."
+          );
           setCheckoutState("error");
         }
       } else {
@@ -88,7 +101,9 @@ export function RegisterPage() {
   const handleRazorpayCheckout = async () => {
     if (!subscriptionData) return;
 
-    const isMock = subscriptionData.subscriptionId.startsWith("sub_mock_") || subscriptionData.key.includes("mock");
+    const isMock =
+      subscriptionData.subscriptionId.startsWith("sub_mock_") ||
+      subscriptionData.key.includes("mock");
 
     if (isMock) {
       console.log("Initializing Mock Payment Flow...");
@@ -96,7 +111,9 @@ export function RegisterPage() {
       try {
         // Wait 1.5 seconds to simulate payment authorization delay
         await new Promise((r) => setTimeout(r, 1500));
-        const res = await paymentsApi.verifySubscription({ subscriptionId: subscriptionData.subscriptionId });
+        const res = await paymentsApi.verifySubscription({
+          subscriptionId: subscriptionData.subscriptionId,
+        });
         if (res.verified) {
           setCheckoutState("success");
           setTimeout(() => {
@@ -117,7 +134,9 @@ export function RegisterPage() {
     setCheckoutState("verifying");
     const loaded = await loadRazorpayScript();
     if (!loaded) {
-      setPaymentError("Failed to load Razorpay payment SDK. Check your internet connection.");
+      setPaymentError(
+        "Failed to load Razorpay payment SDK. Check your internet connection."
+      );
       setCheckoutState("error");
       return;
     }
@@ -129,11 +148,14 @@ export function RegisterPage() {
         name: "Hospitra",
         description: `Hospitra ${selectedPlanForCheckout} Subscription`,
         handler: async function (response: any) {
-          console.log("Razorpay payment authorized, verifying on backend...", response);
+          console.log(
+            "Razorpay payment authorized, verifying on backend...",
+            response
+          );
           setCheckoutState("verifying");
           try {
             const res = await paymentsApi.verifySubscription({
-              subscriptionId: subscriptionData.subscriptionId
+              subscriptionId: subscriptionData.subscriptionId,
             });
 
             if (res.verified) {
@@ -142,7 +164,9 @@ export function RegisterPage() {
                 navigate("/dashboard");
               }, 2000);
             } else {
-              setPaymentError("Payment verification failed. Please contact support.");
+              setPaymentError(
+                "Payment verification failed. Please contact support."
+              );
               setCheckoutState("error");
             }
           } catch (err: any) {
@@ -154,11 +178,11 @@ export function RegisterPage() {
           ondismiss() {
             console.log("Checkout modal dismissed");
             setCheckoutState("pending_payment");
-          }
+          },
         },
         theme: {
-          color: "#2563EB"
-        }
+          color: "#2563EB",
+        },
       };
 
       const rzp = new (window as any).Razorpay(options);
@@ -201,45 +225,96 @@ export function RegisterPage() {
             100% { transform: scale(1); opacity: 1; }
           }
         `}</style>
-        <div className="login-card" style={{ maxWidth: "480px", textAlign: "center", padding: "2.5rem" }}>
+        <div
+          className="login-card"
+          style={{ maxWidth: "480px", textAlign: "center", padding: "2.5rem" }}
+        >
           <h2>Activate Subscription</h2>
           <p className="eyebrow" style={{ marginBottom: "1.5rem" }}>
             Hospitra {selectedPlanForCheckout} Plan
           </p>
 
           {checkoutState === "pending_payment" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", alignItems: "center" }}>
-              <div className="plan-badge" style={{
-                background: "rgba(37, 99, 235, 0.1)",
-                color: "#2563EB",
-                padding: "0.5rem 1rem",
-                borderRadius: "9999px",
-                fontWeight: 600,
-                fontSize: "0.875rem"
-              }}>
-                {selectedPlanForCheckout === "STARTER" ? "Starter Tier — $29/mo" : "Pro Tier — $99/mo"}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "1.5rem",
+                alignItems: "center",
+              }}
+            >
+              <div
+                className="plan-badge"
+                style={{
+                  background: "rgba(37, 99, 235, 0.1)",
+                  color: "#2563EB",
+                  padding: "0.5rem 1rem",
+                  borderRadius: "9999px",
+                  fontWeight: 600,
+                  fontSize: "0.875rem",
+                }}
+              >
+                {selectedPlanForCheckout === "STARTER"
+                  ? "Starter Tier — $29/mo"
+                  : "Pro Tier — $99/mo"}
               </div>
 
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: "1.5" }}>
-                Your Hospitra organization account has been created successfully! Please complete the payment to activate your workspace and start operating.
+              <p
+                style={{
+                  color: "var(--text-secondary)",
+                  fontSize: "0.95rem",
+                  lineHeight: "1.5",
+                }}
+              >
+                Your Hospitra organization account has been created
+                successfully! Please complete the payment to activate your
+                workspace and start operating.
               </p>
 
               {!subscriptionData ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1rem", width: "100%", marginTop: "1rem" }}>
-                  <div style={{
-                    width: "32px",
-                    height: "32px",
-                    border: "3px solid rgba(255, 255, 255, 0.1)",
-                    borderTop: "3px solid #2563EB",
-                    borderRadius: "50%",
-                    animation: "spin 1s linear infinite",
-                    margin: "1rem auto"
-                  }}></div>
-                  <span style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Generating secure payment session...</span>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
+                    width: "100%",
+                    marginTop: "1rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      border: "3px solid rgba(255, 255, 255, 0.1)",
+                      borderTop: "3px solid #2563EB",
+                      borderRadius: "50%",
+                      animation: "spin 1s linear infinite",
+                      margin: "1rem auto",
+                    }}
+                  ></div>
+                  <span
+                    style={{
+                      color: "var(--text-secondary)",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    Generating secure payment session...
+                  </span>
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1rem", width: "100%", marginTop: "1.5rem" }}>
-                  <Button onClick={handleRazorpayCheckout} style={{ width: "100%", padding: "0.875rem" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
+                    width: "100%",
+                    marginTop: "1.5rem",
+                  }}
+                >
+                  <Button
+                    onClick={handleRazorpayCheckout}
+                    style={{ width: "100%", padding: "0.875rem" }}
+                  >
                     Proceed to Payment
                   </Button>
                   <Button onClick={handleCancel} style={{ width: "100%" }}>
@@ -251,66 +326,127 @@ export function RegisterPage() {
           )}
 
           {checkoutState === "verifying" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", alignItems: "center", padding: "1rem" }}>
-              <div style={{
-                width: "32px",
-                height: "32px",
-                border: "3px solid rgba(255, 255, 255, 0.1)",
-                borderTop: "3px solid #2563EB",
-                borderRadius: "50%",
-                animation: "spin 1s linear infinite",
-                margin: "1rem auto"
-              }}></div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "1.5rem",
+                alignItems: "center",
+                padding: "1rem",
+              }}
+            >
+              <div
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  border: "3px solid rgba(255, 255, 255, 0.1)",
+                  borderTop: "3px solid #2563EB",
+                  borderRadius: "50%",
+                  animation: "spin 1s linear infinite",
+                  margin: "1rem auto",
+                }}
+              ></div>
               <h3 style={{ margin: 0 }}>Verifying Subscription</h3>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: 0 }}>
-                Please do not close this window. We are verifying your payment with Razorpay secure servers...
+              <p
+                style={{
+                  color: "var(--text-secondary)",
+                  fontSize: "0.9rem",
+                  margin: 0,
+                }}
+              >
+                Please do not close this window. We are verifying your payment
+                with Razorpay secure servers...
               </p>
             </div>
           )}
 
           {checkoutState === "success" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", alignItems: "center", padding: "1rem" }}>
-              <div style={{
-                width: "60px",
-                height: "60px",
-                borderRadius: "50%",
-                background: "rgba(16, 185, 129, 0.1)",
-                color: "#10B981",
+            <div
+              style={{
                 display: "flex",
+                flexDirection: "column",
+                gap: "1.5rem",
                 alignItems: "center",
-                justifyContent: "center",
-                fontSize: "2rem",
-                animation: "scaleIn 0.3s ease-out"
-              }}>
+                padding: "1rem",
+              }}
+            >
+              <div
+                style={{
+                  width: "60px",
+                  height: "60px",
+                  borderRadius: "50%",
+                  background: "rgba(16, 185, 129, 0.1)",
+                  color: "#10B981",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "2rem",
+                  animation: "scaleIn 0.3s ease-out",
+                }}
+              >
                 ✓
               </div>
-              <h3 style={{ margin: 0, color: "#10B981" }}>Payment Successful!</h3>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: 0 }}>
-                Your Hospitra workspace is now active. Redirecting you to the console dashboard...
+              <h3 style={{ margin: 0, color: "#10B981" }}>
+                Payment Successful!
+              </h3>
+              <p
+                style={{
+                  color: "var(--text-secondary)",
+                  fontSize: "0.9rem",
+                  margin: 0,
+                }}
+              >
+                Your Hospitra workspace is now active. Redirecting you to the
+                console dashboard...
               </p>
             </div>
           )}
 
           {checkoutState === "error" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", alignItems: "center", padding: "1rem" }}>
-              <div style={{
-                width: "60px",
-                height: "60px",
-                borderRadius: "50%",
-                background: "rgba(239, 68, 68, 0.1)",
-                color: "#EF4444",
+            <div
+              style={{
                 display: "flex",
+                flexDirection: "column",
+                gap: "1.5rem",
                 alignItems: "center",
-                justifyContent: "center",
-                fontSize: "2rem"
-              }}>
+                padding: "1rem",
+              }}
+            >
+              <div
+                style={{
+                  width: "60px",
+                  height: "60px",
+                  borderRadius: "50%",
+                  background: "rgba(239, 68, 68, 0.1)",
+                  color: "#EF4444",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "2rem",
+                }}
+              >
                 ✕
               </div>
               <h3 style={{ margin: 0, color: "#EF4444" }}>Payment Failed</h3>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: 0 }}>
-                {paymentError || "We couldn't verify your payment. Please try again."}
+              <p
+                style={{
+                  color: "var(--text-secondary)",
+                  fontSize: "0.9rem",
+                  margin: 0,
+                }}
+              >
+                {paymentError ||
+                  "We couldn't verify your payment. Please try again."}
               </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", width: "100%", marginTop: "1rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.75rem",
+                  width: "100%",
+                  marginTop: "1rem",
+                }}
+              >
                 <Button onClick={handleRetry} style={{ width: "100%" }}>
                   Retry Payment
                 </Button>
@@ -365,14 +501,26 @@ export function RegisterPage() {
         </Field>
 
         <Field label="Admin Full Name" error={errors.adminFullName?.message}>
-          <TextInput placeholder="e.g. Dr. John Doe" {...register("adminFullName")} />
+          <TextInput
+            placeholder="e.g. Dr. John Doe"
+            {...register("adminFullName")}
+          />
         </Field>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "1rem",
+          }}
+        >
           <Field label="Admin Username" error={errors.adminUsername?.message}>
             <TextInput placeholder="username" {...register("adminUsername")} />
           </Field>
-          <Field label="Admin Email (Optional)" error={errors.adminEmail?.message}>
+          <Field
+            label="Admin Email (Optional)"
+            error={errors.adminEmail?.message}
+          >
             <TextInput
               placeholder="admin@hospital.com"
               type="email"
@@ -392,11 +540,16 @@ export function RegisterPage() {
         {mutation.isError && <ErrorPanel error={mutation.error} />}
 
         <Button disabled={mutation.isPending} style={{ marginTop: "1rem" }}>
-          {mutation.isPending ? "Creating Account..." : "Register & Start Operating"}
+          {mutation.isPending
+            ? "Creating Account..."
+            : "Register & Start Operating"}
         </Button>
 
         <small style={{ marginTop: "1rem", textAlign: "center" }}>
-          Already have an account? <Link to="/login" style={{ color: "var(--accent-primary)" }}>Sign in here</Link>
+          Already have an account?{" "}
+          <Link to="/login" style={{ color: "var(--accent-primary)" }}>
+            Sign in here
+          </Link>
         </small>
       </form>
     </AuthLayout>

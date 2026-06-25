@@ -59,7 +59,9 @@ async function migrate() {
     });
     console.log(`   Created org: ${defaultOrg._id} (${defaultOrg.name})\n`);
   } else {
-    console.log(`   Using existing org: ${defaultOrg._id} (${defaultOrg.name})\n`);
+    console.log(
+      `   Using existing org: ${defaultOrg._id} (${defaultOrg.name})\n`
+    );
   }
 
   const orgId = defaultOrg._id;
@@ -87,10 +89,7 @@ async function migrate() {
 
   for (const { name, model } of collections) {
     const filter = {
-      $or: [
-        { organizationId: { $exists: false } },
-        { organizationId: null },
-      ],
+      $or: [{ organizationId: { $exists: false } }, { organizationId: null }],
     };
 
     const count = await (model as any).countDocuments(filter);
@@ -104,7 +103,9 @@ async function migrate() {
       $set: { organizationId: orgId },
     });
 
-    console.log(`   🔄 ${name}: backfilled ${result.modifiedCount}/${count} documents`);
+    console.log(
+      `   🔄 ${name}: backfilled ${result.modifiedCount}/${count} documents`
+    );
   }
 
   // Step 3: Drop old unique indexes that are no longer valid
@@ -126,7 +127,10 @@ async function migrate() {
       if (err.code === 27 || err.codeName === "IndexNotFound") {
         console.log(`   Index already gone: ${model.modelName}.${index}`);
       } else {
-        console.warn(`   ⚠️  Could not drop ${model.modelName}.${index}:`, err.message);
+        console.warn(
+          `   ⚠️  Could not drop ${model.modelName}.${index}:`,
+          err.message
+        );
       }
     }
   }

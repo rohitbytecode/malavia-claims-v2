@@ -4,8 +4,15 @@ import { OrganizationModel } from "@/modules/organizations/schema/organization.s
 import { AppError } from "@/core/errors/AppError.js";
 
 const KEY_ID = process.env.RAZORPAY_KEY_ID?.trim().replace(/^["']|["']$/g, "");
-const KEY_SECRET = process.env.RAZORPAY_KEY_SECRET?.trim().replace(/^["']|["']$/g, "");
-const WEBHOOK_SECRET = (process.env.RAZORPAY_WEBHOOK_SECRET || "default_webhook_secret").trim().replace(/^["']|["']$/g, "");
+const KEY_SECRET = process.env.RAZORPAY_KEY_SECRET?.trim().replace(
+  /^["']|["']$/g,
+  ""
+);
+const WEBHOOK_SECRET = (
+  process.env.RAZORPAY_WEBHOOK_SECRET || "default_webhook_secret"
+)
+  .trim()
+  .replace(/^["']|["']$/g, "");
 
 let razorpay: Razorpay | null = null;
 
@@ -16,7 +23,9 @@ if (KEY_ID && KEY_SECRET) {
     key_secret: KEY_SECRET,
   });
 } else {
-  console.log("🎫 Dry-run/Mock Razorpay mode active (Keys missing or empty in environment).");
+  console.log(
+    "🎫 Dry-run/Mock Razorpay mode active (Keys missing or empty in environment)."
+  );
 }
 
 // Razorpay Plan IDs (replace with your dashboard plan IDs)
@@ -48,7 +57,10 @@ export class RazorpayService {
       PRO: { name: "Pro Plan", amount: 990000 },
     };
 
-    const details = planDetails[planName] || { name: `${planName} Plan`, amount: 10000 };
+    const details = planDetails[planName] || {
+      name: `${planName} Plan`,
+      amount: 10000,
+    };
 
     try {
       const plan = await razorpay.plans.create({
@@ -66,7 +78,10 @@ export class RazorpayService {
       this.dynamicPlanIds[planName] = plan.id;
       return plan.id;
     } catch (err: any) {
-      console.error(`Failed to create dynamic plan in Razorpay for ${planName}:`, err);
+      console.error(
+        `Failed to create dynamic plan in Razorpay for ${planName}:`,
+        err
+      );
       throw err;
     }
   }
@@ -99,12 +114,17 @@ export class RazorpayService {
     try {
       planId = await this.getOrCreatePlanId(planName);
     } catch (planErr: any) {
-      throw new AppError(planErr.message || "Failed to initialize payment plan on Razorpay", 500);
+      throw new AppError(
+        planErr.message || "Failed to initialize payment plan on Razorpay",
+        500
+      );
     }
 
     if (!razorpay || planId.includes("mock")) {
       // Mock mode
-      console.log(`[MOCK] Creating mock Razorpay subscription for ${org.name} on plan ${planName}`);
+      console.log(
+        `[MOCK] Creating mock Razorpay subscription for ${org.name} on plan ${planName}`
+      );
       org.plan = planName as any;
       org.billing = {
         email: org.billing?.email || "mock@hospital.com",
@@ -136,13 +156,19 @@ export class RazorpayService {
         key: KEY_ID || "",
       };
     } catch (err: any) {
-      console.error("❌ Razorpay subscription creation failed. Error details:", {
-        message: err.message,
-        statusCode: err.statusCode,
-        error: err.error || err,
-        stack: err.stack,
-      });
-      throw new AppError(err.message || "Payment gateway subscription failed", err.statusCode || 500);
+      console.error(
+        "❌ Razorpay subscription creation failed. Error details:",
+        {
+          message: err.message,
+          statusCode: err.statusCode,
+          error: err.error || err,
+          stack: err.stack,
+        }
+      );
+      throw new AppError(
+        err.message || "Payment gateway subscription failed",
+        err.statusCode || 500
+      );
     }
   }
 
@@ -151,7 +177,7 @@ export class RazorpayService {
    */
   static verifyWebhookSignature(body: string, signature: string): boolean {
     if (!signature) return false;
-    
+
     const hmac = crypto.createHmac("sha256", WEBHOOK_SECRET);
     hmac.update(body);
     const generated = hmac.digest("hex");
@@ -176,7 +202,9 @@ export class RazorpayService {
       const orgId = notes.organizationId;
 
       if (!orgId) {
-        console.warn("⚠️ Received subscription webhook without organizationId in notes");
+        console.warn(
+          "⚠️ Received subscription webhook without organizationId in notes"
+        );
         return;
       }
 
@@ -204,8 +232,13 @@ export class RazorpayService {
       };
 
       await org.save();
-      console.log(`✅ Subscription successfully updated for organization: ${org.name} (Plan: ${planName})`);
-    } else if (eventName === "subscription.cancelled" || eventName === "subscription.halted") {
+      console.log(
+        `✅ Subscription successfully updated for organization: ${org.name} (Plan: ${planName})`
+      );
+    } else if (
+      eventName === "subscription.cancelled" ||
+      eventName === "subscription.halted"
+    ) {
       const subscription = event.payload.subscription.entity;
       const orgId = subscription.notes?.organizationId;
 
@@ -214,7 +247,9 @@ export class RazorpayService {
         if (org) {
           org.isActive = false; // suspend access due to cancellation
           await org.save();
-          console.warn(`🛑 Subscription cancelled for organization: ${org.name}`);
+          console.warn(
+            `🛑 Subscription cancelled for organization: ${org.name}`
+          );
         }
       }
     }
@@ -223,7 +258,10 @@ export class RazorpayService {
   /**
    * Verify subscription status directly with Razorpay API
    */
-  static async verifySubscription(organizationId: string, subscriptionId: string) {
+  static async verifySubscription(
+    organizationId: string,
+    subscriptionId: string
+  ) {
     const org = await OrganizationModel.findById(organizationId);
     if (!org) {
       throw new AppError("Organization not found", 404);
@@ -239,8 +277,15 @@ export class RazorpayService {
     }
 
     try {
-      const subscription = (await razorpay.subscriptions.fetch(subscriptionId)) as any;
-      const isActive = ["active", "authenticated", "completed", "charged"].includes(subscription.status);
+      const subscription = (await razorpay.subscriptions.fetch(
+        subscriptionId
+      )) as any;
+      const isActive = [
+        "active",
+        "authenticated",
+        "completed",
+        "charged",
+      ].includes(subscription.status);
 
       if (isActive) {
         // Map back plan ID to name
@@ -267,13 +312,19 @@ export class RazorpayService {
         status: subscription.status,
       };
     } catch (err: any) {
-      console.error("❌ Razorpay subscription verification failed. Error details:", {
-        message: err.message,
-        statusCode: err.statusCode,
-        error: err.error || err,
-        stack: err.stack,
-      });
-      throw new AppError(err.message || "Failed to verify subscription on Razorpay", err.statusCode || 500);
+      console.error(
+        "❌ Razorpay subscription verification failed. Error details:",
+        {
+          message: err.message,
+          statusCode: err.statusCode,
+          error: err.error || err,
+          stack: err.stack,
+        }
+      );
+      throw new AppError(
+        err.message || "Failed to verify subscription on Razorpay",
+        err.statusCode || 500
+      );
     }
   }
 }

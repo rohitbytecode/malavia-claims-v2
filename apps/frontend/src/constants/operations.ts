@@ -280,13 +280,8 @@ export const roleExperiences: Record<Role, RoleExperience> = {
       "Manage multi-tenant organizations, monitor billing/subscription states, and administer system-wide resources.",
     primaryQueues: [],
     visibleModules: ["Organizations", "Users", "Billing"],
-    criticalActions: [
-      "Suspend organizations",
-      "Update global configurations",
-    ],
-    guardrails: [
-      "All multi-tenant isolation rules still apply at data level",
-    ],
+    criticalActions: ["Suspend organizations", "Update global configurations"],
+    guardrails: ["All multi-tenant isolation rules still apply at data level"],
   },
 };
 

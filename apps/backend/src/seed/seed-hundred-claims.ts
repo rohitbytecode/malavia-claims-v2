@@ -51,7 +51,7 @@ async function seed() {
         password: hashedPassword,
         role: "ADMIN",
         isActive: true,
-        organizationId: org._id
+        organizationId: org._id,
       });
       console.log(`Created admin user for organization: ${user.username}`);
     } else {
@@ -65,7 +65,7 @@ async function seed() {
         name: "General Medicine",
         code: "GM",
         isActive: true,
-        organizationId: org._id
+        organizationId: org._id,
       });
       console.log("Created default department");
     }
@@ -77,7 +77,7 @@ async function seed() {
         name: "Dr. Dave Miller",
         departmentId: dept._id,
         isActive: true,
-        organizationId: org._id
+        organizationId: org._id,
       });
       console.log("Created default doctor");
     }
@@ -90,7 +90,7 @@ async function seed() {
         email: "contact@universalhealth.com",
         phone: "18005550199",
         isActive: true,
-        organizationId: org._id
+        organizationId: org._id,
       });
       console.log("Created default insurance company");
     }
@@ -104,7 +104,7 @@ async function seed() {
         insurerId: "INS-99999",
         insuranceCompanyId: ins._id,
         isActive: true,
-        organizationId: org._id
+        organizationId: org._id,
       });
       console.log("Created default patient");
     }
@@ -116,8 +116,9 @@ async function seed() {
     const claimDocs = [];
 
     for (let i = 1; i <= 100; i++) {
-      const claimNumber = `CLM-SEED-${String(i).padStart(3, '0')}-${Date.now().toString().slice(-6)}`;
-      const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+      const claimNumber = `CLM-SEED-${String(i).padStart(3, "0")}-${Date.now().toString().slice(-6)}`;
+      const randomStatus =
+        statuses[Math.floor(Math.random() * statuses.length)];
       const randomType = types[Math.floor(Math.random() * types.length)];
       const randomAmount = Math.floor(Math.random() * 200000) + 5000;
 

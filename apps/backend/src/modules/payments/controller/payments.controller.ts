@@ -26,7 +26,10 @@ export class PaymentsController {
     }
 
     try {
-      const data = await RazorpayService.createSubscription(user.organizationId, planName);
+      const data = await RazorpayService.createSubscription(
+        user.organizationId,
+        planName
+      );
       return res.status(200).json({
         success: true,
         message: "Subscription created successfully",
@@ -45,7 +48,7 @@ export class PaymentsController {
    */
   static async handleWebhook(req: Request, res: Response) {
     const signature = req.headers["x-razorpay-signature"] as string;
-    
+
     // We need the raw body to check signature validation.
     // If Express is parsed with body-parser json, we can stringify it or read it.
     // In our verification helper, we compare. Let's make sure it matches.
@@ -155,7 +158,10 @@ export class PaymentsController {
     }
 
     try {
-      const data = await RazorpayService.verifySubscription(user.organizationId, subscriptionId);
+      const data = await RazorpayService.verifySubscription(
+        user.organizationId,
+        subscriptionId
+      );
       return res.status(200).json({
         success: true,
         message: "Subscription verification completed",

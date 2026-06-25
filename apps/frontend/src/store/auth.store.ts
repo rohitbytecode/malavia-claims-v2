@@ -43,11 +43,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     localStorage.removeItem("mh_access:v1");
     localStorage.removeItem("mh_refresh:v1");
     localStorage.removeItem("mh_org:v1");
-    set({ user: undefined, organizationId: undefined, accessToken: undefined, refreshToken: undefined });
+    set({
+      user: undefined,
+      organizationId: undefined,
+      accessToken: undefined,
+      refreshToken: undefined,
+    });
   },
   hasRole: (roles) => {
     const role = get().user?.role;
     return role ? roles.includes(role) : false;
   },
 }));
-

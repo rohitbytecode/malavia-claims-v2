@@ -5,6 +5,11 @@ import { requireTenant } from "@/middleware/tenant.middleware.js";
 
 const router = Router();
 
-router.get("/metrics", authenticate, requireTenant, DashboardController.getMetrics);
+router.get(
+  "/metrics",
+  authenticate,
+  requireTenant,
+  DashboardController.getMetrics
+);
 
 export default router;
