@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { RazorpayService } from "../service/razorpay.service.js";
 import { OrganizationModel } from "@/modules/organizations/schema/organization.schema.js";
+import { ClaimModel } from "@/modules/claims/schema/claim.schema.js";
 
 export class PaymentsController {
   /**
@@ -96,12 +97,32 @@ export class PaymentsController {
         });
       }
 
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const usage = await ClaimModel.countDocuments({
+        organizationId: org._id,
+        createdAt: { $gte: startOfMonth },
+      });
+
+      const LIMITS: Record<string, number> = {
+        FREE: 100,
+        STARTER: 1000,
+        PRO: 5000,
+        ENTERPRISE: Infinity,
+      };
+
+      const limit = LIMITS[org.plan] ?? 100;
+
       return res.status(200).json({
         success: true,
         data: {
           plan: org.plan,
           isActive: org.isActive,
           expiresAt: org.billing?.planExpiresAt || null,
+          usage,
+          limit: limit === Infinity ? -1 : limit, // -1 denotes unlimited
         },
       });
     } catch (err: any) {

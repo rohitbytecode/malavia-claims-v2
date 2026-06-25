@@ -6,6 +6,7 @@ import { ClaimStatus } from "@/modules/claims/constant/claim-status.enum.js";
 interface ClaimFilter {
   type?: string;
   status?: string;
+  createdAt?: any;
 }
 
 export class ClaimRepository {

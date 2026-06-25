@@ -15,6 +15,8 @@ import { NotificationService } from "@/modules/notifications/service/notificatio
 import { AdvancedNotificationService } from "@/modules/advanced-notifications/service/advanced-notification.service.js";
 import { UserModel } from "@/modules/users/schema/user.schema.js";
 import { SettlementModel } from "@/modules/settlements/schema/settlement.schema.js";
+import { getTenantId } from "@/core/tenant/tenant-context.js";
+import { OrganizationModel } from "@/modules/organizations/schema/organization.schema.js";
 
 interface CreateClaimPayload {
   type: ClaimType;
@@ -40,6 +42,45 @@ export class ClaimService {
   }
 
   static async createClaim(payload: CreateClaimPayload) {
+    const orgId = getTenantId();
+    if (orgId) {
+      const org = await OrganizationModel.findById(orgId);
+      if (org) {
+        if (!org.isActive) {
+          throw new AppError(
+            "Your organization account is currently inactive. Please complete the subscription payment to reactivate.",
+            403
+          );
+        }
+
+        const LIMITS: Record<string, number> = {
+          FREE: 100,
+          STARTER: 1000,
+          PRO: 5000,
+          ENTERPRISE: Infinity,
+        };
+
+        const limit = LIMITS[org.plan] ?? 100;
+
+        if (limit !== Infinity) {
+          const startOfMonth = new Date();
+          startOfMonth.setDate(1);
+          startOfMonth.setHours(0, 0, 0, 0);
+
+          const count = await ClaimRepository.countClaims({
+            createdAt: { $gte: startOfMonth } as any
+          });
+
+          if (count >= limit) {
+            throw new AppError(
+              `You have reached the monthly limit of ${limit} claims for your ${org.plan} plan. Please upgrade your plan in settings to enter more claims.`,
+              403
+            );
+          }
+        }
+      }
+    }
+
     const claim = await ClaimRepository.createClaim({
       claimNumber: this.buildClaimNumber(),
       type: payload.type,

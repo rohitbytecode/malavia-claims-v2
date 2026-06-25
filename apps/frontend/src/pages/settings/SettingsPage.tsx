@@ -4,8 +4,23 @@ import { Button } from "../../components/ui/Button";
 import { Field, TextInput } from "../../components/forms/FormField";
 import { useUiStore } from "../../store/ui.store";
 import { useAuthStore } from "../../store/auth.store";
-import { authApi } from "../../api/services";
+import { authApi, paymentsApi } from "../../api/services";
 import { APP_CONFIG } from "../../config/app";
+import { useQuery } from "@tanstack/react-query";
+
+const loadRazorpayScript = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 export function SettingsPage() {
   const { theme, toggleTheme } = useUiStore();
@@ -18,6 +33,86 @@ export function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isPending, setIsPending] = useState(false);
+
+  // Billing and upgrade state
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [upgradePending, setUpgradePending] = useState(false);
+  const [upgradeError, setUpgradeError] = useState<string | null>(null);
+
+  const { data: billingData, isLoading, refetch: refetchBilling } = useQuery({
+    queryKey: ["subscriptionStatus"],
+    queryFn: paymentsApi.getSubscriptionStatus,
+  });
+
+  const triggerUpgradeFlow = async (planName: string) => {
+    setUpgradePending(true);
+    setUpgradeError(null);
+    try {
+      const res = await paymentsApi.createSubscription({ planName });
+      const isMock = res.subscriptionId.startsWith("sub_mock_") || res.key.includes("mock");
+
+      if (isMock) {
+        console.log("Mock upgrade flow starting...");
+        await new Promise((r) => setTimeout(r, 1500));
+        const verifyRes = await paymentsApi.verifySubscription({ subscriptionId: res.subscriptionId });
+        if (verifyRes.verified) {
+          refetchBilling();
+          setIsUpgrading(false);
+        } else {
+          setUpgradeError("Mock subscription upgrade verification failed.");
+        }
+        setUpgradePending(false);
+        return;
+      }
+
+      console.log("Real upgrade flow starting...");
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        setUpgradeError("Failed to load Razorpay payment SDK.");
+        setUpgradePending(false);
+        return;
+      }
+
+      const options = {
+        key: res.key,
+        subscription_id: res.subscriptionId,
+        name: "Hospitra",
+        description: `Upgrade to ${planName} Plan`,
+        handler: async function (response: any) {
+          try {
+            const verifyRes = await paymentsApi.verifySubscription({
+              subscriptionId: res.subscriptionId
+            });
+
+            if (verifyRes.verified) {
+              refetchBilling();
+              setIsUpgrading(false);
+            } else {
+              setUpgradeError("Payment verification failed.");
+            }
+          } catch (err: any) {
+            setUpgradeError(err.message || "Verification failed");
+          } finally {
+            setUpgradePending(false);
+          }
+        },
+        modal: {
+          ondismiss() {
+            setUpgradePending(false);
+          }
+        },
+        theme: {
+          color: "#2563EB"
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch (err: any) {
+      setUpgradeError(err.message || "Failed to initiate upgrade.");
+      setUpgradePending(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +154,13 @@ export function SettingsPage() {
 
   return (
     <div className="page-stack">
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+      
       <div className="page-title">
         <p className="eyebrow">Operator preferences</p>
         <h1>Settings</h1>
@@ -79,6 +181,143 @@ export function SettingsPage() {
               Current theme: <strong>{theme}</strong>
             </p>
             <Button onClick={toggleTheme}>Switch theme</Button>
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader
+            title="Subscription & Limits"
+            eyebrow="Manage workspace plan and claim usage"
+          />
+          <div className="card-pad" style={{ display: "grid", gap: "16px" }}>
+            {isLoading ? (
+              <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
+                <div style={{
+                  width: "24px",
+                  height: "24px",
+                  border: "2px solid rgba(255, 255, 255, 0.1)",
+                  borderTop: "2px solid #2563EB",
+                  borderRadius: "50%",
+                  animation: "spin 1s linear infinite"
+                }}></div>
+              </div>
+            ) : billingData ? (
+              <>
+                {upgradeError && (
+                  <div style={{
+                    color: "#EF4444",
+                    background: "rgba(239, 68, 68, 0.1)",
+                    border: "1px solid rgba(239, 68, 68, 0.2)",
+                    padding: "10px",
+                    borderRadius: "4px",
+                    fontSize: "0.85rem",
+                  }}>
+                    {upgradeError}
+                  </div>
+                )}
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Current Plan</span>
+                    <h3 style={{ margin: "4px 0 0 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                      {billingData.plan}
+                      <span style={{
+                        fontSize: "0.75rem",
+                        padding: "2px 8px",
+                        borderRadius: "9999px",
+                        background: billingData.isActive ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
+                        color: billingData.isActive ? "#10B981" : "#EF4444",
+                        fontWeight: 600
+                      }}>
+                        {billingData.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </h3>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Expires On</span>
+                    <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>
+                      {billingData.expiresAt ? new Date(billingData.expiresAt).toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }) : "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: "8px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", marginBottom: "6px" }}>
+                    <span style={{ color: "var(--text-secondary)" }}>Monthly Claims Usage</span>
+                    <span style={{ fontWeight: 600 }}>
+                      {billingData.usage} / {billingData.limit === -1 ? "Unlimited" : billingData.limit}
+                    </span>
+                  </div>
+
+                  {billingData.limit !== -1 ? (
+                    <div style={{
+                      width: "100%",
+                      height: "8px",
+                      background: "rgba(255, 255, 255, 0.1)",
+                      borderRadius: "9999px",
+                      overflow: "hidden"
+                    }}>
+                      <div style={{
+                        width: `${Math.min(100, (billingData.usage / billingData.limit) * 100)}%`,
+                        height: "100%",
+                        background: (billingData.usage / billingData.limit) > 0.9 
+                          ? "#EF4444" 
+                          : (billingData.usage / billingData.limit) > 0.7 
+                          ? "#F59E0B" 
+                          : "linear-gradient(90deg, #2563EB, #3B82F6)",
+                        borderRadius: "9999px",
+                        transition: "width 0.4s ease-out"
+                      }}></div>
+                    </div>
+                  ) : (
+                    <div style={{
+                      width: "100%",
+                      height: "8px",
+                      background: "linear-gradient(90deg, #10B981, #34D399)",
+                      borderRadius: "9999px"
+                    }}></div>
+                  )}
+                </div>
+
+                {billingData.plan !== "PRO" && (
+                  <div style={{ marginTop: "12px" }}>
+                    {isUpgrading ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                          {billingData.plan === "FREE" && (
+                            <Button 
+                              onClick={() => triggerUpgradeFlow("STARTER")} 
+                              style={{ background: "#2563EB", color: "#FFF" }}
+                              disabled={upgradePending}
+                            >
+                              {upgradePending ? "Processing..." : "Starter ($29/mo)"}
+                            </Button>
+                          )}
+                          <Button 
+                            onClick={() => triggerUpgradeFlow("PRO")} 
+                            style={{ background: "linear-gradient(135deg, #7C3AED, #2563EB)", color: "#FFF" }}
+                            disabled={upgradePending}
+                          >
+                            {upgradePending ? "Processing..." : "Pro ($99/mo)"}
+                          </Button>
+                        </div>
+                        <Button variant="ghost" onClick={() => setIsUpgrading(false)} disabled={upgradePending}>Cancel</Button>
+                      </div>
+                    ) : (
+                      <Button onClick={() => setIsUpgrading(true)} style={{ width: "100%" }}>
+                        Upgrade Subscription
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <p style={{ color: "var(--text-secondary)" }}>Failed to load subscription details.</p>
+            )}
           </div>
         </Card>
 
@@ -241,3 +480,4 @@ export function SettingsPage() {
     </div>
   );
 }
+export default SettingsPage;

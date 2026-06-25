@@ -16,6 +16,7 @@ import {
 import { claimTypes } from "../../constants/workflow";
 import { Field, SelectInput, TextArea, TextInput } from "../forms/FormField";
 import { Button } from "../ui/Button";
+import { ErrorPanel } from "../ui/ErrorPanel";
 import { useAuthStore } from "../../store/auth.store";
 import { claimSchema } from "../../validators/forms";
 
@@ -277,6 +278,29 @@ export function ClaimCreatePanel() {
           <TextArea {...register("remarks")} />
         </Field>
       </div>
+
+      {mutation.isError && (
+        <div style={{ margin: "1rem 0", width: "100%" }}>
+          <ErrorPanel error={mutation.error} />
+          {String((mutation.error as any)?.response?.data?.message || "").toLowerCase().includes("limit") && (
+            <div style={{
+              marginTop: "0.75rem",
+              background: "rgba(37, 99, 235, 0.1)",
+              border: "1px solid rgba(37, 99, 235, 0.2)",
+              padding: "1rem",
+              borderRadius: "6px",
+              textAlign: "center"
+            }}>
+              <p style={{ margin: "0 0 0.75rem 0", fontSize: "0.9rem", color: "var(--text-primary)" }}>
+                Upgrade your subscription to Starter or Pro to continue creating more claims.
+              </p>
+              <Button type="button" onClick={() => navigate("/settings")} style={{ padding: "0.5rem 1rem", fontSize: "0.875rem" }}>
+                Upgrade Now
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       <Button disabled={mutation.isPending || isPharmacist}>
         {isPharmacist
