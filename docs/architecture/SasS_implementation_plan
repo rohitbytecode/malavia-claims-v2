@@ -1,0 +1,76 @@
+# SaaS Implementation — Progress & External Tasks
+
+All 6 development phases of the SaaS Scaling & Deployment implementation plan have been completed and verified. The codebase is now enterprise-grade, multi-tenant isolated, secure, and ready for deployment on AWS.
+
+---
+
+## ✅ Phase 1: Multi-Tenancy Foundation (Completed)
+- **Tenant Context**: Implemented thread-safe tenant context using Express AsyncLocalStorage.
+- **Mongoose Hook Scoping**: Created a global plugin `tenantScopePlugin` that automatically scopes all Mongoose queries and updates with `organizationId` for all tenant-scoped schemas.
+- **Mongoose Aggregate Scoping**: Pre-scoped raw aggregation pipelines (`schema.pre('aggregate')`) to inject `{ $match: { organizationId: ObjectId(orgId) } }` at the beginning of the aggregation sequence, ensuring reports and metrics are isolated.
+- **Tenant Middleware**: Built `requireTenant` middleware to validate that an active tenant context is loaded for operational routes.
+- **Secured Analytics Routes**: Secured all report and dashboard metrics endpoints with authentication and tenant-isolation middlewares.
+- **Token Payloads**: Updated JWT utility and middleware to embed and verify `organizationId`.
+- **Database Migration**: Ran `migrate:multi-tenant` script to backfill a default organization ID and transform single-tenant unique indexes into tenant-aware compound indexes.
+
+---
+
+## ✅ Phase 2: Homepage, Signup & Dynamic Branding (Completed)
+- **Marketing Landing Page**: Designed a premium, modern SaaS landing page (`LandingPage.tsx`) with high-fidelity glassmorphism, pricing plans, and client testimonies.
+- **Organization Signup**: Created a multi-step registration form (`RegisterPage.tsx`) backed by Zod validation schemas.
+- **Dynamic Frontend Branding**: Updated layouts and dashboards to dynamically fetch the signed-in tenant's organization name and display it across page headings, initials radar logo, and browser tab titles.
+- **Decoupled Frontend Configurations**: Created a separate client-side configuration package `src/config/app.ts` to prevent bundling backend system/node variables, fixing client runtime ReferenceErrors.
+- **Dynamic Email Communications**: Patched email templates so advanced notification emails (e.g. status transition updates) resolve and print the correct tenant organization name.
+
+---
+
+## ✅ Phase 3: File Upload & AWS S3 Integration (Completed)
+- **Dual-Storage Utility**: Built `StorageService` to manage file uploads/downloads with a fallback system.
+- **Cloud Uploads**: Uploads files directly to AWS S3 if cloud credentials are present, unlinking the local temp multer files.
+- **Streaming S3 Downloads**: Streams downloads directly from S3 using `@aws-sdk/client-s3` while setting correct content disposition and MIME type headers.
+- **Local Fallback**: Safely defaults to local disk storage if AWS keys are not configured, enabling standard offline and LAN usage.
+
+---
+
+## ✅ Phase 4: Production Deployment Configurations (Completed)
+- **PM2 Process Manager**: Created `ecosystem.config.cjs` configured for production cluster mode scaling to maximize CPU cores with memory limits and unified logging.
+- **Nginx Web Server**: Designed a production-ready `nginx.production.conf` for reverse proxying, WebSocket upgrades, HTTP redirection, Let's Encrypt SSL termination, and static asset performance caching.
+
+---
+
+## ✅ Phase 5: Sockets & Real-Time Isolation (Completed)
+- **Tenant Scoped WebSockets**: Adjusted the Socket.io server to join distinct rooms for organizations (`org:${orgId}`) and organization roles (`org:${orgId}:role:${role}`).
+- **Notifications**: Updated `broadcastClaimStatusChange` to route notification streams strictly to tenant-scoped rooms to avoid cross-tenant WebSocket leakage.
+
+---
+
+## ✅ Phase 6: Razorpay Payments Integration (Completed)
+- **Razorpay Node SDK**: Integrated `razorpay` library into the backend modules.
+- **Subscription Creation**: Created `/api/payments/subscription/create` to generate secure payment links for pricing tiers (STARTER, PRO).
+- **Secure Webhook Handler**: Implemented webhook endpoint `/api/payments/webhook` with cryptographic signature verification (`sha256`) to handle successful charges, cancellations, and status updates.
+- **Mock Fallback**: Implemented a mock payment gateway simulator if Razorpay keys are omitted, ensuring smooth test environments.
+
+---
+
+## 📋 External Setup Tasks (Things YOU Must Do Manually)
+
+To deploy the application to AWS and configure production environments, follow these manual configuration tasks:
+
+### 1. AWS S3 for File Storage
+* **Create AWS Account**: Sign up at [aws.amazon.com](https://aws.amazon.com).
+* **Create S3 Bucket**: S3 → Create bucket → Name it (e.g. `your-company-claims-bucket`) → Enable bucket versioning for backup security.
+* **Create IAM User**: IAM → Create User → Attach policy `AmazonS3FullAccess` → Generate Access Key & Secret. Set these in your `.env` file (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_S3_BUCKET`).
+
+### 2. DNS & Domain Settings
+* **Purchase Domain**: Register a domain (e.g. `yourdomain.com`).
+* **Route 53**: Create a hosted zone in Route 53 and update nameservers at your registrar.
+* **ACM Certificate**: Request a free SSL certificate for `yourdomain.com` and `*.yourdomain.com` in AWS Certificate Manager.
+
+### 3. Database Hosting (MongoDB Atlas)
+* **Atlas Cluster**: Create a free or dedicated database cluster at [cloud.mongodb.com](https://cloud.mongodb.com).
+* **Connection String**: Copy the SRV string and replace `MONGO_URI` in the production environment settings.
+
+### 4. Razorpay Settings
+* **Register**: Create a merchant account at [razorpay.com](https://razorpay.com).
+* **Generate API Keys**: In settings, create Key ID and Secret.
+* **Configure Webhook**: Point webhook to `https://yourdomain.com/api/v1/payments/webhook` and register the `subscription.charged`, `subscription.cancelled`, and `subscription.activated` events. Provide the secret in `RAZORPAY_WEBHOOK_SECRET`.
