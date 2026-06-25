@@ -3,9 +3,9 @@ import Razorpay from "razorpay";
 import { OrganizationModel } from "@/modules/organizations/schema/organization.schema.js";
 import { AppError } from "@/core/errors/AppError.js";
 
-const KEY_ID = process.env.RAZORPAY_KEY_ID;
-const KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
-const WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || "default_webhook_secret";
+const KEY_ID = process.env.RAZORPAY_KEY_ID?.trim().replace(/^["']|["']$/g, "");
+const KEY_SECRET = process.env.RAZORPAY_KEY_SECRET?.trim().replace(/^["']|["']$/g, "");
+const WEBHOOK_SECRET = (process.env.RAZORPAY_WEBHOOK_SECRET || "default_webhook_secret").trim().replace(/^["']|["']$/g, "");
 
 let razorpay: Razorpay | null = null;
 
@@ -16,7 +16,7 @@ if (KEY_ID && KEY_SECRET) {
     key_secret: KEY_SECRET,
   });
 } else {
-  console.log("🎫 Dry-run/Mock Razorpay mode active (Keys missing from environment).");
+  console.log("🎫 Dry-run/Mock Razorpay mode active (Keys missing or empty in environment).");
 }
 
 // Razorpay Plan IDs (replace with your dashboard plan IDs)
@@ -136,8 +136,13 @@ export class RazorpayService {
         key: KEY_ID || "",
       };
     } catch (err: any) {
-      console.error("❌ Razorpay subscription creation failed:", err);
-      throw new AppError(err.message || "Payment gateway subscription failed", 500);
+      console.error("❌ Razorpay subscription creation failed. Error details:", {
+        message: err.message,
+        statusCode: err.statusCode,
+        error: err.error || err,
+        stack: err.stack,
+      });
+      throw new AppError(err.message || "Payment gateway subscription failed", err.statusCode || 500);
     }
   }
 
@@ -250,7 +255,9 @@ export class RazorpayService {
         org.isActive = true;
         org.billing = {
           email: subscription.customer_email || org.billing?.email || "",
-          planExpiresAt: new Date(subscription.current_end * 1000),
+          planExpiresAt: subscription.current_end
+            ? new Date(subscription.current_end * 1000)
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         };
         await org.save();
       }
@@ -260,8 +267,13 @@ export class RazorpayService {
         status: subscription.status,
       };
     } catch (err: any) {
-      console.error("❌ Razorpay subscription verification failed:", err);
-      throw new AppError(err.message || "Failed to verify subscription on Razorpay", 500);
+      console.error("❌ Razorpay subscription verification failed. Error details:", {
+        message: err.message,
+        statusCode: err.statusCode,
+        error: err.error || err,
+        stack: err.stack,
+      });
+      throw new AppError(err.message || "Failed to verify subscription on Razorpay", err.statusCode || 500);
     }
   }
 }
