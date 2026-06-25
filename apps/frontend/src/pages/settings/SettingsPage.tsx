@@ -44,6 +44,14 @@ export function SettingsPage() {
     queryFn: paymentsApi.getSubscriptionStatus,
   });
 
+  // Calculate usage and limit with client-side fallback if backend lacks them (e.g. during deployments)
+  const usage = billingData?.usage ?? 0;
+  const limit = billingData?.limit !== undefined && billingData?.limit !== null ? billingData.limit : (
+    billingData?.plan === "FREE" ? 100 :
+    billingData?.plan === "STARTER" ? 1000 :
+    billingData?.plan === "PRO" ? 5000 : -1
+  );
+
   const triggerUpgradeFlow = async (planName: string) => {
     setUpgradePending(true);
     setUpgradeError(null);
@@ -249,11 +257,11 @@ export function SettingsPage() {
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", marginBottom: "6px" }}>
                     <span style={{ color: "var(--text-secondary)" }}>Monthly Claims Usage</span>
                     <span style={{ fontWeight: 600 }}>
-                      {billingData.usage} / {billingData.limit === -1 ? "Unlimited" : billingData.limit}
+                      {usage} / {limit === -1 ? "Unlimited" : limit}
                     </span>
                   </div>
 
-                  {billingData.limit !== -1 ? (
+                  {limit !== -1 ? (
                     <div style={{
                       width: "100%",
                       height: "8px",
@@ -262,11 +270,11 @@ export function SettingsPage() {
                       overflow: "hidden"
                     }}>
                       <div style={{
-                        width: `${Math.min(100, (billingData.usage / billingData.limit) * 100)}%`,
+                        width: `${Math.min(100, (usage / limit) * 100)}%`,
                         height: "100%",
-                        background: (billingData.usage / billingData.limit) > 0.9 
+                        background: (usage / limit) > 0.9 
                           ? "#EF4444" 
-                          : (billingData.usage / billingData.limit) > 0.7 
+                          : (usage / limit) > 0.7 
                           ? "#F59E0B" 
                           : "linear-gradient(90deg, #2563EB, #3B82F6)",
                         borderRadius: "9999px",
