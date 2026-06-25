@@ -16,6 +16,12 @@ router.get(
   PaymentsController.getSubscriptionStatus
 );
 
+router.post(
+  "/subscription/verify",
+  authenticate,
+  PaymentsController.verifySubscription
+);
+
 router.post("/webhook", PaymentsController.handleWebhook);
 
 export default router;

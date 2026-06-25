@@ -111,4 +111,40 @@ export class PaymentsController {
       });
     }
   }
+
+  /**
+   * Verify Razorpay Subscription Payment
+   */
+  static async verifySubscription(req: Request, res: Response) {
+    const { subscriptionId } = req.body;
+    const user = (req as any).user;
+
+    if (!user || !user.organizationId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Active organization session is required.",
+      });
+    }
+
+    if (!subscriptionId) {
+      return res.status(400).json({
+        success: false,
+        message: "subscriptionId is required.",
+      });
+    }
+
+    try {
+      const data = await RazorpayService.verifySubscription(user.organizationId, subscriptionId);
+      return res.status(200).json({
+        success: true,
+        message: "Subscription verification completed",
+        data,
+      });
+    } catch (err: any) {
+      return res.status(err.statusCode || 500).json({
+        success: false,
+        message: err.message || "Failed to verify subscription",
+      });
+    }
+  }
 }

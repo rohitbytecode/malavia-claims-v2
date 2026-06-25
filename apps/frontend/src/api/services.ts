@@ -537,3 +537,24 @@ export const pastRecordsApi = {
     departmentBreakdown?: any[];
   }) => unwrap<Claim>(apiClient.post("/past-records", body)),
 };
+
+export const paymentsApi = {
+  createSubscription: (body: { planName: string }) =>
+    unwrap<{
+      subscriptionId: string;
+      status: string;
+      key: string;
+    }>(apiClient.post("/payments/subscription/create", body)),
+  verifySubscription: (body: { subscriptionId: string }) =>
+    unwrap<{
+      verified: boolean;
+      status: string;
+    }>(apiClient.post("/payments/subscription/verify", body)),
+  getSubscriptionStatus: () =>
+    unwrap<{
+      plan: PlanTier;
+      isActive: boolean;
+      expiresAt: string | null;
+    }>(apiClient.get("/payments/subscription/status")),
+};
+

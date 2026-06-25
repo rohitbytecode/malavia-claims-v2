@@ -26,6 +26,51 @@ const PLAN_IDS: Record<string, string> = {
 };
 
 export class RazorpayService {
+  private static dynamicPlanIds: Record<string, string> = {};
+
+  private static async getOrCreatePlanId(planName: string): Promise<string> {
+    const defaultPlanId = PLAN_IDS[planName];
+    if (defaultPlanId && !defaultPlanId.includes("mock")) {
+      return defaultPlanId;
+    }
+
+    if (this.dynamicPlanIds[planName]) {
+      return this.dynamicPlanIds[planName];
+    }
+
+    if (!razorpay) {
+      return defaultPlanId || "mock_id";
+    }
+
+    console.log(`Creating dynamic Razorpay plan for ${planName}...`);
+    const planDetails: Record<string, { name: string; amount: number }> = {
+      STARTER: { name: "Starter Plan", amount: 290000 },
+      PRO: { name: "Pro Plan", amount: 990000 },
+    };
+
+    const details = planDetails[planName] || { name: `${planName} Plan`, amount: 10000 };
+
+    try {
+      const plan = await razorpay.plans.create({
+        period: "monthly",
+        interval: 1,
+        item: {
+          name: details.name,
+          amount: details.amount,
+          currency: "INR",
+          description: `SaaS ${planName} tier subscription`,
+        },
+      });
+
+      console.log(`Successfully created dynamic Razorpay plan: ${plan.id}`);
+      this.dynamicPlanIds[planName] = plan.id;
+      return plan.id;
+    } catch (err: any) {
+      console.error(`Failed to create dynamic plan in Razorpay for ${planName}:`, err);
+      throw err;
+    }
+  }
+
   /**
    * Generates a new subscription link for an organization
    */
@@ -50,12 +95,14 @@ export class RazorpayService {
       };
     }
 
-    const planId = PLAN_IDS[planName];
-    if (!planId) {
-      throw new AppError(`Invalid plan name: ${planName}`, 400);
+    let planId: string;
+    try {
+      planId = await this.getOrCreatePlanId(planName);
+    } catch (planErr: any) {
+      throw new AppError(planErr.message || "Failed to initialize payment plan on Razorpay", 500);
     }
 
-    if (!razorpay) {
+    if (!razorpay || planId.includes("mock")) {
       // Mock mode
       console.log(`[MOCK] Creating mock Razorpay subscription for ${org.name} on plan ${planName}`);
       org.plan = planName as any;
@@ -67,8 +114,8 @@ export class RazorpayService {
 
       return {
         subscriptionId: `sub_mock_${Math.random().toString(36).substring(7)}`,
-        shortUrl: `/dashboard?payment=mock_success&plan=${planName}`,
         status: "active",
+        key: KEY_ID || "rzp_test_mock_key",
       };
     }
 
@@ -85,8 +132,8 @@ export class RazorpayService {
 
       return {
         subscriptionId: subscription.id,
-        shortUrl: subscription.short_url,
         status: subscription.status,
+        key: KEY_ID || "",
       };
     } catch (err: any) {
       console.error("❌ Razorpay subscription creation failed:", err);
@@ -165,6 +212,56 @@ export class RazorpayService {
           console.warn(`🛑 Subscription cancelled for organization: ${org.name}`);
         }
       }
+    }
+  }
+
+  /**
+   * Verify subscription status directly with Razorpay API
+   */
+  static async verifySubscription(organizationId: string, subscriptionId: string) {
+    const org = await OrganizationModel.findById(organizationId);
+    if (!org) {
+      throw new AppError("Organization not found", 404);
+    }
+
+    if (!razorpay || subscriptionId.startsWith("sub_mock_")) {
+      org.isActive = true;
+      await org.save();
+      return {
+        verified: true,
+        status: "active",
+      };
+    }
+
+    try {
+      const subscription = (await razorpay.subscriptions.fetch(subscriptionId)) as any;
+      const isActive = ["active", "authenticated", "completed", "charged"].includes(subscription.status);
+
+      if (isActive) {
+        // Map back plan ID to name
+        let planName = "PRO";
+        for (const [key, value] of Object.entries(PLAN_IDS)) {
+          if (value === subscription.plan_id) {
+            planName = key;
+            break;
+          }
+        }
+        org.plan = planName as any;
+        org.isActive = true;
+        org.billing = {
+          email: subscription.customer_email || org.billing?.email || "",
+          planExpiresAt: new Date(subscription.current_end * 1000),
+        };
+        await org.save();
+      }
+
+      return {
+        verified: isActive,
+        status: subscription.status,
+      };
+    } catch (err: any) {
+      console.error("❌ Razorpay subscription verification failed:", err);
+      throw new AppError(err.message || "Failed to verify subscription on Razorpay", 500);
     }
   }
 }
