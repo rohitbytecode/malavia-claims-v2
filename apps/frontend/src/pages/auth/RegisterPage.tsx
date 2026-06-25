@@ -44,8 +44,6 @@ export function RegisterPage() {
   const {
     register,
     handleSubmit,
-    setValue,
-    watch,
     formState: { errors },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -55,8 +53,6 @@ export function RegisterPage() {
         : "FREE",
     },
   });
-
-  const selectedPlan = watch("plan");
 
   const mutation = useMutation({
     mutationFn: organizationApi.register,
@@ -350,10 +346,7 @@ export function RegisterPage() {
         <h2>Register Your Organization</h2>
 
         <Field label="Choose Pricing Plan" error={errors.plan?.message}>
-          <SelectInput
-            value={selectedPlan}
-            onChange={(e) => setValue("plan", e.target.value as any)}
-          >
+          <SelectInput {...register("plan")}>
             <option value="FREE">Free Tier (100 claims/mo)</option>
             <option value="STARTER">Starter Tier ($29/mo)</option>
             <option value="PRO">Pro Tier ($99/mo)</option>
