@@ -1,6 +1,6 @@
 # Claim Management System
 
-[![Chat with Repo](https://badge.forgithub.com/rohitbytecode/malavia-claims?badge=chat)](https://uithub.com/rohitbytecode/malavia-claims-v2)
+[![Chat with Repo](https://badge.forgithub.com/rohitbytecode/malavia-claims-v2?badge=chat)](https://uithub.com/rohitbytecode/malavia-claims-v2)
 
 Internal hospital claim management platform.
 
